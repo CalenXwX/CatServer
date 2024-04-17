@@ -47,7 +47,7 @@
  import net.minecraft.world.entity.boss.wither.WitherBoss;
  import net.minecraft.world.entity.item.ItemEntity;
  import net.minecraft.world.entity.player.Player;
-@@ -115,6 +_,14 @@
+@@ -115,6 +_,15 @@
  import net.minecraft.world.phys.HitResult;
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.scores.PlayerTeam;
@@ -59,6 +59,7 @@
 +import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 +import org.bukkit.event.entity.*;
 +import org.bukkit.event.player.PlayerItemConsumeEvent;
++import org.jetbrains.annotations.NotNull;
  import org.slf4j.Logger;
  
  public abstract class LivingEntity extends Entity {
@@ -358,7 +359,25 @@
              iterator.remove();
           }
  
-@@ -877,25 +_,55 @@
+@@ -873,29 +_,79 @@
+       return this.f_20945_.get(p_21125_);
+    }
+ 
++   // CatServer start - Fix mixin conflict with respiteful Mod
++   @Nullable
++   private EntityPotionEffectEvent.Cause potionEffectCause;
++
++   private void potionEffectCause(EntityPotionEffectEvent.Cause cause) {
++      this.potionEffectCause = cause;
++   }
++
++   @Nullable
++   private EntityPotionEffectEvent.Cause potionEffectCause() {
++      return potionEffectCause;
++   }
++   // CatServer end
++
+    public final boolean m_7292_(MobEffectInstance p_21165_) {
        return this.m_147207_(p_21165_, (Entity)null);
     }
  
@@ -367,8 +386,15 @@
 +   }
 +
     public boolean m_147207_(MobEffectInstance p_147208_, @Nullable Entity p_147209_) {
-+      // CraftBukkit start
-+      return this.addEffect(p_147208_, p_147209_, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.UNKNOWN);
++      // CatServer start
++      EntityPotionEffectEvent.Cause cause;
++      if (potionEffectCause() != null) {
++         cause = potionEffectCause();
++      } else {
++         cause = EntityPotionEffectEvent.Cause.UNKNOWN;
++      }
++      return this.addEffect(p_147208_, p_147209_, cause);
++      // CatServer end
 +   }
 +
 +   public boolean addEffect(MobEffectInstance p_147208_, @Nullable Entity p_147209_, EntityPotionEffectEvent.Cause cause) {
@@ -376,7 +402,6 @@
 +         effectsToProcess.add(new ProcessableEffect(p_147208_, cause));
 +         return true;
 +      }
-+      // CraftBukkit end
        if (!this.m_7301_(p_147208_)) {
           return false;
        } else {
@@ -1600,15 +1625,17 @@
     }
  
     public ItemStack m_5584_(Level p_21067_, ItemStack p_21068_) {
-@@ -3160,9 +_,9 @@
+@@ -3160,9 +_,12 @@
     private void m_21063_(ItemStack p_21064_, Level p_21065_, LivingEntity p_21066_) {
        Item item = p_21064_.m_41720_();
        if (item.m_41472_()) {
 -         for(Pair<MobEffectInstance, Float> pair : item.m_41473_().m_38749_()) {
 +         for(Pair<MobEffectInstance, Float> pair : p_21064_.getFoodProperties(this).m_38749_()) {
              if (!p_21065_.f_46443_ && pair.getFirst() != null && p_21065_.f_46441_.nextFloat() < pair.getSecond()) {
--               p_21066_.m_7292_(new MobEffectInstance(pair.getFirst()));
-+               p_21066_.addEffect(new MobEffectInstance(pair.getFirst()), EntityPotionEffectEvent.Cause.FOOD); // CraftBukkit
++               // CatServer start - Fix mixin conflict with respiteful Mod
++               p_21066_.potionEffectCause(EntityPotionEffectEvent.Cause.FOOD);
+                p_21066_.m_7292_(new MobEffectInstance(pair.getFirst()));
++               // CatServer end
              }
           }
        }
