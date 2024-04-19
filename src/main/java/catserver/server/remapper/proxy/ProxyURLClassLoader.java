@@ -43,6 +43,10 @@ public class ProxyURLClassLoader extends URLClassLoader
         this.remapper = new CatServerRemapper(this.jarMapping);
     }
 
+    public ProxyURLClassLoader(String name, URL[] urls, ClassLoader parent) {
+        super(name, urls, parent);
+    }
+
     public ProxyURLClassLoader(final URL[] urls, final ClassLoader parent) {
         super(urls, parent);
     }

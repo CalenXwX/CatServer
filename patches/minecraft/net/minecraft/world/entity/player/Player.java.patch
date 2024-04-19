@@ -151,7 +151,7 @@
        super.m_6667_(p_36152_);
        this.m_20090_();
        if (!this.m_5833_()) {
-@@ -625,7 +_,37 @@
+@@ -625,7 +_,20 @@
  
     @Nullable
     public ItemEntity m_36176_(ItemStack p_36177_, boolean p_36178_) {
@@ -159,40 +159,56 @@
 +      return net.minecraftforge.common.ForgeHooks.onPlayerTossEvent(this, p_36177_, p_36178_);
 +   }
 +
++   // CatServer start - handle PlayerDropItemEvent
++   private boolean callDropItemEvent = true;
++
++   private void callDropItemEvent(boolean b) {
++      this.callDropItemEvent = b;
++   }
++
 +   @Nullable
 +   public ItemEntity drop(ItemStack p_36179_, boolean p_36180_, boolean p_36181_, boolean callEvent) {
-+      ItemEntity itementity = m_7197_(p_36179_, p_36180_, p_36181_);
-+      // CraftBukkit start - fire PlayerDropItemEvent
-+      if (!callEvent) { // SPIGOT-2942: Add boolean to call event
-+         return itementity;
-+      }
-+      org.bukkit.entity.Player player = (org.bukkit.entity.Player) this.getBukkitEntity();
-+      Item drop = (Item) itementity.getBukkitEntity();
-+      PlayerDropItemEvent event = new PlayerDropItemEvent(player, drop);
-+      this.f_19853_.getCraftServer().getPluginManager().callEvent(event);
-+      if (event.isCancelled()) {
-+         org.bukkit.inventory.ItemStack cur = player.getInventory().getItemInHand();
-+         if (p_36181_ && (cur == null || cur.getAmount() == 0)) {
-+            // The complete stack was dropped
-+            player.getInventory().setItemInHand(drop.getItemStack());
-+         } else if (p_36181_ && cur.isSimilar(drop.getItemStack()) && cur.getAmount() < cur.getMaxStackSize() && drop.getItemStack().getAmount() == 1) {
-+            // Only one item is dropped
-+            cur.setAmount(cur.getAmount() + 1);
-+            player.getInventory().setItemInHand(cur);
-+         } else {
-+            // Fallback
-+            player.getInventory().addItem(drop.getItemStack());
-+         }
-+         return null;
-+      }
-+      // CraftBukkit end
-+      return itementity;
++      this.callDropItemEvent(callEvent);
++      return m_7197_(p_36179_, p_36180_, p_36181_);
     }
  
     @Nullable
-@@ -663,7 +_,12 @@
+@@ -659,11 +_,45 @@
+             itementity.m_20334_((double)(-f3 * f2 * 0.3F) + Math.cos((double)f5) * (double)f6, (double)(-f8 * 0.3F + 0.1F + (this.f_19796_.nextFloat() - this.f_19796_.nextFloat()) * 0.1F), (double)(f4 * f2 * 0.3F) + Math.sin((double)f5) * (double)f6);
+          }
+ 
++         boolean callEvent = this.callDropItemEvent; // CatServer
++         this.callDropItemEvent = true; // Reset
++
++         // CraftBukkit start - fire PlayerDropItemEvent
++         if (!callEvent) { // SPIGOT-2942: Add boolean to call event
++            return itementity;
++         }
++         org.bukkit.entity.Player player = (org.bukkit.entity.Player) this.getBukkitEntity();
++         Item drop = (Item) itementity.getBukkitEntity();
++         PlayerDropItemEvent event = new PlayerDropItemEvent(player, drop);
++         this.f_19853_.getCraftServer().getPluginManager().callEvent(event);
++         if (event.isCancelled()) {
++            org.bukkit.inventory.ItemStack cur = player.getInventory().getItemInHand();
++            if (p_36181_ && (cur == null || cur.getAmount() == 0)) {
++               // The complete stack was dropped
++               player.getInventory().setItemInHand(drop.getItemStack());
++            } else if (p_36181_ && cur.isSimilar(drop.getItemStack()) && cur.getAmount() < cur.getMaxStackSize() && drop.getItemStack().getAmount() == 1) {
++               // Only one item is dropped
++               cur.setAmount(cur.getAmount() + 1);
++               player.getInventory().setItemInHand(cur);
++            } else {
++               // Fallback
++               player.getInventory().addItem(drop.getItemStack());
++            }
++            return null;
++         }
++         // CraftBukkit end
++
+          return itementity;
        }
     }
++   // CatServer end
  
 +   @Deprecated //Use location sensitive version below
     public float m_36281_(BlockState p_36282_) {

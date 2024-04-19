@@ -22,7 +22,7 @@
  import java.util.concurrent.atomic.AtomicInteger;
  import java.util.function.Predicate;
  import java.util.stream.Stream;
-@@ -114,9 +_,30 @@
+@@ -114,9 +_,31 @@
  import net.minecraft.world.phys.shapes.VoxelShape;
  import net.minecraft.world.scores.PlayerTeam;
  import net.minecraft.world.scores.Team;
@@ -32,6 +32,7 @@
 +import org.bukkit.World;
 +import org.bukkit.block.BlockFace;
 +import org.bukkit.command.CommandSender;
++import org.bukkit.craftbukkit.v1_18_R2.CraftServer;
 +import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
 +import org.bukkit.craftbukkit.v1_18_R2.entity.CraftEntity;
 +import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
@@ -101,7 +102,7 @@
     protected boolean f_19817_;
     protected int f_19818_;
     protected BlockPos f_19819_;
-@@ -224,11 +_,72 @@
+@@ -224,11 +_,66 @@
     public boolean f_146810_;
     private float f_146803_;
     private int f_146804_;
@@ -113,17 +114,6 @@
 +   private static final int CURRENT_LEVEL = 2;
 +   static boolean isLevelAtLeast(CompoundTag tag, int level) {
 +      return tag.m_128441_("Bukkit.updateLevel") && tag.m_128451_("Bukkit.updateLevel") >= level;
-+   }
-+   private CraftEntity bukkitEntity;
-+   public CraftEntity getBukkitEntity() {
-+      if (bukkitEntity == null) {
-+         bukkitEntity = CraftEntity.getEntity(f_19853_.getCraftServer(), this);
-+      }
-+      return bukkitEntity;
-+   }
-+   @Override
-+   public CommandSender getBukkitSender(CommandSourceStack wrapper) {
-+      return getBukkitEntity();
 +   }
 +   // CraftBukkit - SPIGOT-6907: re-implement LivingEntity#setMaximumAir()
 +   public int getDefaultMaxAirSupply() {
@@ -154,19 +144,24 @@
 +      return m_6094_();
 +   }
 +   // CraftBukkit end
++
 +   // CatSever start
-+   @Deprecated
++   private CraftEntity bukkitEntity;
++
 +   public void setBukkitEntity(CraftEntity bukkitEntity) {
 +      this.bukkitEntity = bukkitEntity;
-+      if (bukkitEntity instanceof org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer && this instanceof net.minecraft.server.level.ServerPlayer) {
-+         ((org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer) this.bukkitEntity).setHandle((net.minecraft.server.level.ServerPlayer) this);
-+      } else if (bukkitEntity instanceof org.bukkit.craftbukkit.v1_18_R2.entity.CraftHumanEntity && this instanceof net.minecraft.world.entity.player.Player) {
-+         ((org.bukkit.craftbukkit.v1_18_R2.entity.CraftHumanEntity) this.bukkitEntity).setHandle((net.minecraft.world.entity.player.Player) this);
-+      } if (bukkitEntity instanceof org.bukkit.craftbukkit.v1_18_R2.entity.CraftLivingEntity && this instanceof net.minecraft.world.entity.LivingEntity) {
-+         ((org.bukkit.craftbukkit.v1_18_R2.entity.CraftLivingEntity) this.bukkitEntity).setHandle((net.minecraft.world.entity.LivingEntity) this);
-+      } else {
-+         this.bukkitEntity.setHandle(this);
++   }
++
++   public CraftEntity getBukkitEntity() {
++      if (bukkitEntity == null) {
++         bukkitEntity = CraftEntity.getEntity(f_19853_.getCraftServer(), this);
 +      }
++      return bukkitEntity;
++   }
++
++   @Override
++   public CommandSender getBukkitSender(CommandSourceStack wrapper) {
++      return getBukkitEntity();
 +   }
 +   // CatSever end
  

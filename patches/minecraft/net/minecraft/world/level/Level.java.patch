@@ -41,7 +41,7 @@
  import net.minecraft.world.entity.player.Player;
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.item.crafting.RecipeManager;
-@@ -45,859 +_,1243 @@
+@@ -45,859 +_,1266 @@
  import net.minecraft.world.level.block.entity.BlockEntity;
  import net.minecraft.world.level.block.entity.TickingBlockEntity;
  import net.minecraft.world.level.block.state.BlockState;
@@ -1053,9 +1053,32 @@
 +    public void m_142052_(BlockPos p_151531_, BlockState p_151532_) {
 +    }
 +
++    // CatServer start - fix swem mod mixin conflict
++    public boolean callBukkitEvent;
++
++    public @Nullable BlockState originBlockState;
++
++    public void callBukkitEvent(boolean b) {
++        this.callBukkitEvent = b;
++    }
++
++    public void originBlockState(BlockState state) {
++        this.originBlockState = state;
++    }
++
 +    public boolean m_46597_(BlockPos p_46598_, BlockState p_46599_) {
++        this.originBlockState(p_46599_); // CatServer - Capture origin BlockState
++
++        boolean callEvent = this.callBukkitEvent;
++        this.callBukkitEvent = false; // Reset
++
++        if (callEvent) {
++            return false;
++        }
++
 +        return this.m_7731_(p_46598_, p_46599_, 3);
 +    }
++    // CatServer end
 +
 +    public abstract void m_7260_(BlockPos p_46612_, BlockState p_46613_, BlockState p_46614_, int p_46615_);
 +
