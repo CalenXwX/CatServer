@@ -564,16 +564,16 @@
 +
 +      // Forward
 +      p_11237_.getBukkitEntity().setHandle(serverplayer);
-+      p_11237_.setBukkitEntity(p_11237_.getBukkitEntity());
++      serverplayer.setBukkitEntity(p_11237_.getBukkitEntity());
 +      p_11237_.f_8906_.f_9743_ = serverplayer;
 +
        serverplayer.f_8906_ = p_11237_.f_8906_;
        serverplayer.m_9015_(p_11237_, p_11238_);
 +      serverplayer.m_9158_(p_11237_.m_8963_(), p_11237_.m_8961_(), p_11237_.m_8962_(), p_11237_.m_8964_(), false);
 +
-+      if (!p_11238_) {
-+         serverplayer.m_150109_().m_36006_(p_11237_.m_150109_()); // Keep inventory
-+      }
++//      if (!p_11238_) {
++//         serverplayer.getInventory().replaceWith(p_11237_.getInventory()); // Keep inventory // Called in each if case in ServerPlayerEntity#restoreFrom
++//      }
 +
        serverplayer.m_20234_(p_11237_.m_142049_());
        serverplayer.m_36163_(p_11237_.m_5737_());
