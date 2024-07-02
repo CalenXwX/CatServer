@@ -215,7 +215,7 @@ public final class CraftServer implements Server {
         this.serverVersion = (CraftServer.class.getPackage().getImplementationVersion() != null) ? CraftServer.class.getPackage().getImplementationVersion() : "unknown"; // CatServer
         this.structureManager = new CraftStructureManager(console.getStructureManager());
 
-        this.scoreboardManager = new CraftScoreboardManager(console, new ServerScoreboard(console));
+        this.scoreboardManager = new CraftScoreboardManager(console, console.m_129896_());
         Bukkit.setServer(this);
 
         // Register all the Enchantments and PotionTypes now so we can stop new registration immediately after
