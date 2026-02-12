@@ -1,5 +1,17 @@
 --- a/net/minecraft/world/item/AxeItem.java
 +++ b/net/minecraft/world/item/AxeItem.java
+@@ -20,8 +_,9 @@
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.gameevent.GameEvent;
+ 
+-public class AxeItem extends DiggerItem {
+-   protected static final Map<Block, Block> f_150683_ = (new ImmutableMap.Builder<Block, Block>()).put(Blocks.f_50011_, Blocks.f_50044_).put(Blocks.f_49999_, Blocks.f_50010_).put(Blocks.f_50043_, Blocks.f_50049_).put(Blocks.f_50004_, Blocks.f_50009_).put(Blocks.f_50015_, Blocks.f_50048_).put(Blocks.f_50003_, Blocks.f_50008_).put(Blocks.f_271348_, Blocks.f_271145_).put(Blocks.f_271170_, Blocks.f_271326_).put(Blocks.f_50013_, Blocks.f_50046_).put(Blocks.f_50001_, Blocks.f_50006_).put(Blocks.f_50014_, Blocks.f_50047_).put(Blocks.f_50002_, Blocks.f_50007_).put(Blocks.f_50012_, Blocks.f_50045_).put(Blocks.f_50000_, Blocks.f_50005_).put(Blocks.f_50686_, Blocks.f_50687_).put(Blocks.f_50688_, Blocks.f_50689_).put(Blocks.f_50695_, Blocks.f_50696_).put(Blocks.f_50697_, Blocks.f_50698_).put(Blocks.f_220836_, Blocks.f_220837_).put(Blocks.f_220832_, Blocks.f_220835_).put(Blocks.f_256831_, Blocks.f_256740_).build();
++public class AxeItem extends DiggerItem implements net.fabricmc.fabric.mixin.content.registry.AxeItemAccessor { // Fabric - AxeItemAccessor
++   // CatServer - protected -> public  remove final  for Fabric AxeItemAccessor
++   public static Map<Block, Block> f_150683_ = (new ImmutableMap.Builder<Block, Block>()).put(Blocks.f_50011_, Blocks.f_50044_).put(Blocks.f_49999_, Blocks.f_50010_).put(Blocks.f_50043_, Blocks.f_50049_).put(Blocks.f_50004_, Blocks.f_50009_).put(Blocks.f_50015_, Blocks.f_50048_).put(Blocks.f_50003_, Blocks.f_50008_).put(Blocks.f_271348_, Blocks.f_271145_).put(Blocks.f_271170_, Blocks.f_271326_).put(Blocks.f_50013_, Blocks.f_50046_).put(Blocks.f_50001_, Blocks.f_50006_).put(Blocks.f_50014_, Blocks.f_50047_).put(Blocks.f_50002_, Blocks.f_50007_).put(Blocks.f_50012_, Blocks.f_50045_).put(Blocks.f_50000_, Blocks.f_50005_).put(Blocks.f_50686_, Blocks.f_50687_).put(Blocks.f_50688_, Blocks.f_50689_).put(Blocks.f_50695_, Blocks.f_50696_).put(Blocks.f_50697_, Blocks.f_50698_).put(Blocks.f_220836_, Blocks.f_220837_).put(Blocks.f_220832_, Blocks.f_220835_).put(Blocks.f_256831_, Blocks.f_256740_).build();
+ 
+    public AxeItem(Tier p_40521_, float p_40522_, float p_40523_, Item.Properties p_40524_) {
+       super(p_40522_, p_40523_, p_40521_, BlockTags.f_144280_, p_40524_);
 @@ -32,11 +_,9 @@
        BlockPos blockpos = p_40529_.m_8083_();
        Player player = p_40529_.m_43723_();

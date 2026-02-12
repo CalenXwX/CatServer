@@ -101,7 +101,7 @@
        ResourceKey<Level> resourcekey = compoundtag != null ? DimensionType.m_63911_(new Dynamic<>(NbtOps.f_128958_, compoundtag.m_128423_("Dimension"))).resultOrPartial(f_11188_::error).orElse(Level.f_46428_) : Level.f_46428_;
        ServerLevel serverlevel = this.f_11195_.m_129880_(resourcekey);
        ServerLevel serverlevel1;
-@@ -167,22 +_,39 @@
+@@ -167,22 +_,45 @@
        p_11263_.m_284127_(serverlevel1);
        String s1 = "local";
        if (p_11262_.m_129523_() != null) {
@@ -136,11 +136,17 @@
 +      servergamepacketlistenerimpl.m_9829_(new ClientboundLoginPacket(p_11263_.m_19879_(), leveldata.m_5466_(), p_11263_.f_8941_.m_9290_(), p_11263_.f_8941_.m_9293_(), this.f_11195_.m_129784_(), this.f_256838_, serverlevel1.m_220362_(), serverlevel1.m_46472_(), BiomeManager.m_47877_(serverlevel1.m_7328_()), this.m_11310_(), serverlevel1.spigotConfig.viewDistance, serverlevel1.spigotConfig.simulationDistance, flag1, !flag, serverlevel1.m_46659_(), serverlevel1.m_8584_(), p_11263_.m_219759_(), p_11263_.m_287157_()));
 +      p_11263_.getBukkitEntity().sendSupportedChannels(); // CraftBukkit
        servergamepacketlistenerimpl.m_9829_(new ClientboundUpdateEnabledFeaturesPacket(FeatureFlags.f_244280_.m_245829_(serverlevel1.m_246046_())));
++      {
++         net.fabricmc.fabric.impl.networking.server.ServerNetworkingImpl.getAddon(p_11263_.f_8906_).onClientReady(); // Fabric - PlayerManagerMixin
++      }
        servergamepacketlistenerimpl.m_9829_(new ClientboundCustomPayloadPacket(ClientboundCustomPayloadPacket.f_132012_, (new FriendlyByteBuf(Unpooled.buffer())).m_130070_(this.m_7873_().getServerModName())));
        servergamepacketlistenerimpl.m_9829_(new ClientboundChangeDifficultyPacket(leveldata.m_5472_(), leveldata.m_5474_()));
        servergamepacketlistenerimpl.m_9829_(new ClientboundPlayerAbilitiesPacket(p_11263_.m_150110_()));
        servergamepacketlistenerimpl.m_9829_(new ClientboundSetCarriedItemPacket(p_11263_.m_150109_().f_35977_));
 +      net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.OnDatapackSyncEvent(this, p_11263_));
++      {
++         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.invoker().onSyncDataPackContents(p_11263_, true); // Fabric - PlayerManagerMixin
++      }
        servergamepacketlistenerimpl.m_9829_(new ClientboundUpdateRecipesPacket(this.f_11195_.m_129894_().m_44051_()));
        servergamepacketlistenerimpl.m_9829_(new ClientboundUpdateTagsPacket(TagNetworkSerialization.m_245799_(this.f_243858_)));
        this.m_11289_(p_11263_);
@@ -588,7 +594,7 @@
        serverplayer.m_20234_(p_11237_.m_19879_());
        serverplayer.m_36163_(p_11237_.m_5737_());
  
-@@ -440,50 +_,71 @@
+@@ -440,50 +_,75 @@
           serverplayer.m_20049_(s);
        }
  
@@ -652,6 +658,7 @@
 +         this.f_11196_.add(serverplayer);
 +         this.f_11197_.put(serverplayer.m_20148_(), serverplayer);
 +      }
++      this.catserver$PlayerList$respawn$serverplayer$initInventoryMenu$Inject$OverwriteTarget(p_11237_, p_11238_, null, blockpos, f, flag, serverlevel, null, serverlevel1, serverplayer, flag3); // CatServer
 +      serverplayer.m_143429_(); // CatServer - recover
        serverplayer.m_21153_(serverplayer.m_21223_());
 -      if (flag2) {
@@ -684,6 +691,9 @@
 +      }
 +
 +      // CraftBukkit end
++      {
++         net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.AFTER_RESPAWN.invoker().afterRespawn(p_11237_, serverplayer, p_11238_); // Fabric - PlayerManagerMixin
++      }
        return serverplayer;
     }
 +   // CatServer end
@@ -831,6 +841,51 @@
  
     public void m_240416_(Component p_240618_, boolean p_240644_) {
        this.m_240502_(p_240618_, (p_215639_) -> {
+@@ -738,6 +_,15 @@
+    }
+ 
+    public void m_240502_(Component p_240526_, Function<ServerPlayer, Component> p_240594_, boolean p_240648_) {
++      {
++         // Fabric start - PlayerManagerMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("fabric$onSendGameMessage", true);
++         this.fabric$onSendGameMessage(p_240526_, p_240594_, p_240648_, ci);
++         if (ci.isCancelled()) {
++            return;
++         }
++         // Fabric end
++      }
+       this.f_11195_.m_213846_(p_240526_);
+ 
+       for(ServerPlayer serverplayer : this.f_11196_) {
+@@ -750,10 +_,28 @@
+    }
+ 
+    public void m_243063_(PlayerChatMessage p_243229_, CommandSourceStack p_243254_, ChatType.Bound p_243255_) {
++      {
++         // Fabric start - PlayerManagerMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("fabric$onSendCommandMessage", true);
++         this.fabric$onSendCommandMessage(p_243229_, p_243254_, p_243255_, ci);
++         if (ci.isCancelled()) {
++            return;
++         }
++         // Fabric end
++      }
+       this.m_245148_(p_243229_, p_243254_::m_243061_, p_243254_.m_230896_(), p_243255_);
+    }
+ 
+    public void m_243049_(PlayerChatMessage p_243264_, ServerPlayer p_243234_, ChatType.Bound p_243204_) {
++      {
++         // Fabric start - PlayerManagerMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("fabric$onSendChatMessage", true);
++         this.fabric$onSendChatMessage(p_243264_, p_243234_, p_243204_, ci);
++         if (ci.isCancelled()) {
++            return;
++         }
++         // Fabric end
++      }
+       this.m_245148_(p_243264_, p_243234_::m_143421_, p_243234_, p_243204_);
+    }
+ 
 @@ -779,22 +_,31 @@
        return p_251384_.m_245272_() && !p_251384_.m_240431_(Instant.now());
     }
@@ -897,7 +952,7 @@
     }
  
     @Nullable
-@@ -851,10 +_,13 @@
+@@ -851,16 +_,22 @@
     }
  
     public void m_11315_() {
@@ -911,3 +966,52 @@
        this.m_11268_(new ClientboundUpdateTagsPacket(TagNetworkSerialization.m_245799_(this.f_243858_)));
        ClientboundUpdateRecipesPacket clientboundupdaterecipespacket = new ClientboundUpdateRecipesPacket(this.f_11195_.m_129894_().m_44051_());
  
+       for(ServerPlayer serverplayer : this.f_11196_) {
+          serverplayer.f_8906_.m_9829_(clientboundupdaterecipespacket);
+          serverplayer.m_8952_().m_12789_(serverplayer);
++         {
++            net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.invoker().onSyncDataPackContents(serverplayer, false); // Fabric - PlayerManagerMixin
++         }
+       }
+ 
+    }
+@@ -868,4 +_,39 @@
+    public boolean m_11316_() {
+       return this.f_11209_;
+    }
++
++   // Fabric start - PlayerManagerMixin
++   private void fabric$onSendChatMessage(PlayerChatMessage message, ServerPlayer sender, ChatType.Bound params, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
++      if (!net.fabricmc.fabric.api.message.v1.ServerMessageEvents.ALLOW_CHAT_MESSAGE.invoker().allowChatMessage(message, sender, params)) {
++         ci.cancel();
++         return;
++      }
++
++      net.fabricmc.fabric.api.message.v1.ServerMessageEvents.CHAT_MESSAGE.invoker().onChatMessage(message, sender, params);
++   }
++
++   private void fabric$onSendGameMessage(Component message, Function<ServerPlayer, Component> playerMessageFactory, boolean overlay, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
++      if (!net.fabricmc.fabric.api.message.v1.ServerMessageEvents.ALLOW_GAME_MESSAGE.invoker().allowGameMessage(this.f_11195_, message, overlay)) {
++         ci.cancel();
++         return;
++      }
++
++      net.fabricmc.fabric.api.message.v1.ServerMessageEvents.GAME_MESSAGE.invoker().onGameMessage(this.f_11195_, message, overlay);
++   }
++
++   private void fabric$onSendCommandMessage(PlayerChatMessage message, CommandSourceStack source, ChatType.Bound params, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
++      if (!net.fabricmc.fabric.api.message.v1.ServerMessageEvents.ALLOW_COMMAND_MESSAGE.invoker().allowCommandMessage(message, source, params)) {
++         ci.cancel();
++         return;
++      }
++
++      net.fabricmc.fabric.api.message.v1.ServerMessageEvents.COMMAND_MESSAGE.invoker().onCommandMessage(message, source, params);
++   }
++   // Fabric end
++
++   // CatServer start - compat:fabric-mod:apoli-2.9.2+mc.1.20.x:io.github.apace100.apoli.mixin.LoginMixin#invokePowerRespawnCallback
++   private void catserver$PlayerList$respawn$serverplayer$initInventoryMenu$Inject$OverwriteTarget(ServerPlayer player, boolean alive, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<ServerPlayer> cir, BlockPos blockPos, float f, boolean bl, ServerLevel serverWorld, Optional optional2, ServerLevel serverWorld2, ServerPlayer serverPlayerEntity, boolean b) {
++      return;
++   }
++   // CatServer end
+ }

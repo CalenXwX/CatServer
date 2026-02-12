@@ -47,7 +47,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // TODO systemic review of all extension functions. lots of unused -C
-public interface IForgeItem
+public interface IForgeItem extends net.fabricmc.fabric.api.item.v1.FabricItem
 {
     private Item self()
     {
@@ -60,7 +60,7 @@ public interface IForgeItem
     @SuppressWarnings("deprecation")
     default Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot slot, ItemStack stack)
     {
-        return self().getDefaultAttributeModifiers(slot);
+        return this.getAttributeModifiers(stack, slot); // CatServer - call fabric method instead vanilla method
     }
 
     /**
@@ -236,11 +236,16 @@ public interface IForgeItem
     @SuppressWarnings("deprecation")
     default ItemStack getCraftingRemainingItem(ItemStack itemStack)
     {
+        // CatServer start
+        /*
         if (!hasCraftingRemainingItem(itemStack))
         {
             return ItemStack.EMPTY;
         }
         return new ItemStack(self().getCraftingRemainingItem());
+        */
+        return this.getRecipeRemainder(itemStack);
+        // CatServer end
     }
 
     /**
@@ -495,7 +500,10 @@ public interface IForgeItem
      */
     default boolean isCorrectToolForDrops(ItemStack stack, BlockState state)
     {
-        return self().isCorrectToolForDrops(state);
+        // CatServer start - in vanilla methods we remain the forge method calls, and we replace the vanilla calls with fabric calls
+        // return self().isCorrectToolForDrops(state);
+        return this.isSuitableFor(stack, state); // Fabric - ItemStackMixin
+        // CatServer end
     }
 
     /**
@@ -821,6 +829,19 @@ public interface IForgeItem
     @NotNull
     default AABB getSweepHitBox(@NotNull ItemStack stack, @NotNull Player player, @NotNull Entity target)
     {
+        // CatServer start - compat:fabric-mod:pehkui-3.8.3+1.14.4-1.21:virtuoel.pehkui.mixin.PlayerEntityMixin#pehkui$attack$expand
+        {
+            Object obj = player.catserver$fabricModRedirectTarget_IForgeItem$getSweepHitBox_AABB$inflate(target.getBoundingBox(), 1.0D, 0.25D, 1.0D, null, target);
+            if (obj instanceof Object[] modifiedArgs) {
+                try {
+                    return ((AABB)modifiedArgs[0]).inflate((double)modifiedArgs[1], (double)modifiedArgs[2], (double)modifiedArgs[3]);
+                } catch (Throwable e) {
+                    // If the types of values in modifiedArgs are not correct, or modifiedArgs.length is not correct, we catch the exception and use forge logic
+                    catserver.server.CatServer.LOGGER.error("Error invoking fabric mod's modification", e);
+                }
+            }
+        }
+        // CatServer end
         return target.getBoundingBox().inflate(1.0D, 0.25D, 1.0D);
     }
 

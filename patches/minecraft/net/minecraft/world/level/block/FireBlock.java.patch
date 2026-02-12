@@ -1,9 +1,10 @@
 --- a/net/minecraft/world/level/block/FireBlock.java
 +++ b/net/minecraft/world/level/block/FireBlock.java
-@@ -28,6 +_,14 @@
+@@ -28,7 +_,15 @@
  import net.minecraft.world.phys.shapes.Shapes;
  import net.minecraft.world.phys.shapes.VoxelShape;
  
+-public class FireBlock extends BaseFireBlock {
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R1.block.CraftBlockState;
 +import org.bukkit.craftbukkit.v1_20_R1.block.CraftBlockStates;
@@ -12,9 +13,20 @@
 +import org.bukkit.event.block.BlockFadeEvent;
 +// CraftBukkit end
 +
- public class FireBlock extends BaseFireBlock {
++public class FireBlock extends BaseFireBlock implements net.fabricmc.fabric.impl.content.registry.FireBlockHooks { // Fabric - FireBlockMixin
     public static final int f_153264_ = 15;
     public static final IntegerProperty f_53408_ = BlockStateProperties.f_61410_;
+    public static final BooleanProperty f_53409_ = PipeBlock.f_55148_;
+@@ -62,6 +_,9 @@
+       this.f_53420_ = ImmutableMap.copyOf(this.f_49792_.m_61056_().stream().filter((p_53497_) -> {
+          return p_53497_.m_61143_(f_53408_) == 0;
+       }).collect(Collectors.toMap(Function.identity(), FireBlock::m_53490_)));
++      {
++         fabric_registry = net.fabricmc.fabric.impl.content.registry.FlammableBlockRegistryImpl.getInstance(this); // Fabric - FireBlockMixin
++      }
+    }
+ 
+    private static VoxelShape m_53490_(BlockState p_53491_) {
 @@ -90,7 +_,22 @@
     }
  
@@ -140,17 +152,37 @@
                             }
                          }
                       }
-@@ -205,31 +_,56 @@
+@@ -205,31 +_,76 @@
        return p_53429_.m_46758_(p_53430_) || p_53429_.m_46758_(p_53430_.m_122024_()) || p_53429_.m_46758_(p_53430_.m_122029_()) || p_53429_.m_46758_(p_53430_.m_122012_()) || p_53429_.m_46758_(p_53430_.m_122019_());
     }
  
 +   @Deprecated //Forge: Use IForgeBlockState.getFlammability, Public for default implementation only.
     public int m_221164_(BlockState p_221165_) {
++      // Fabric start - FireBlockMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable info = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable("fabric$getFabricBurnChance", true);
++         this.fabric$getFabricBurnChance(p_221165_, info);
++         if (info.isCancelled()) {
++            return info.getReturnValueI();
++         }
++      }
++      // Fabric end
++
        return p_221165_.m_61138_(BlockStateProperties.f_61362_) && p_221165_.m_61143_(BlockStateProperties.f_61362_) ? 0 : this.f_53422_.getInt(p_221165_.m_60734_());
     }
  
 +   @Deprecated //Forge: Use IForgeBlockState.getFireSpreadSpeed
     public int m_221166_(BlockState p_221167_) {
++      // Fabric start - FireBlockMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable info = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable("fabric$getFabricSpreadChance", true);
++         this.fabric$getFabricSpreadChance(p_221167_, info);
++         if (info.isCancelled()) {
++            return info.getReturnValueI();
++         }
++      }
++      // Fabric end
++
        return p_221167_.m_61138_(BlockStateProperties.f_61362_) && p_221167_.m_61143_(BlockStateProperties.f_61362_) ? 0 : this.f_221147_.getInt(p_221167_.m_60734_());
     }
  
@@ -238,15 +270,15 @@
     protected boolean m_7599_(BlockState p_53489_) {
        return this.m_221166_(p_53489_) > 0;
     }
-@@ -280,8 +_,21 @@
+@@ -280,10 +_,23 @@
     }
  
     private void m_53444_(Block p_53445_, int p_53446_, int p_53447_) {
 +      if (p_53445_ == Blocks.f_50016_) throw new IllegalArgumentException("Tried to set air on fire... This is bad.");
        this.f_221147_.put(p_53445_, p_53446_);
        this.f_53422_.put(p_53445_, p_53447_);
-+   }
-+
+    }
+ 
 +   /**
 +    * Side sensitive version that calls the block function.
 +    *
@@ -257,6 +289,48 @@
 +    */
 +   public boolean canCatchFire(BlockGetter world, BlockPos pos, Direction face) {
 +      return world.m_8055_(pos).isFlammable(world, pos, face);
-    }
- 
++   }
++
     public static void m_53484_() {
+       FireBlock fireblock = (FireBlock)Blocks.f_50083_;
+       fireblock.m_53444_(Blocks.f_50705_, 5, 20);
+@@ -461,4 +_,39 @@
+       fireblock.m_53444_(Blocks.f_152548_, 30, 60);
+       fireblock.m_53444_(Blocks.f_152475_, 15, 100);
+    }
++
++   // Fabric start - FireBlockMixin
++   private net.fabricmc.fabric.impl.content.registry.FlammableBlockRegistryImpl fabric_registry;
++
++   private void fabric$getFabricBurnChance(BlockState p_221165_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable info) {
++      net.fabricmc.fabric.api.registry.FlammableBlockRegistry.Entry entry = fabric_registry.getFabric(p_221165_.m_60734_());
++
++      if (entry != null) {
++         // TODO: use a (BlockState -> int) with this as the default impl
++         if (p_221165_.m_61138_(BlockStateProperties.f_61362_) && p_221165_.m_61143_(BlockStateProperties.f_61362_)) {
++            info.setReturnValue(0);
++         } else {
++            info.setReturnValue(entry.getBurnChance());
++         }
++      }
++   }
++
++   private void fabric$getFabricSpreadChance(BlockState p_221167_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable info) {
++      net.fabricmc.fabric.api.registry.FlammableBlockRegistry.Entry entry = fabric_registry.getFabric(p_221167_.m_60734_());
++
++      if (entry != null) {
++         // TODO: use a (BlockState -> int) with this as the default impl
++         if (p_221167_.m_61138_(BlockStateProperties.f_61362_) && p_221167_.m_61143_(BlockStateProperties.f_61362_)) {
++            info.setReturnValue(0);
++         } else {
++            info.setReturnValue(entry.getSpreadChance());
++         }
++      }
++   }
++
++   @Override
++   public net.fabricmc.fabric.api.registry.FlammableBlockRegistry.Entry fabric_getVanillaEntry(BlockState block) {
++      return new net.fabricmc.fabric.api.registry.FlammableBlockRegistry.Entry(m_221166_(block), m_221164_(block));
++   }
++   // Fabric end
+ }

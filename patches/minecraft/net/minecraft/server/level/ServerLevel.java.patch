@@ -16,10 +16,11 @@
  import java.util.concurrent.Executor;
  import java.util.function.BooleanSupplier;
  import java.util.function.Function;
-@@ -157,6 +_,28 @@
+@@ -157,7 +_,29 @@
  import net.minecraft.world.ticks.LevelTicks;
  import org.slf4j.Logger;
  
+-public class ServerLevel extends Level implements WorldGenLevel {
 +// CraftBukkit start
 +import net.minecraft.world.level.biome.BiomeSource;
 +import net.minecraft.world.level.dimension.LevelStem;
@@ -42,9 +43,10 @@
 +// CraftBukkit end
 +
 +
- public class ServerLevel extends Level implements WorldGenLevel {
++public class ServerLevel extends Level implements WorldGenLevel, net.fabricmc.fabric.impl.lookup.block.ServerWorldCache { // Fabric - ServerWorldMixin
     public static final BlockPos f_8562_ = new BlockPos(100, 50, 0);
     public static final IntProvider f_263704_ = UniformInt.m_146622_(12000, 180000);
+    public static final IntProvider f_263681_ = UniformInt.m_146622_(12000, 24000);
 @@ -169,9 +_,9 @@
     final List<ServerPlayer> f_8546_ = Lists.newArrayList();
     private final ServerChunkCache f_8547_;
@@ -57,7 +59,7 @@
     private final GameEventDispatcher f_243695_;
     public boolean f_8564_;
     private final SleepStatus f_143245_;
-@@ -188,58 +_,212 @@
+@@ -188,58 +_,224 @@
     private final List<CustomSpawner> f_8558_;
     @Nullable
     private EndDragonFight f_8559_;
@@ -136,6 +138,8 @@
 +         this.worldDataServer = primaryLevelData;
 +      } else if (p_215002_ instanceof net.minecraft.world.level.storage.DerivedLevelData derivedLevelData) {
 +         this.worldDataServer = catserver.server.level.CustomDerivedLevelData.wrap(derivedLevelData);
++      } else {
++         this.worldDataServer = catserver.server.level.CustomDerivedLevelData.wrapUnknown(p_214999_, p_215002_); // CatServer - compat:mod:moonlight-1.20-2.16.27-forge
 +      }
 +      this.spigotConfig = new org.spigotmc.SpigotWorldConfig(MinecraftServer.getServer().f_129744_.m_197394_(p_215003_).toFile().getName()); // Spigot // CatServer - from net.minecraft.world.level.Level#<init>
 +      // CatServer end
@@ -229,6 +233,10 @@
 +         );
 +      }
 +      // CatServer end
++
++      {
++         this.fabric$createAttachmentsPersistentState(); // Fabric - ServerWorldMixin
++      }
 +   }
 +
 +   public ServerLevel(MinecraftServer p_214999_, Executor p_215000_, LevelStorageSource.LevelStorageAccess p_215001_, ServerLevelData p_215002_, ResourceKey<Level> p_215003_, LevelStem p_215004_, ChunkProgressListener p_215005_, boolean p_215006_, long p_215007_, List<CustomSpawner> p_215008_, boolean p_215009_, @Nullable RandomSequences p_288977_, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) { // Paper // CatServer - recover
@@ -241,6 +249,8 @@
 +         this.worldDataServer = primaryLevelData;
 +      } else if (p_215002_ instanceof net.minecraft.world.level.storage.DerivedLevelData derivedLevelData) {
 +         this.worldDataServer = catserver.server.level.CustomDerivedLevelData.wrap(derivedLevelData);
++      } else {
++         this.worldDataServer = catserver.server.level.CustomDerivedLevelData.wrapUnknown(p_214999_, p_215002_); // CatServer - compat:mod:moonlight-1.20-2.16.27-forge
 +      }
 +      this.spigotConfig = new org.spigotmc.SpigotWorldConfig(MinecraftServer.getServer().f_129744_.m_197394_(p_215003_).toFile().getName()); // Spigot // CatServer - from net.minecraft.world.level.Level#<init>
 +      // CatServer end
@@ -315,10 +325,23 @@
 +      this.entityLimiter = new org.spigotmc.TickLimiter(this.spigotConfig.entityMaxTickTime);
 +      this.tileLimiter = new org.spigotmc.TickLimiter(this.spigotConfig.tileMaxTickTime);
 +      // Spigot end
++
++      {
++         this.fabric$createAttachmentsPersistentState(); // Fabric - ServerWorldMixin
++      }
     }
  
     /** @deprecated */
-@@ -274,12 +_,20 @@
+@@ -268,18 +_,29 @@
+    public void m_8793_(BooleanSupplier p_8794_) {
+       ProfilerFiller profilerfiller = this.m_46473_();
+       this.f_8557_ = true;
++      {
++         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.START_WORLD_TICK.invoker().onStartTick(this); // Fabric - ServerWorldMixin
++      }
+       profilerfiller.m_6180_("world border");
+       this.m_6857_().m_61969_();
+       profilerfiller.m_6182_("weather");
        this.m_184096_();
        int i = this.m_46469_().m_46215_(GameRules.f_151486_);
        if (this.f_143245_.m_144002_(i) && this.f_143245_.m_144004_(i, this.f_8546_)) {
@@ -404,6 +427,17 @@
           profilerfiller.m_7238_();
           this.m_46463_();
        }
+@@ -350,6 +_,10 @@
+       profilerfiller.m_6180_("entityManagement");
+       this.f_143244_.m_157506_();
+       profilerfiller.m_7238_();
++
++      {
++         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_WORLD_TICK.invoker().onEndTick(this); // Fabric - ServerWorldMixin
++      }
+    }
+ 
+    public boolean m_183438_(long p_184059_) {
 @@ -401,7 +_,7 @@
        int j = chunkpos.m_45605_();
        ProfilerFiller profilerfiller = this.m_46473_();
@@ -1003,7 +1037,7 @@
           ServerLevel.this.m_7726_().m_8463_(p_143371_);
           if (p_143371_ instanceof ServerPlayer serverplayer) {
              ServerLevel.this.f_8546_.add(serverplayer);
-@@ -1475,16 +_,48 @@
+@@ -1475,16 +_,54 @@
              ServerLevel.this.f_143246_.add(mob);
           }
  
@@ -1017,9 +1051,15 @@
  
           p_143371_.m_213651_(DynamicGameEventListener::m_223617_);
 +         p_143371_.valid = true; // CraftBukkit
++         {
++            net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.invoker().onLoad(p_143371_, ServerLevel.this); // Fabric - ServerWorldServerEntityHandlerMixin
++         }
        }
  
        public void m_141981_(Entity p_143375_) {
++         {
++            net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.invoker().onUnload(p_143375_, ServerLevel.this); // Fabric - ServerWorldServerEntityHandlerMixin
++         }
 +         org.spigotmc.AsyncCatcher.catchOp("entity unregister"); // Spigot
 +         // Spigot start
 +         if ( p_143375_ instanceof Player )
@@ -1054,7 +1094,7 @@
           ServerLevel.this.m_7726_().m_8443_(p_143375_);
           if (p_143375_ instanceof ServerPlayer serverplayer) {
              ServerLevel.this.f_8546_.remove(serverplayer);
-@@ -1500,17 +_,33 @@
+@@ -1500,17 +_,92 @@
              ServerLevel.this.f_143246_.remove(mob);
           }
  
@@ -1083,10 +1123,69 @@
        public void m_214006_(Entity p_215086_) {
           p_215086_.m_213651_(DynamicGameEventListener::m_223641_);
        }
-+   }
+    }
 +
 +   @Override
 +   public java.util.Collection<net.minecraftforge.entity.PartEntity<?>> getPartEntities() {
 +      return this.f_143247_.values();
-    }
++   }
++
++   // Fabric start - ServerWorldMixin
++   private final Map<BlockPos, List<java.lang.ref.WeakReference<net.fabricmc.fabric.impl.lookup.block.BlockApiCacheImpl<?, ?>>>> apiLookupCaches = new it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap<>();
++   /**
++    * Ensures that the apiLookupCaches map is iterated over every once in a while to clean up caches.
++    */
++   private int apiLookupAccessesWithoutCleanup = 0;
++
++   @Override
++   public void fabric_registerCache(BlockPos pos, net.fabricmc.fabric.impl.lookup.block.BlockApiCacheImpl<?, ?> cache) {
++      List<java.lang.ref.WeakReference<net.fabricmc.fabric.impl.lookup.block.BlockApiCacheImpl<?, ?>>> caches = apiLookupCaches.computeIfAbsent(pos.m_7949_(), ignored -> new ArrayList<>());
++      caches.removeIf(weakReference -> weakReference.get() == null);
++      caches.add(new java.lang.ref.WeakReference<>(cache));
++      apiLookupAccessesWithoutCleanup++;
++   }
++
++   @Override
++   public void fabric_invalidateCache(BlockPos pos) {
++      List<java.lang.ref.WeakReference<net.fabricmc.fabric.impl.lookup.block.BlockApiCacheImpl<?, ?>>> caches = apiLookupCaches.get(pos);
++
++      if (caches != null) {
++         caches.removeIf(weakReference -> weakReference.get() == null);
++
++         if (caches.size() == 0) {
++            apiLookupCaches.remove(pos);
++         } else {
++            caches.forEach(weakReference -> {
++               net.fabricmc.fabric.impl.lookup.block.BlockApiCacheImpl<?, ?> cache = weakReference.get();
++
++               if (cache != null) {
++                  cache.invalidate();
++               }
++            });
++         }
++      }
++
++      apiLookupAccessesWithoutCleanup++;
++
++      // Try to invalidate GC'd lookups from the cache after 2 * the number of cached lookups
++      if (apiLookupAccessesWithoutCleanup > 2 * apiLookupCaches.size()) {
++         apiLookupCaches.entrySet().removeIf(entry -> {
++            entry.getValue().removeIf(weakReference -> weakReference.get() == null);
++            return entry.getValue().isEmpty();
++         });
++
++         apiLookupAccessesWithoutCleanup = 0;
++      }
++   }
++
++   private void fabric$createAttachmentsPersistentState() {
++      // Force persistent state creation
++      ServerLevel world = this;
++      world.m_8895_().m_164861_(
++              nbt -> net.fabricmc.fabric.impl.attachment.AttachmentPersistentState.read(world, nbt),
++              () -> new net.fabricmc.fabric.impl.attachment.AttachmentPersistentState(world),
++              net.fabricmc.fabric.impl.attachment.AttachmentPersistentState.ID
++      );
++   }
++   // Fabric end
  }

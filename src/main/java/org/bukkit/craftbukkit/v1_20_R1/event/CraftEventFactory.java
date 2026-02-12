@@ -1344,7 +1344,15 @@ public class CraftEventFactory {
 
     public static AbstractContainerMenu callInventoryOpenEvent(ServerPlayer player, AbstractContainerMenu container, boolean cancelled) {
         if (player.containerMenu != player.inventoryMenu) { // fire INVENTORY_CLOSE if one already open
-            player.connection.handleContainerClose(new ServerboundContainerClosePacket(player.containerMenu.containerId));
+            // Fabric start - ServerPlayerEntityMixin
+            net.minecraft.world.MenuProvider p_9033_ = catserver.server.CatServerCaptures.getCatServerCaptures().ServerPlayer$openMenu$p_9033_.get(player); // CatServer
+            if (p_9033_.shouldCloseCurrentScreen()) {
+                player.connection.handleContainerClose(new ServerboundContainerClosePacket(player.containerMenu.containerId)); // CatServer - CraftBukkit
+            } else {
+                // Called by closeHandledScreen in vanilla
+                // player.doCloseContainer(); // CatServer - CraftBukkit: replace closeContainer() with player.connection.handleContainerClose() means avoid calling doCloseContainer(), so we remove the Fabric call here
+            }
+            // Fabric end
         }
 
         CraftServer server = player.level().getCraftServer();

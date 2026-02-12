@@ -4,6 +4,7 @@
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.ticks.ContainerSingleItem;
  
+-public class JukeboxBlockEntity extends BlockEntity implements Clearable, ContainerSingleItem {
 +// CraftBukkit start
 +import java.util.List;
 +import org.bukkit.Location;
@@ -11,7 +12,7 @@
 +import org.bukkit.entity.HumanEntity;
 +// CraftBukkit end
 +
- public class JukeboxBlockEntity extends BlockEntity implements Clearable, ContainerSingleItem {
++public class JukeboxBlockEntity extends BlockEntity implements Clearable, ContainerSingleItem, net.fabricmc.fabric.impl.transfer.item.SpecialLogicInventory {
     private static final int f_271500_ = 20;
     private final NonNullList<ItemStack> f_271436_ = NonNullList.m_122780_(this.m_6643_(), ItemStack.f_41583_);
     private int f_238796_;
@@ -60,6 +61,21 @@
  
     public JukeboxBlockEntity(BlockPos p_155613_, BlockState p_155614_) {
        super(BlockEntityType.f_58921_, p_155613_, p_155614_);
+@@ -130,6 +_,14 @@
+    }
+ 
+    public void m_6836_(int p_273461_, ItemStack p_273584_) {
++      // Fabric start - JukeboxBlockEntityMixin
++      {
++         if (fabric_suppressSpecialLogic) {
++            f_271436_.set(0, p_273584_);
++            return;
++         }
++      }
++      // Fabric end
+       if (p_273584_.m_204117_(ItemTags.f_13158_) && this.f_58857_ != null) {
+          this.f_271436_.set(p_273461_, p_273584_);
+          this.m_271871_((Entity)null, true);
 @@ -139,7 +_,7 @@
     }
  
@@ -69,7 +85,7 @@
     }
  
     public boolean m_6542_(Player p_273466_) {
-@@ -185,7 +_,11 @@
+@@ -185,7 +_,27 @@
     @VisibleForTesting
     public void m_272139_(ItemStack p_272693_) {
        this.f_271436_.set(0, p_272693_);
@@ -81,4 +97,20 @@
 +      // CraftBukkit end
        this.m_6596_();
     }
++
++   // Fabric start - JukeboxBlockEntityMixin
++   private boolean fabric_suppressSpecialLogic = false;
++
++   @Override
++   public void fabric_setSuppress(boolean suppress) {
++      fabric_suppressSpecialLogic = suppress;
++   }
++
++   @Override
++   public void fabric_onFinalCommit(int slot, ItemStack oldStack, ItemStack newStack) {
++      // Call setStack again without suppressing vanilla logic,
++      // where now the record will actually getting played/stopped.
++      m_272287_(newStack);
++   }
++   // Fabric end
  }

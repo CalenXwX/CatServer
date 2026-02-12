@@ -90,7 +90,7 @@ public interface IForgePlayer {
      */
     default boolean canReach(BlockPos pos, double padding) {
         double reach = this.getBlockReach() + padding;
-        return self().getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) <= reach * reach;
+        return self().getEyePosition().distanceToSqr(this.catserver$IForgePlayer$canReach$distanceToSqr$ModifyArg$OverwriteTarget(Vec3.atCenterOf(pos))) <= this.catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$WrapOperation$OverwriteTarget(this.catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$Redirect$OverwriteTarget(reach * reach)); // CatServer
     }
 
     /**
@@ -106,7 +106,7 @@ public interface IForgePlayer {
      */
     default boolean canReachRaw(BlockPos pos, double padding) {
         double reach = self().getAttributeValue(ForgeMod.BLOCK_REACH.get()) + padding;
-        return self().getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) <= reach * reach;
+        return self().getEyePosition().distanceToSqr(this.catserver$IForgePlayer$canReach$distanceToSqr$ModifyArg$OverwriteTarget(Vec3.atCenterOf(pos))) <= this.catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$WrapOperation$OverwriteTarget(this.catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$Redirect$OverwriteTarget(reach * reach)); // CatServer
     }
 
     /**
@@ -117,14 +117,31 @@ public interface IForgePlayer {
      * @implNote This method inflates the bounding box by the pick radius, which differs from vanilla. But vanilla doesn't use the pick radius, the only entity with > 0 is AbstractHurtingProjectile.
      */
     default boolean isCloseEnough(Entity entity, double dist) {
-        // This cuses the "eye-to-closest-corner" checks, which can cause issues with servers.
+        // This causes the "eye-to-closest-corner" checks, which can cause issues with servers.
         // https://github.com/MinecraftForge/MinecraftForge/issues/9309
         // But to not break expectations of others, its staying until a config can be set.
         // The vanilla code is:
         //    return entity.getBoundingBox().distanceToSqr(self().getEyePosition()) < dist * dist;
         Vec3 eye = self().getEyePosition();
         AABB aabb = entity.getBoundingBox().inflate(entity.getPickRadius());
-        return aabb.distanceToSqr(eye) < dist * dist;
+        return aabb.distanceToSqr(eye) < this.catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$WrapOperation$OverwriteTarget(this.catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$Redirect$OverwriteTarget(dist * dist)); // CatServer
     }
 
+    // CatServer start
+    // compat:fabric-mod:pehkui-3.8.3+1.14.4-1.21:virtuoel.pehkui.mixin.compat1204minus.compat119plus.ServerPlayerInteractionManagerMixin#pehkui$processBlockBreakingAction$center
+    default Vec3 catserver$IForgePlayer$canReach$distanceToSqr$ModifyArg$OverwriteTarget(Vec3 originalValue) {
+        return originalValue;
+    }
+
+    // compat:fabric-mod:reach-entity-attributes-2.4.0:com.jamieswhiteshirt.reachentityattributes.mixin.ServerPlayNetworkHandlerMixin#getActualAttackRange
+    // compat:fabric-mod:reach-entity-attributes-2.4.0:com.jamieswhiteshirt.reachentityattributes.mixin.ServerPlayerInteractionManagerMixin#getActualReachDistance
+    default double catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$Redirect$OverwriteTarget(double originalValue) {
+        return originalValue;
+    }
+
+    // compat:fabric-mod:pehkui-3.8.3+1.14.4-1.21:virtuoel.pehkui.mixin.reach.compat1204minus.compat119plus.ServerPlayerInteractionManagerMixin#pehkui$processBlockBreakingAction$distance
+    default double catserver$IForgePlayer$canReach$ServerGamePacketListenerImpl$MAX_INTERACTION_DISTANCE$WrapOperation$OverwriteTarget(double originalValue) {
+        return originalValue;
+    }
+    // CatServer end
 }

@@ -1,0 +1,25 @@
+--- a/net/minecraft/server/packs/resources/Resource.java
++++ b/net/minecraft/server/packs/resources/Resource.java
+@@ -8,7 +_,7 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.server.packs.PackResources;
+ 
+-public class Resource {
++public class Resource implements net.fabricmc.fabric.impl.resource.loader.FabricResource { // Fabric - ResourceMixin
+    private final PackResources f_244326_;
+    private final IoSupplier<InputStream> f_215496_;
+    private final IoSupplier<ResourceMetadata> f_215497_;
+@@ -55,4 +_,13 @@
+ 
+       return this.f_215498_;
+    }
++
++   // Fabric start - ResourceMixin
++   @SuppressWarnings("ConstantConditions")
++   @Override
++   public net.minecraft.server.packs.repository.PackSource getFabricPackSource() {
++      Resource self = this;
++      return net.fabricmc.fabric.impl.resource.loader.ResourcePackSourceTracker.getSource(self.m_247173_());
++   }
++   // Fabric end
+ }

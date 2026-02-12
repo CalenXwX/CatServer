@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/level/chunk/ChunkAccess.java
 +++ b/net/minecraft/world/level/chunk/ChunkAccess.java
+@@ -53,7 +_,7 @@
+ import net.minecraft.world.ticks.TickContainerAccess;
+ import org.slf4j.Logger;
+ 
+-public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiomeSource, LightChunk, StructureAccess {
++public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiomeSource, LightChunk, StructureAccess, net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl { // Fabric - AttachmentTargetsMixin
+    public static final int f_279635_ = -1;
+    private static final Logger f_187613_ = LogUtils.getLogger();
+    private static final LongSet f_207932_ = new LongOpenHashSet();
 @@ -71,14 +_,19 @@
     protected final UpgradeData f_187606_;
     @Nullable
@@ -98,11 +107,86 @@
                       }
                    }
                 }
-@@ -463,4 +_,7 @@
+@@ -463,4 +_,82 @@
  
     public static record TicksToSave(SerializableTickContainer<Block> f_187680_, SerializableTickContainer<Fluid> f_187681_) {
     }
 +
 +   @Nullable
 +   public net.minecraft.world.level.LevelAccessor getWorldForge() { return null; }
++
++   // Fabric start - AttachmentTargetsMixin
++   @Nullable
++   private java.util.IdentityHashMap<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, Object> fabric_dataAttachments = null;
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T getAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type) {
++      return fabric_dataAttachments == null ? null : (T) fabric_dataAttachments.get(type);
++   }
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T setAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type, @Nullable T value) {
++      // Extremely inelegant, but the only alternative is separating out these two mixins and duplicating code
++      Object thisObject = this;
++
++      /* if (thisObject instanceof BlockEntity) { // CatServer - always instance of ChunkAccess
++         ((BlockEntity) thisObject).setChanged();
++      } else if (thisObject instanceof net.minecraft.world.level.chunk.ChunkAccess) */{
++         ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).m_8092_(true);
++
++         if (type.isPersistent() && ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).m_6415_().equals(net.minecraft.world.level.chunk.ChunkStatus.f_62314_)) {
++            net.fabricmc.fabric.impl.attachment.AttachmentEntrypoint.LOGGER.warn("Attaching persistent attachment {} to chunk with chunk status EMPTY. Attachment might be discarded.", type.identifier());
++         }
++      }
++
++      if (value == null) {
++         if (fabric_dataAttachments == null) {
++            return null;
++         }
++
++         T removed = (T) fabric_dataAttachments.remove(type);
++
++         if (fabric_dataAttachments.isEmpty()) {
++            fabric_dataAttachments = null;
++         }
++
++         return removed;
++      } else {
++         if (fabric_dataAttachments == null) {
++            fabric_dataAttachments = new java.util.IdentityHashMap<>();
++         }
++
++         return (T) fabric_dataAttachments.put(type, value);
++      }
++   }
++
++   @Override
++   public boolean hasAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<?> type) {
++      return fabric_dataAttachments != null && fabric_dataAttachments.containsKey(type);
++   }
++
++   @Override
++   public void fabric_writeAttachmentsToNbt(CompoundTag nbt) {
++      net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.serializeAttachmentData(nbt, fabric_dataAttachments);
++   }
++
++   @Override
++   public void fabric_readAttachmentsFromNbt(CompoundTag nbt) {
++      fabric_dataAttachments = net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.deserializeAttachmentData(nbt);
++   }
++
++   @Override
++   public boolean fabric_hasPersistentAttachments() {
++      return net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.hasPersistentAttachments(fabric_dataAttachments);
++   }
++
++   @Override
++   public java.util.Map<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, ?> fabric_getAttachments() {
++      return fabric_dataAttachments;
++   }
++   // Fabric end
  }

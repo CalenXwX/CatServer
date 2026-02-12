@@ -75,7 +75,14 @@
        }
  
        private void m_78313_() {
-@@ -439,6 +_,19 @@
+@@ -435,10 +_,26 @@
+ 
+       @Nullable
+       public Pair<WorldData, WorldDimensions.Complete> m_246049_(DynamicOps<Tag> p_248747_, WorldDataConfiguration p_251873_, Registry<LevelStem> p_249187_, Lifecycle p_249736_) {
++         {
++            this.fabric$readWorldProperties(); // Fabric - LevelStorageSessionMixin
++         }
+          this.m_78313_();
           return LevelStorageSource.this.m_230817_(this.f_230867_, LevelStorageSource.m_245503_(p_248747_, p_251873_, p_249187_, p_249736_));
        }
  
@@ -95,7 +102,15 @@
        @Nullable
        public WorldDataConfiguration m_247706_() {
           this.m_78313_();
-@@ -455,6 +_,8 @@
+@@ -450,11 +_,16 @@
+       }
+ 
+       public void m_78290_(RegistryAccess p_78291_, WorldData p_78292_, @Nullable CompoundTag p_78293_) {
++         {
++            this.fabric$saveWorld(); // Fabric - LevelStorageSessionMixin
++         }
+          File file1 = this.f_230867_.f_230850_().toFile();
+          CompoundTag compoundtag = p_78292_.m_6626_(p_78291_, p_78293_);
           CompoundTag compoundtag1 = new CompoundTag();
           compoundtag1.m_128365_("Data", compoundtag);
  
@@ -104,14 +119,129 @@
           try {
              File file2 = File.createTempFile("level", ".dat", file1);
              NbtIo.m_128944_(compoundtag1, file2);
-@@ -469,6 +_,10 @@
- 
-       public Optional<Path> m_182514_() {
+@@ -471,6 +_,10 @@
           return !this.f_78270_.m_13639_() ? Optional.empty() : Optional.of(this.f_230867_.m_230860_());
-+      }
-+
-+      public Path getWorldDir() {
-+         return f_78194_;
        }
  
++      public Path getWorldDir() {
++         return f_78194_;
++      }
++
        public void m_78311_() throws IOException {
+          this.m_78313_();
+          final Path path = this.f_230867_.m_230861_();
+@@ -570,5 +_,114 @@
+       public void close() throws IOException {
+          this.f_78270_.close();
+       }
++
++      // Fabric start - LevelStorageSessionMixin
++      private static final int FABRIC_ID_REGISTRY_BACKUPS = 3;
++      private static final Logger FABRIC_LOGGER = org.slf4j.LoggerFactory.getLogger("FabricRegistrySync");
++      private Map<ResourceLocation, it.unimi.dsi.fastutil.objects.Object2IntMap<ResourceLocation>> fabric_lastSavedRegistryMap = null;
++      private Map<ResourceLocation, it.unimi.dsi.fastutil.objects.Object2IntMap<ResourceLocation>> fabric_activeRegistryMap = null;
++
++      private boolean fabric_readIdMapFile(File file) throws IOException, net.fabricmc.fabric.impl.registry.sync.RemapException {
++         FABRIC_LOGGER.debug("Reading registry data from " + file.toString());
++
++         if (file.exists()) {
++            java.io.FileInputStream fileInputStream = new java.io.FileInputStream(file);
++            CompoundTag tag = NbtIo.m_128939_(fileInputStream);
++            fileInputStream.close();
++
++            if (tag != null) {
++               fabric_activeRegistryMap = net.fabricmc.fabric.impl.registry.sync.RegistryMapSerializer.fromNbt(tag);
++               net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager.apply(fabric_activeRegistryMap, net.fabricmc.fabric.impl.registry.sync.RemappableRegistry.RemapMode.AUTHORITATIVE);
++               return true;
++            }
++         }
++
++         return false;
++      }
++
++      private File fabric_getWorldIdMapFile(int i) {
++         return new File(new File(f_230867_.f_230850_().toFile(), "data"), "fabricRegistry" + ".dat" + (i == 0 ? "" : ("." + i)));
++      }
++
++      private void fabric_saveRegistryData() {
++         FABRIC_LOGGER.debug("Starting registry save");
++         Map<ResourceLocation, it.unimi.dsi.fastutil.objects.Object2IntMap<ResourceLocation>> newMap = net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager.createAndPopulateRegistryMap(false, fabric_activeRegistryMap);
++
++         if (newMap == null) {
++            FABRIC_LOGGER.debug("Not saving empty registry data");
++            return;
++         }
++
++         if (!newMap.equals(fabric_lastSavedRegistryMap)) {
++            for (int i = FABRIC_ID_REGISTRY_BACKUPS - 1; i >= 0; i--) {
++               File file = fabric_getWorldIdMapFile(i);
++
++               if (file.exists()) {
++                  if (i == FABRIC_ID_REGISTRY_BACKUPS - 1) {
++                     file.delete();
++                  } else {
++                     File target = fabric_getWorldIdMapFile(i + 1);
++                     file.renameTo(target);
++                  }
++               }
++            }
++
++            try {
++               File file = fabric_getWorldIdMapFile(0);
++               File parentFile = file.getParentFile();
++
++               if (!parentFile.exists()) {
++                  if (!parentFile.mkdirs()) {
++                     FABRIC_LOGGER.warn("[fabric-registry-sync] Could not create directory " + parentFile + "!");
++                  }
++               }
++
++               FABRIC_LOGGER.debug("Saving registry data to " + file);
++               java.io.FileOutputStream fileOutputStream = new java.io.FileOutputStream(file);
++               NbtIo.m_128947_(net.fabricmc.fabric.impl.registry.sync.RegistryMapSerializer.toNbt(newMap), fileOutputStream);
++               fileOutputStream.close();
++            } catch (IOException e) {
++               FABRIC_LOGGER.warn("[fabric-registry-sync] Failed to save registry file!", e);
++            }
++
++            fabric_lastSavedRegistryMap = newMap;
++         }
++      }
++
++      public void fabric$saveWorld() {
++         if (!Files.exists(f_230867_.f_230850_())) {
++            return;
++         }
++
++         fabric_saveRegistryData();
++      }
++
++      public void fabric$readWorldProperties() {
++         // Load
++         for (int i = 0; i < FABRIC_ID_REGISTRY_BACKUPS; i++) {
++            FABRIC_LOGGER.trace("[fabric-registry-sync] Loading Fabric registry [file " + (i + 1) + "/" + (FABRIC_ID_REGISTRY_BACKUPS + 1) + "]");
++
++            try {
++               if (fabric_readIdMapFile(fabric_getWorldIdMapFile(i))) {
++                  FABRIC_LOGGER.info("[fabric-registry-sync] Loaded registry data [file " + (i + 1) + "/" + (FABRIC_ID_REGISTRY_BACKUPS + 1) + "]");
++                  return;
++               }
++            } catch (java.io.FileNotFoundException e) {
++               // pass
++            } catch (IOException e) {
++               if (i >= FABRIC_ID_REGISTRY_BACKUPS - 1) {
++                  throw new RuntimeException(e);
++               } else {
++                  FABRIC_LOGGER.warn("Reading registry file failed!", e);
++               }
++            } catch (net.fabricmc.fabric.impl.registry.sync.RemapException e) {
++               throw new RuntimeException("Remapping world failed!", e);
++            }
++         }
++
++         // If not returned (not present), try saving the registry data
++         fabric_saveRegistryData();
++      }
++      // Fabric end
+    }
+ }

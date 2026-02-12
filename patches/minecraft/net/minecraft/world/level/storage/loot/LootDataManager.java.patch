@@ -1,6 +1,20 @@
 --- a/net/minecraft/world/level/storage/loot/LootDataManager.java
 +++ b/net/minecraft/world/level/storage/loot/LootDataManager.java
-@@ -33,6 +_,30 @@
+@@ -6,6 +_,7 @@
+ import com.google.gson.JsonElement;
+ import com.mojang.logging.LogUtils;
+ import java.util.Collection;
++import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.Map;
+ import java.util.concurrent.CompletableFuture;
+@@ -28,11 +_,35 @@
+ import net.minecraft.world.level.storage.loot.predicates.LootItemConditions;
+ import org.slf4j.Logger;
+ 
+-public class LootDataManager implements PreparableReloadListener, LootDataResolver {
++public class LootDataManager implements PreparableReloadListener, LootDataResolver, net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener { // Fabric - KeyedResourceReloadListenerMixin
+    private static final Logger f_278476_ = LogUtils.getLogger();
     public static final LootDataId<LootTable> f_278474_ = new LootDataId<>(LootDataType.f_278413_, BuiltInLootTables.f_78712_);
     private Map<LootDataId<?>, ?> f_278415_ = Map.of();
     private Multimap<LootDataType<?>, ResourceLocation> f_278404_ = ImmutableMultimap.of();
@@ -31,15 +45,49 @@
  
     public final CompletableFuture<Void> m_5540_(PreparableReloadListener.PreparationBarrier p_279240_, ResourceManager p_279377_, ProfilerFiller p_279135_, ProfilerFiller p_279088_, Executor p_279148_, Executor p_279169_) {
        Map<LootDataType<?>, Map<ResourceLocation, ?>> map = new HashMap<>();
-@@ -53,7 +_,7 @@
+@@ -41,22 +_,39 @@
+       }).toArray((p_279126_) -> {
+          return new CompletableFuture[p_279126_];
+       });
+-      return CompletableFuture.allOf(completablefuture).thenCompose(p_279240_::m_6769_).thenAcceptAsync((p_279096_) -> {
++      return this.fabric$reload(p_279377_, CompletableFuture.allOf(completablefuture).thenCompose(p_279240_::m_6769_).thenAcceptAsync((p_279096_) -> {
+          this.m_278787_(map);
+-      }, p_279169_);
++      }, p_279169_)); // Fabric - LootManagerMixin
+    }
+ 
+    private static <T> CompletableFuture<?> m_278800_(LootDataType<T> p_279205_, ResourceManager p_279441_, Executor p_279233_, Map<LootDataType<?>, Map<ResourceLocation, ?>> p_279241_) {
+       Map<ResourceLocation, T> map = new HashMap<>();
+       p_279241_.put(p_279205_, map);
++      // dynamicRegistryManagerMap.put(map, net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.get()); // Fabric - LootManagerMixin // CatServer
++      final net.minecraft.core.RegistryAccess.Frozen reg = net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.get(); // CatServer
+       return CompletableFuture.runAsync(() -> {
++         {
++            fabric$runAsync(reg); // Fabric - LootManagerMixin
++         }
           Map<ResourceLocation, JsonElement> map1 = new HashMap<>();
           SimpleJsonResourceReloadListener.m_278771_(p_279441_, p_279205_.m_278624_(), p_279205_.m_278857_(), map1);
           map1.forEach((p_279416_, p_279151_) -> {
 -            p_279205_.m_278763_(p_279416_, p_279151_).ifPresent((p_279295_) -> {
++            {
++               // Fabric start - LootManagerMixin
++               org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("fabric$applyResourceConditions", true);
++               fabric$applyResourceConditions(p_279205_, p_279416_, p_279151_, ci);
++               if (ci.isCancelled()) {
++                  return;
++               }
++               // Fabric end
++            }
 +            p_279205_.deserialize(p_279416_, p_279151_, p_279441_).ifPresent((p_279295_) -> {
                 map.put(p_279416_, p_279295_);
              });
           });
++         {
++            net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.remove(); // Fabric - LootManagerMixin
++         }
+       }, p_279233_);
+    }
+ 
 @@ -90,6 +_,11 @@
        });
        this.f_278415_ = map;
@@ -52,3 +100,132 @@
     }
  
     private static <T> void m_278621_(ValidationContext p_279270_, LootDataId<T> p_279249_, Object p_279342_) {
+@@ -166,4 +_,128 @@
+          throw new UnsupportedOperationException();
+       }
+    }
++
++   // Fabric start - KeyedResourceReloadListenerMixin
++   private ResourceLocation fabric$id;
++   private Collection<ResourceLocation> fabric$dependencies;
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public ResourceLocation getFabricId() {
++      if (this.fabric$id == null) {
++         /*Object self = this;
++
++         if (self instanceof RecipeManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.RECIPES;
++         } else if (self instanceof ServerAdvancementManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.ADVANCEMENTS;
++         } else if (self instanceof ServerFunctionLibrary) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.FUNCTIONS;
++         } else if (self instanceof LootDataManager) */{
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.LOOT_TABLES;
++         }/* else if (self instanceof TagManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS;
++         } else {
++            this.fabric$id = new ResourceLocation("minecraft", "private/" + self.getClass().getSimpleName().toLowerCase(Locale.ROOT));
++         }*/ // CatServer - only this class
++      }
++
++      return this.fabric$id;
++   }
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public Collection<ResourceLocation> getFabricDependencies() {
++      if (this.fabric$dependencies == null) {
++         /*Object self = this;
++
++         if (self instanceof TagManager) {
++            this.fabric$dependencies = Collections.emptyList();
++         } else */{
++            this.fabric$dependencies = Collections.singletonList(net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS);
++         } // CatServer - only this class
++      }
++
++      return this.fabric$dependencies;
++   }
++   // Fabric end
++
++   // Fabric start - LootManagerMixin
++   // Keep track of the DynamicRegistryManager instance by assgining it to the map that is passed to the async runnable.
++   @Deprecated // CatServer
++   private static final Map<Object, net.minecraft.core.RegistryAccess.Frozen> dynamicRegistryManagerMap = new catserver.server.utils.FabricUnused.FabricUnusedMap<>(); // Collections.synchronizedMap(new java.util.IdentityHashMap<>()); // CatServer
++
++   private static void fabric$runAsync(net.minecraft.core.RegistryAccess.Frozen reg) {
++      assert net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.get() == null;
++      net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.set(java.util.Objects.requireNonNull(/*dynamicRegistryManagerMap.remove(map)*/reg)); // CatServer
++   }
++
++   private static void fabric$applyResourceConditions(LootDataType lootDataType, ResourceLocation id, JsonElement json, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
++      if (json.isJsonObject()) {
++         com.google.gson.JsonObject obj = json.getAsJsonObject();
++
++         if (obj.has(net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions.CONDITIONS_KEY)) {
++            boolean matched = net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions.objectMatchesConditions(obj);
++
++            if (!matched) {
++               ci.cancel();
++            }
++
++            if (net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.LOGGER.isDebugEnabled()) {
++               String verdict = matched ? "Allowed" : "Rejected";
++               net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.LOGGER.debug("{} resource of type {} with id {}", verdict, lootDataType.m_278624_(), id);
++            }
++         }
++      }
++   }
++
++   private CompletableFuture<Void> fabric$reload(ResourceManager manager, CompletableFuture<Void> ret) {
++      //noinspection DataFlowIssue
++      LootDataManager lootManager = this;
++      ret = ret.thenRun(() -> applyLootTableEvents(manager, lootManager));
++      return ret;
++   }
++
++   private void applyLootTableEvents(ResourceManager resourceManager, LootDataManager lootManager) {
++      // The builder for the new LootManager.tables map with modified loot tables.
++      // We're using an immutable map to match vanilla.
++      ImmutableMap.Builder<LootDataId<?>, Object> newTables = ImmutableMap.builder();
++
++      this.f_278415_.forEach((dataKey, entry) -> {
++         if (dataKey == LootDataManager.f_278474_) {
++            // This is a special table and cannot be modified.
++            // Vanilla also warns about that.
++            newTables.put(dataKey, entry);
++            return;
++         }
++
++         if (!(entry instanceof LootTable table)) {
++            // We only want to modify loot tables
++            newTables.put(dataKey, entry);
++            return;
++         }
++
++         net.fabricmc.fabric.api.loot.v2.LootTableSource source = net.fabricmc.fabric.impl.loot.LootUtil.determineSource(dataKey.f_278500_(), resourceManager);
++         // Invoke the REPLACE event for the current loot table.
++         LootTable replacement = net.fabricmc.fabric.api.loot.v2.LootTableEvents.REPLACE.invoker().replaceLootTable(resourceManager, lootManager, dataKey.f_278500_(), table, source);
++
++         if (replacement != null) {
++            // Set the loot table to MODIFY to be the replacement loot table.
++            // The MODIFY event will also see it as a replaced loot table via the source.
++            table = replacement;
++            source = net.fabricmc.fabric.api.loot.v2.LootTableSource.REPLACED;
++         }
++
++         // Turn the current table into a modifiable builder and invoke the MODIFY event.
++         LootTable.Builder builder = net.fabricmc.fabric.api.loot.v2.FabricLootTableBuilder.copyOf(table);
++         net.fabricmc.fabric.api.loot.v2.LootTableEvents.MODIFY.invoker().modifyLootTable(resourceManager, lootManager, dataKey.f_278500_(), builder, source);
++
++         // Turn the builder back into a loot table and store it in the new table.
++         newTables.put(dataKey, builder.m_79167_());
++      });
++
++      this.f_278415_ = newTables.build();
++      net.fabricmc.fabric.api.loot.v2.LootTableEvents.ALL_LOADED.invoker().onLootTablesLoaded(resourceManager, lootManager);
++   }
++   // Fabric end
+ }

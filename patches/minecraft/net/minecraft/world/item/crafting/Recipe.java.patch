@@ -1,6 +1,11 @@
 --- a/net/minecraft/world/item/crafting/Recipe.java
 +++ b/net/minecraft/world/item/crafting/Recipe.java
-@@ -22,9 +_,9 @@
+@@ -18,13 +_,13 @@
+ 
+    ItemStack m_8043_(RegistryAccess p_267052_);
+ 
+-   default NonNullList<ItemStack> m_7457_(C p_44004_) {
++   default NonNullList<ItemStack> m_7457_(C p_44004_) { // CatServer - Fabric RecipeMixin does the same thing as Forge
        NonNullList<ItemStack> nonnulllist = NonNullList.m_122780_(p_44004_.m_6643_(), ItemStack.f_41583_);
  
        for(int i = 0; i < nonnulllist.size(); ++i) {
@@ -9,7 +14,7 @@
 -            nonnulllist.set(i, new ItemStack(item.m_41469_()));
 +         ItemStack item = p_44004_.m_8020_(i);
 +         if (item.hasCraftingRemainingItem()) {
-+            nonnulllist.set(i, item.getCraftingRemainingItem());
++            nonnulllist.set(i, item.getCraftingRemainingItem()); // CatServer - in forge method we call fabric method instead of vanilla method
           }
        }
  

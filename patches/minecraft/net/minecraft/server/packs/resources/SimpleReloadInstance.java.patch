@@ -1,0 +1,41 @@
+--- a/net/minecraft/server/packs/resources/SimpleReloadInstance.java
++++ b/net/minecraft/server/packs/resources/SimpleReloadInstance.java
+@@ -85,10 +_,37 @@
+    }
+ 
+    public static ReloadInstance m_203834_(ResourceManager p_203835_, List<PreparableReloadListener> p_203836_, Executor p_203837_, Executor p_203838_, CompletableFuture<Unit> p_203839_, boolean p_203840_) {
+-      return (ReloadInstance)(p_203840_ ? new ProfiledReloadInstance(p_203835_, p_203836_, p_203837_, p_203838_, p_203839_) : m_10815_(p_203835_, p_203836_, p_203837_, p_203838_, p_203839_));
++      net.minecraft.server.packs.PackType fabric_resourceType = fabric$method_40087(p_203835_); // Fabric - SimpleResourceReloadMixin
++      return (ReloadInstance)(p_203840_ ? new ProfiledReloadInstance(p_203835_, fabric$sortProfiled(fabric_resourceType, p_203836_), p_203837_, p_203838_, p_203839_) : m_10815_(p_203835_, fabric$sortSimple(fabric_resourceType, p_203836_), p_203837_, p_203838_, p_203839_)); // Fabric - SimpleResourceReloadMixin
+    }
+ 
+    protected interface StateFactory<S> {
+       CompletableFuture<S> m_10863_(PreparableReloadListener.PreparationBarrier p_10864_, ResourceManager p_10865_, PreparableReloadListener p_10866_, Executor p_10867_, Executor p_10868_);
+    }
++
++   // Fabric start - SimpleResourceReloadMixin
++   // CatServer start
++   private static final ThreadLocal<net.minecraft.server.packs.PackType> fabric_resourceType = new catserver.server.utils.FabricUnused.FabricUnusedThreadLocal<>();
++
++   private static /*void*/net.minecraft.server.packs.PackType fabric$method_40087(ResourceManager resourceManager) {
++      if (resourceManager instanceof net.fabricmc.fabric.impl.resource.loader.FabricLifecycledResourceManager flrm) {
++         // fabric_resourceType.set(flrm.fabric_getResourceType());
++         return flrm.fabric_getResourceType();
++      }
++      return null;
++   }
++
++   private static List<PreparableReloadListener> fabric$sortSimple(net.minecraft.server.packs.PackType fabric_resourceType, List<PreparableReloadListener> reloaders) {
++      List<PreparableReloadListener> sorted = net.fabricmc.fabric.impl.resource.loader.ResourceManagerHelperImpl.sort(/*fabric_resourceType.get()*/fabric_resourceType, reloaders);
++      // ric_resourceType.set(null);
++      return sorted;
++   }
++
++   private static /*ProfiledReloadInstance*/List<PreparableReloadListener> fabric$sortProfiled(net.minecraft.server.packs.PackType fabric_resourceType, List<PreparableReloadListener> reloaders) {
++      List<PreparableReloadListener> sorted = net.fabricmc.fabric.impl.resource.loader.ResourceManagerHelperImpl.sort(/*fabric_resourceType.get()*/fabric_resourceType, reloaders);
++      // ric_resourceType.set(null);
++      return sorted; // new ProfiledReloadInstance(manager, sorted, prepareExecutor, applyExecutor, initialStage);
++   }
++   // CatServer end
++   // Fabric end
+ }

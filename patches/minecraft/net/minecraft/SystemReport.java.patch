@@ -1,0 +1,56 @@
+--- a/net/minecraft/SystemReport.java
++++ b/net/minecraft/SystemReport.java
+@@ -51,6 +_,9 @@
+          List<String> list = Util.m_137582_().collect(Collectors.toList());
+          return String.format(Locale.ROOT, "%d total; %s", list.size(), String.join(" ", list));
+       });
++      {
++         this.fabric$fillSystemDetails(); // Fabric - SystemDetailsMixin
++      }
+    }
+ 
+    public void m_143519_(String p_143520_, String p_143521_) {
+@@ -181,4 +_,43 @@
+          return (String)p_143534_.getKey() + ": " + (String)p_143534_.getValue();
+       }).collect(Collectors.joining(System.lineSeparator()));
+    }
++
++   // Fabric start - SystemDetailsMixin
++   private void fabric$fillSystemDetails() {
++      m_143522_("Fabric Mods", () -> {
++         java.util.ArrayList<net.fabricmc.loader.api.ModContainer> topLevelMods = new java.util.ArrayList<>();
++
++         for (net.fabricmc.loader.api.ModContainer container : net.fabricmc.loader.api.FabricLoader.getInstance().getAllMods()) {
++            if (container.getContainingMod().isEmpty()) {
++               topLevelMods.add(container);
++            }
++         }
++
++         StringBuilder modString = new StringBuilder();
++
++         appendMods(modString, 2, topLevelMods);
++
++         return modString.toString();
++      });
++   }
++
++   private static void appendMods(StringBuilder modString, int depth, java.util.ArrayList<net.fabricmc.loader.api.ModContainer> mods) {
++      mods.sort(java.util.Comparator.comparing(mod -> mod.getMetadata().getId()));
++
++      for (net.fabricmc.loader.api.ModContainer mod : mods) {
++         modString.append('\n');
++         modString.append("\t".repeat(depth));
++         modString.append(mod.getMetadata().getId());
++         modString.append(": ");
++         modString.append(mod.getMetadata().getName());
++         modString.append(' ');
++         modString.append(mod.getMetadata().getVersion().getFriendlyString());
++
++         if (!mod.getContainedMods().isEmpty()) {
++            java.util.ArrayList<net.fabricmc.loader.api.ModContainer> childMods = new java.util.ArrayList<>(mod.getContainedMods());
++            appendMods(modString, depth + 1, childMods);
++         }
++      }
++   }
++   // Fabric end
+ }

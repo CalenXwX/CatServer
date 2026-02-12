@@ -1,0 +1,35 @@
+--- a/net/minecraft/server/packs/resources/MultiPackResourceManager.java
++++ b/net/minecraft/server/packs/resources/MultiPackResourceManager.java
+@@ -16,7 +_,7 @@
+ import net.minecraft.server.packs.PackType;
+ import org.slf4j.Logger;
+ 
+-public class MultiPackResourceManager implements CloseableResourceManager {
++public class MultiPackResourceManager implements CloseableResourceManager, net.fabricmc.fabric.impl.resource.loader.FabricLifecycledResourceManager { // Fabric - LifecycledResourceManagerImplMixin
+    private static final Logger f_215463_ = LogUtils.getLogger();
+    private final Map<String, FallbackResourceManager> f_203794_;
+    private final List<PackResources> f_203795_;
+@@ -57,6 +_,9 @@
+       }
+ 
+       this.f_203794_ = map;
++      {
++         this.fabric_ResourceType = p_203797_; // Fabric - LifecycledResourceManagerImplMixin
++      }
+    }
+ 
+    @Nullable
+@@ -118,4 +_,13 @@
+    public void close() {
+       this.f_203795_.forEach(PackResources::close);
+    }
++
++   // Fabric start - MultiPackResourceManager
++   private PackType fabric_ResourceType;
++
++   @Override
++   public PackType fabric_getResourceType() {
++      return fabric_ResourceType;
++   }
++   // Fabric end
+ }

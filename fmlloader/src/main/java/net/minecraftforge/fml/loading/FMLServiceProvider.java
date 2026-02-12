@@ -45,6 +45,8 @@ public class FMLServiceProvider implements ITransformationService
     private String targetForgeGroup;
     private Map<String, Object> arguments;
 
+    private static final String MIXINEXTRAS = "mixinextras";
+
     public FMLServiceProvider()
     {
         final String markerselection = System.getProperty("forge.logging.markers", "");
@@ -78,6 +80,8 @@ public class FMLServiceProvider implements ITransformationService
         FMLLoader.setupLaunchHandler(environment, arguments);
         FMLEnvironment.setupInteropEnvironment(environment);
         Environment.build(environment);
+
+        net.fabricmc.loader.impl.launch.knot.Knot.preDiscoverAndRemapMods(); // CatServer
     }
 
     @Override
@@ -88,7 +92,42 @@ public class FMLServiceProvider implements ITransformationService
 
     @Override
     public List<Resource> completeScan(final IModuleLayerManager layerManager) {
-        return FMLLoader.completeScan(layerManager);
+        // CatServer start
+        List<Resource> forgeResult = FMLLoader.completeScan(layerManager);
+
+        net.fabricmc.loader.impl.launch.knot.Knot.load();
+
+        // provide Fabric mods to classLoader. from FabricLoaderImpl#finishModLoading
+        List<cpw.mods.jarhandling.SecureJar> secureJars = net.fabricmc.loader.impl.FabricLoaderImpl.mods.stream()
+                .filter(m -> (!net.fabricmc.loader.impl.metadata.AbstractModMetadata.TYPE_BUILTIN.equals(m.getMetadata().getType()) && (!net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID.equals(m.getMetadata().getId()))))
+                .filter(m -> !m.isFromForge())
+                .map(net.fabricmc.loader.impl.ModContainerImpl::getCodeSourcePaths)
+                .flatMap(java.util.Collection::stream)
+                .map(cpw.mods.jarhandling.SecureJar::from)
+                .filter(fabricModSecureJar -> {
+                    // TODO WARN: now fabric mod list has been dumped to console. if we use a forge dependency as a fabric mod
+                    // Forge non-mod jarInJar dependencies
+                    List<String> fabricModPackages = new ArrayList<>(fabricModSecureJar.getPackages());
+                    if (!fabricModPackages.isEmpty()) {
+                        String fabricModPackage_0 = fabricModPackages.get(0);
+                        // if any forge game lib has the same package, skip this fabric mod.
+                        for (net.minecraftforge.fml.loading.moddiscovery.ModFile gameLibrary : net.minecraftforge.fml.loading.FMLLoader.getGameLibraries()) {
+                            if (gameLibrary.getSecureJar().getPackages().contains(fabricModPackage_0)) {
+                                LOGGER.info("Using Forge mod library [" + gameLibrary.getSecureJar().moduleDataProvider().uri().toString() + "] as Fabric mod [" + fabricModSecureJar.moduleDataProvider().uri().toString() + "]");
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        List<Resource> fabricResult = List.of(new ITransformationService.Resource(IModuleLayerManager.Layer.GAME, secureJars));
+
+        List<Resource> ret = com.google.common.collect.Lists.newArrayList();
+        ret.addAll(forgeResult);
+        ret.addAll(fabricResult);
+        return ret;
+        // CatServer end
     }
 
     @Override

@@ -1,15 +1,36 @@
 --- a/net/minecraft/world/level/levelgen/DebugLevelSource.java
 +++ b/net/minecraft/world/level/levelgen/DebugLevelSource.java
-@@ -104,6 +_,12 @@
-       return blockstate;
-    }
+@@ -29,16 +_,16 @@
+ import net.minecraft.world.level.chunk.ChunkGenerator;
+ import net.minecraft.world.level.levelgen.blending.Blender;
  
+-public class DebugLevelSource extends ChunkGenerator {
++public class DebugLevelSource extends ChunkGenerator implements net.fabricmc.fabric.mixin.registry.sync.DebugChunkGeneratorAccessor { // Fabric - DebugChunkGeneratorAccessor
+    public static final Codec<DebugLevelSource> f_64111_ = RecordCodecBuilder.create((p_255576_) -> {
+       return p_255576_.group(RegistryOps.m_254866_(Biomes.f_48202_)).apply(p_255576_, p_255576_.stable(DebugLevelSource::new));
+    });
+    private static final int f_158227_ = 2;
+-   private static List<BlockState> f_64114_ = StreamSupport.stream(BuiltInRegistries.f_256975_.spliterator(), false).flatMap((p_208208_) -> {
++   public static List<BlockState> f_64114_ = StreamSupport.stream(BuiltInRegistries.f_256975_.spliterator(), false).flatMap((p_208208_) -> { // Fabric - private -> public
+       return p_208208_.m_49965_().m_61056_().stream();
+    }).collect(Collectors.toList());
+-   private static int f_64115_ = Mth.m_14167_(Mth.m_14116_((float)f_64114_.size()));
+-   private static int f_64116_ = Mth.m_14167_((float)f_64114_.size() / (float)f_64115_);
++   public static int f_64115_ = Mth.m_14167_(Mth.m_14116_((float)f_64114_.size())); // Fabric - private -> public
++   public static int f_64116_ = Mth.m_14167_((float)f_64114_.size() / (float)f_64115_); // Fabric - private -> public
+    protected static final BlockState f_64112_ = Blocks.f_50016_.m_49966_();
+    protected static final BlockState f_64113_ = Blocks.f_50375_.m_49966_();
+    public static final int f_158225_ = 70;
+@@ -102,6 +_,12 @@
+       }
+ 
+       return blockstate;
++   }
++
 +   public static void initValidStates() {
 +      f_64114_ = StreamSupport.stream(BuiltInRegistries.f_256975_.spliterator(), false).flatMap(block -> block.m_49965_().m_61056_().stream()).collect(Collectors.toList());
 +      f_64115_ = Mth.m_14167_(Mth.m_14116_(f_64114_.size()));
 +      f_64116_ = Mth.m_14167_((float) (f_64114_.size() / f_64115_));
-+   }
-+
-    public void m_213679_(WorldGenRegion p_223970_, long p_223971_, RandomState p_223972_, BiomeManager p_223973_, StructureManager p_223974_, ChunkAccess p_223975_, GenerationStep.Carving p_223976_) {
     }
  
+    public void m_213679_(WorldGenRegion p_223970_, long p_223971_, RandomState p_223972_, BiomeManager p_223973_, StructureManager p_223974_, ChunkAccess p_223975_, GenerationStep.Carving p_223976_) {

@@ -5,7 +5,7 @@
  import net.minecraft.resources.ResourceLocation;
  
 -public class TagBuilder {
-+public class TagBuilder implements net.minecraftforge.common.extensions.IForgeRawTagBuilder {
++public class TagBuilder implements net.minecraftforge.common.extensions.IForgeRawTagBuilder, net.fabricmc.fabric.impl.datagen.FabricTagBuilder { // Fabric - TagBuilderMixin
 +   // FORGE: Remove entries are used for datagen.
 +   private final List<TagEntry> removeEntries = new ArrayList<>();
 +   public java.util.stream.Stream<TagEntry> getRemoveEntries() { return this.removeEntries.stream(); }
@@ -19,11 +19,10 @@
     private final List<TagEntry> f_215897_ = new ArrayList<>();
  
     public static TagBuilder m_215899_() {
-@@ -34,5 +_,21 @@
- 
+@@ -35,4 +_,34 @@
     public TagBuilder m_215909_(ResourceLocation p_215910_) {
        return this.m_215902_(TagEntry.m_215953_(p_215910_));
-+   }
+    }
 +
 +   // FORGE: Set the replace property of this tag.
 +   public TagBuilder replace(boolean value) {
@@ -39,5 +38,19 @@
 +   // FORGE: Is this tag set to replace or not?
 +   public boolean isReplace() {
 +      return this.replace;
-    }
++   }
++
++   // Fabric start - TagBuilderMixin
++   private boolean fabric$replace = false;
++
++   @Override
++   public void fabric_setReplace(boolean replace) {
++      this.fabric$replace = replace;
++   }
++
++   @Override
++   public boolean fabric_isReplaced() {
++      return fabric$replace;
++   }
++   // Fabric end
  }

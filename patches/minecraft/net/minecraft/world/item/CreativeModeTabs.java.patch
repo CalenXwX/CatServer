@@ -1,5 +1,67 @@
 --- a/net/minecraft/world/item/CreativeModeTabs.java
 +++ b/net/minecraft/world/item/CreativeModeTabs.java
+@@ -1582,7 +_,61 @@
+       }).m_257609_("inventory.png").m_257809_().m_257826_().m_257623_(CreativeModeTab.Type.INVENTORY).m_257794_().m_257652_());
+    }
+ 
++   private static final int TABS_PER_PAGE = 10; // Fabric - ItemGroupsMixin
++
+    public static void m_280019_() {
++      // Fabric start - ItemGroupsMixin
++      if (Boolean.valueOf(true)) { // CatServer - vanilla method body compile error: Unreachable. in fact, the fabric injection is an overwrite, so don't create a fabric method so that we can remain the part of the fabric method body which is similar to the vanilla method body in this mixin target method.
++         final List<ResourceKey<CreativeModeTab>> vanillaGroups = List.of(f_256788_, f_256725_, f_256776_, f_256791_, f_257028_, f_256917_, f_256750_, f_256869_, f_256797_, f_256839_, f_256968_, f_256731_, f_256837_, f_257039_);
++
++         int count = 0;
++
++         // Sort the item groups to ensure they are in a deterministic order.
++         final List<ResourceKey<CreativeModeTab>> sortedItemGroups = BuiltInRegistries.f_279662_.m_214010_().stream()
++                 .sorted(Comparator.comparing(ResourceKey::m_135782_))
++                 .toList();
++
++         for (ResourceKey<CreativeModeTab> registryKey : sortedItemGroups) {
++            final CreativeModeTab itemGroup = BuiltInRegistries.f_279662_.m_123013_(registryKey);
++            final net.fabricmc.fabric.impl.itemgroup.FabricItemGroup fabricItemGroup = itemGroup;
++
++            if (vanillaGroups.contains(registryKey)) {
++               // Vanilla group goes on the first page.
++               fabricItemGroup.setPage(0);
++               continue;
++            }
++
++            final net.fabricmc.fabric.mixin.itemgroup.ItemGroupAccessor itemGroupAccessor = itemGroup;
++            fabricItemGroup.setPage((count / TABS_PER_PAGE) + 1);
++            int pageIndex = count % TABS_PER_PAGE;
++            CreativeModeTab.Row row = pageIndex < (TABS_PER_PAGE / 2) ? CreativeModeTab.Row.TOP : CreativeModeTab.Row.BOTTOM;
++            itemGroupAccessor.setRow(row);
++            itemGroupAccessor.setColumn(row == CreativeModeTab.Row.TOP ? pageIndex % TABS_PER_PAGE : (pageIndex - TABS_PER_PAGE / 2) % (TABS_PER_PAGE));
++
++            count++;
++         }
++
++         // Overlapping group detection logic, with support for pages.
++         record ItemGroupPosition(CreativeModeTab.Row row, int column, int page) {
++         }
++         var map = new HashMap<ItemGroupPosition, String>();
++
++         for (ResourceKey<CreativeModeTab> registryKey : BuiltInRegistries.f_279662_.m_214010_()) {
++            final CreativeModeTab itemGroup = BuiltInRegistries.f_279662_.m_123013_(registryKey);
++            final net.fabricmc.fabric.impl.itemgroup.FabricItemGroup fabricItemGroup = itemGroup;
++            final String displayName = itemGroup.m_40786_().getString();
++            final var position = new ItemGroupPosition(itemGroup.m_258064_(), itemGroup.m_257903_(), fabricItemGroup.getPage());
++            final String existingName = map.put(position, displayName);
++
++            if (existingName != null) {
++               throw new IllegalArgumentException("Duplicate position: (%s) for item groups %s vs %s".formatted(position, displayName, existingName));
++            }
++         }
++
++         return;
++      }
++      // Fabric end
++
+       Map<Pair<CreativeModeTab.Row, Integer>, String> map = new HashMap<>();
+ 
+       for(ResourceKey<CreativeModeTab> resourcekey : BuiltInRegistries.f_279662_.m_214010_()) {
 @@ -1612,7 +_,7 @@
  
     private static void m_269182_(CreativeModeTab.Output p_270868_, HolderLookup<Enchantment> p_270903_, Set<EnchantmentCategory> p_270380_, CreativeModeTab.TabVisibility p_270407_) {

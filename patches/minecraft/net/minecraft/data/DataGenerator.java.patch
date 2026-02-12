@@ -1,6 +1,12 @@
 --- a/net/minecraft/data/DataGenerator.java
 +++ b/net/minecraft/data/DataGenerator.java
-@@ -21,6 +_,7 @@
+@@ -16,11 +_,12 @@
+ public class DataGenerator {
+    private static final Logger f_123905_ = LogUtils.getLogger();
+    private final Path f_243753_;
+-   private final PackOutput f_244116_;
++   public final PackOutput f_244116_; // CatServer - private -> public for Fabric FabricDataGenerator
+    final Set<String> f_252429_ = new HashSet<>();
     final Map<String, DataProvider> f_236026_ = new LinkedHashMap<>();
     private final WorldVersion f_236027_;
     private final boolean f_236028_;
@@ -16,12 +22,10 @@
              stopwatch1.start();
              hashcache.m_253116_(hashcache.m_253234_(p_254418_, p_253750_::m_213708_).join());
              stopwatch1.stop();
-@@ -56,6 +_,34 @@
-    public DataGenerator.PackGenerator m_253030_(boolean p_253826_, String p_254134_) {
-       Path path = this.f_244116_.m_247566_(PackOutput.Target.DATA_PACK).resolve("minecraft").resolve("datapacks").resolve(p_254134_);
+@@ -58,6 +_,34 @@
        return new DataGenerator.PackGenerator(p_253826_, p_254134_, new PackOutput(path));
-+   }
-+
+    }
+ 
 +   public Map<String, DataProvider> getProvidersView() {
 +       return this.providersView;
 +   }
@@ -48,6 +52,17 @@
 +         DataGenerator.this.f_236026_.put(id, provider);
 +
 +      return provider;
-    }
- 
++   }
++
     static {
+       Bootstrap.m_135870_();
+    }
+@@ -67,7 +_,7 @@
+       private final String f_252464_;
+       private final PackOutput f_252503_;
+ 
+-      PackGenerator(boolean p_253884_, String p_254544_, PackOutput p_254363_) {
++      protected PackGenerator(boolean p_253884_, String p_254544_, PackOutput p_254363_) { // CatServer - protected for Fabric FabricDataGenerator
+          this.f_252435_ = p_253884_;
+          this.f_252464_ = p_254544_;
+          this.f_252503_ = p_254363_;

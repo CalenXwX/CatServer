@@ -1,6 +1,28 @@
 --- a/net/minecraft/core/MappedRegistry.java
 +++ b/net/minecraft/core/MappedRegistry.java
-@@ -121,7 +_,16 @@
+@@ -32,7 +_,7 @@
+ import org.apache.commons.lang3.Validate;
+ import org.slf4j.Logger;
+ 
+-public class MappedRegistry<T> implements WritableRegistry<T> {
++public class MappedRegistry<T> implements WritableRegistry<T>, net.fabricmc.fabric.impl.registry.sync.RemappableRegistry, net.fabricmc.fabric.impl.registry.sync.ListenableRegistry<T> { // Fabric - SimpleRegistryMixin
+    private static final Logger f_211050_ = LogUtils.getLogger();
+    final ResourceKey<? extends Registry<T>> f_256817_;
+    private final ObjectList<Holder.Reference<T>> f_122672_ = new ObjectArrayList<>(256);
+@@ -110,18 +_,30 @@
+    }
+ 
+    private void m_245419_() {
+-      if (this.f_205845_) {
++      if (this.f_205845_ && (!net.fabricmc.loader.impl.game.minecraft.Hooks.isFabricLoadingRegistries.get())) { // CatServer
+          throw new IllegalStateException("Registry is already frozen");
+       }
+    }
+ 
+    private void m_205921_(ResourceKey<T> p_205922_) {
+-      if (this.f_205845_) {
++      if (this.f_205845_ && (!net.fabricmc.loader.impl.game.minecraft.Hooks.isFabricLoadingRegistries.get())) { // CatServer
+          throw new IllegalStateException("Registry is already frozen (trying to add key " + p_205922_ + ")");
        }
     }
  
@@ -13,6 +35,9 @@
 +   }
 +
     public Holder.Reference<T> m_203704_(int p_256563_, ResourceKey<T> p_256594_, T p_256374_, Lifecycle p_256469_) {
++      {
++         this.fabric$setPre(p_256563_, p_256594_, p_256374_); // Fabric - SimpleRegistryMixin
++      }
 +      markKnown();
        this.m_205921_(p_256594_);
        Validate.notNull(p_256594_);
@@ -26,6 +51,20 @@
        }
  
        this.f_205842_.put(p_256594_, reference);
+@@ -160,11 +_,11 @@
+       this.f_122676_.put(p_256374_, p_256469_);
+       this.f_256989_ = this.f_256989_.add(p_256469_);
+       this.f_211051_ = null;
+-      return reference;
++      return this.fabric$setPost(p_256563_, p_256594_, p_256374_, this.fabric$set(p_256594_, p_256374_, reference)); // Fabric - SimpleRegistryMixin
+    }
+ 
+    public Holder.Reference<T> m_255290_(ResourceKey<T> p_256252_, T p_256591_, Lifecycle p_256255_) {
+-      return this.m_203704_(this.f_122678_, p_256252_, p_256591_, p_256255_);
++      return this.fabric$add(p_256252_, this.m_203704_(this.f_122678_, p_256252_, p_256591_, p_256255_)); // Fabric - SimpleRegistryMixin
+    }
+ 
+    @Nullable
 @@ -300,14 +_,17 @@
        return this.f_205842_.containsKey(p_175392_);
     }
@@ -57,3 +96,344 @@
              }
  
              return this;
+@@ -416,4 +_,340 @@
+    public HolderLookup.RegistryLookup<T> m_255303_() {
+       return this.f_256971_;
+    }
++
++   // Fabric start - SimpleRegistryMixin
++   // Namespaces used by the vanilla game. "brigadier" is used by command argument type registry.
++   // While Realms use "realms" namespace, it is irrelevant for Registry Sync.
++   private static final Set<String> VANILLA_NAMESPACES = Set.of("minecraft", "brigadier");
++   private static final Logger FABRIC_LOGGER = org.slf4j.LoggerFactory.getLogger("net.fabricmc.fabric.mixin.registry.sync.SimpleRegistryMixin");
++
++   private final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.registry.RegistryEntryAddedCallback<T>> fabric_addObjectEvent = net.fabricmc.fabric.api.event.EventFactory.createArrayBacked(net.fabricmc.fabric.api.event.registry.RegistryEntryAddedCallback.class,
++           (callbacks) -> (rawId, id, object) -> {
++              for (net.fabricmc.fabric.api.event.registry.RegistryEntryAddedCallback<T> callback : callbacks) {
++                 callback.onEntryAdded(rawId, id, object);
++              }
++           }
++   );
++
++   private final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.registry.RegistryEntryRemovedCallback<T>> fabric_removeObjectEvent = net.fabricmc.fabric.api.event.EventFactory.createArrayBacked(net.fabricmc.fabric.api.event.registry.RegistryEntryRemovedCallback.class,
++           (callbacks) -> (rawId, id, object) -> {
++              for (net.fabricmc.fabric.api.event.registry.RegistryEntryRemovedCallback<T> callback : callbacks) {
++                 callback.onEntryRemoved(rawId, id, object);
++              }
++           }
++   );
++
++   private final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.registry.RegistryIdRemapCallback<T>> fabric_postRemapEvent = net.fabricmc.fabric.api.event.EventFactory.createArrayBacked(net.fabricmc.fabric.api.event.registry.RegistryIdRemapCallback.class,
++           (callbacks) -> (a) -> {
++              for (net.fabricmc.fabric.api.event.registry.RegistryIdRemapCallback<T> callback : callbacks) {
++                 callback.onRemap(a);
++              }
++           }
++   );
++
++   private Object2IntMap<ResourceLocation> fabric_prevIndexedEntries;
++   private com.google.common.collect.BiMap<ResourceLocation, Holder.Reference<T>> fabric_prevEntries;
++
++   @Override
++   public net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.registry.RegistryEntryAddedCallback<T>> fabric_getAddObjectEvent() {
++      return fabric_addObjectEvent;
++   }
++
++   @Override
++   public net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.registry.RegistryEntryRemovedCallback<T>> fabric_getRemoveObjectEvent() {
++      return fabric_removeObjectEvent;
++   }
++
++   @Override
++   public net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.registry.RegistryIdRemapCallback<T>> fabric_getRemapEvent() {
++      return fabric_postRemapEvent;
++   }
++
++   // The rest of the registry isn't thread-safe, so this one need not be either.
++   private boolean fabric_isObjectNew = false;
++
++   private <V extends T> Holder.Reference<T> fabric$add(ResourceKey<T> registryKey, Holder.Reference<T> ret) {
++      onChange(registryKey);
++      return ret; // CatServer
++   }
++
++   private <V extends T> Holder.Reference<T> fabric$set(ResourceKey<T> registryKey, V entry, Holder.Reference<T> ret) {
++      // We need to restore the 1.19 behavior of binding the value to references immediately.
++      // Unfrozen registries cannot be interacted with otherwise, because the references would throw when
++      // trying to access their values.
++      /*if (ret instanceof Holder.Reference<T> reference) */{ // CatServer - always true
++         ret.m_247654_(entry);
++      }
++
++      onChange(registryKey);
++      return ret; // CatServer
++   }
++
++   private void onChange(ResourceKey<T> registryKey) {
++      if (net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager.postBootstrap || !VANILLA_NAMESPACES.contains(registryKey.m_135782_().m_135827_())) {
++         net.fabricmc.fabric.api.event.registry.RegistryAttributeHolder holder = net.fabricmc.fabric.api.event.registry.RegistryAttributeHolder.get(m_123023_());
++
++         if (!holder.hasAttribute(net.fabricmc.fabric.api.event.registry.RegistryAttribute.MODDED)) {
++            ResourceLocation id = m_123023_().m_135782_();
++            FABRIC_LOGGER.debug("Registry {} has been marked as modded, registry entry {} was changed", id, registryKey.m_135782_());
++            net.fabricmc.fabric.api.event.registry.RegistryAttributeHolder.get(m_123023_()).addAttribute(net.fabricmc.fabric.api.event.registry.RegistryAttribute.MODDED);
++         }
++      }
++   }
++
++   public void fabric$setPre(int id, ResourceKey<T> registryId, T object) {
++      int indexedEntriesId = f_122673_.getInt(object);
++
++      if (indexedEntriesId >= 0) {
++         throw new RuntimeException("Attempted to register object " + object + " twice! (at raw IDs " + indexedEntriesId + " and " + id + " )");
++      }
++
++      if (!f_205841_.containsKey(registryId.m_135782_())) {
++         fabric_isObjectNew = true;
++      } else {
++         Holder.Reference<T> oldObject = f_205841_.get(registryId.m_135782_());
++
++         if (oldObject != null && oldObject.m_203334_() != null && oldObject.m_203334_() != object) {
++            int oldId = f_122673_.getInt(oldObject.m_203334_());
++
++            if (oldId != id) {
++               throw new RuntimeException("Attempted to register ID " + registryId + " at different raw IDs (" + oldId + ", " + id + ")! If you're trying to override an item, use .set(), not .register()!");
++            }
++
++            fabric_removeObjectEvent.invoker().onEntryRemoved(oldId, registryId.m_135782_(), oldObject.m_203334_());
++            fabric_isObjectNew = true;
++         } else {
++            fabric_isObjectNew = false;
++         }
++      }
++   }
++
++   public Holder.Reference<T> fabric$setPost(int id, ResourceKey<T> registryId, T object, Holder.Reference<T> ret) {
++      if (fabric_isObjectNew) {
++         fabric_addObjectEvent.invoker().onEntryAdded(id, registryId.m_135782_(), object);
++      }
++      return ret;
++   }
++
++   @Override
++   public void remap(String name, Object2IntMap<ResourceLocation> remoteIndexedEntries, net.fabricmc.fabric.impl.registry.sync.RemappableRegistry.RemapMode mode) throws net.fabricmc.fabric.impl.registry.sync.RemapException {
++      // Throw on invalid conditions.
++      switch (mode) {
++         case AUTHORITATIVE:
++            break;
++         case REMOTE: {
++            List<String> strings = null;
++
++            for (ResourceLocation remoteId : remoteIndexedEntries.keySet()) {
++               if (!f_205841_.containsKey(remoteId)) {
++                  if (strings == null) {
++                     strings = new ArrayList<>();
++                  }
++
++                  strings.add(" - " + remoteId);
++               }
++            }
++
++            if (strings != null) {
++               StringBuilder builder = new StringBuilder("Received ID map for " + name + " contains IDs unknown to the receiver!");
++
++               for (String s : strings) {
++                  builder.append('\n').append(s);
++               }
++
++               throw new net.fabricmc.fabric.impl.registry.sync.RemapException(builder.toString());
++            }
++
++            break;
++         }
++         case EXACT: {
++            if (!f_205841_.keySet().equals(remoteIndexedEntries.keySet())) {
++               List<String> strings = new ArrayList<>();
++
++               for (ResourceLocation remoteId : remoteIndexedEntries.keySet()) {
++                  if (!f_205841_.containsKey(remoteId)) {
++                     strings.add(" - " + remoteId + " (missing on local)");
++                  }
++               }
++
++               for (ResourceLocation localId : m_6566_()) {
++                  if (!remoteIndexedEntries.containsKey(localId)) {
++                     strings.add(" - " + localId + " (missing on remote)");
++                  }
++               }
++
++               StringBuilder builder = new StringBuilder("Local and remote ID sets for " + name + " do not match!");
++
++               for (String s : strings) {
++                  builder.append('\n').append(s);
++               }
++
++               throw new net.fabricmc.fabric.impl.registry.sync.RemapException(builder.toString());
++            }
++
++            break;
++         }
++      }
++
++      // Make a copy of the previous maps.
++      // For now, only one is necessary - on an integrated server scenario,
++      // AUTHORITATIVE == CLIENT, which is fine.
++      // The reason we preserve the first one is because it contains the
++      // vanilla order of IDs before mods, which is crucial for vanilla server
++      // compatibility.
++      if (fabric_prevIndexedEntries == null) {
++         fabric_prevIndexedEntries = new it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap<>();
++         fabric_prevEntries = com.google.common.collect.HashBiMap.create(f_205841_);
++
++         for (T o : this) {
++            fabric_prevIndexedEntries.put(m_7981_(o), m_7447_(o));
++         }
++      }
++
++      it.unimi.dsi.fastutil.ints.Int2ObjectMap<ResourceLocation> oldIdMap = new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<>();
++
++      for (T o : this) {
++         oldIdMap.put(m_7447_(o), m_7981_(o));
++      }
++
++      // If we're AUTHORITATIVE, we append entries which only exist on the
++      // local side to the new entry list. For REMOTE, we instead drop them.
++      switch (mode) {
++         case AUTHORITATIVE: {
++            int maxValue = 0;
++
++            Object2IntMap<ResourceLocation> oldRemoteIndexedEntries = remoteIndexedEntries;
++            remoteIndexedEntries = new it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap<>();
++
++            for (ResourceLocation id : oldRemoteIndexedEntries.keySet()) {
++               int v = oldRemoteIndexedEntries.getInt(id);
++               remoteIndexedEntries.put(id, v);
++               if (v > maxValue) maxValue = v;
++            }
++
++            for (ResourceLocation id : m_6566_()) {
++               if (!remoteIndexedEntries.containsKey(id)) {
++                  FABRIC_LOGGER.warn("Adding " + id + " to saved/remote registry.");
++                  remoteIndexedEntries.put(id, ++maxValue);
++               }
++            }
++
++            break;
++         }
++         case REMOTE: {
++            int maxId = -1;
++
++            for (ResourceLocation id : m_6566_()) {
++               if (!remoteIndexedEntries.containsKey(id)) {
++                  if (maxId < 0) {
++                     for (int value : remoteIndexedEntries.values()) {
++                        if (value > maxId) {
++                           maxId = value;
++                        }
++                     }
++                  }
++
++                  if (maxId < 0) {
++                     throw new net.fabricmc.fabric.impl.registry.sync.RemapException("Failed to assign new id to client only registry entry");
++                  }
++
++                  maxId++;
++
++                  FABRIC_LOGGER.debug("An ID for {} was not sent by the server, assuming client only registry entry and assigning a new id ({}) in {}", id.toString(), maxId, m_123023_().m_135782_().toString());
++                  remoteIndexedEntries.put(id, maxId);
++               }
++            }
++
++            break;
++         }
++      }
++
++      it.unimi.dsi.fastutil.ints.Int2IntMap idMap = new it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap();
++
++      for (int i = 0; i < f_122672_.size(); i++) {
++         Holder.Reference<T> reference = f_122672_.get(i);
++
++         // Unused id, skip
++         if (reference == null) continue;
++
++         ResourceLocation id = reference.m_205785_().m_135782_();
++
++         // see above note
++         if (remoteIndexedEntries.containsKey(id)) {
++            idMap.put(i, remoteIndexedEntries.getInt(id));
++         }
++      }
++
++      // entries was handled above, if it was necessary.
++      f_122672_.clear();
++      f_122673_.clear();
++      f_122678_ = 0;
++
++      List<ResourceLocation> orderedRemoteEntries = new ArrayList<>(remoteIndexedEntries.keySet());
++      orderedRemoteEntries.sort(java.util.Comparator.comparingInt(remoteIndexedEntries::getInt));
++
++      for (ResourceLocation identifier : orderedRemoteEntries) {
++         int id = remoteIndexedEntries.getInt(identifier);
++         Holder.Reference<T> object = f_205841_.get(identifier);
++
++         // Warn if an object is missing from the local registry.
++         // This should only happen in AUTHORITATIVE mode, and as such we
++         // throw an exception otherwise.
++         if (object == null) {
++            if (mode != net.fabricmc.fabric.impl.registry.sync.RemappableRegistry.RemapMode.AUTHORITATIVE) {
++               throw new net.fabricmc.fabric.impl.registry.sync.RemapException(identifier + " missing from registry, but requested!");
++            } else {
++               FABRIC_LOGGER.warn(identifier + " missing from registry, but requested!");
++            }
++
++            continue;
++         }
++
++         // Add the new object, increment nextId to match.
++         f_122672_.size(Math.max(this.f_122672_.size(), id + 1));
++         f_122672_.set(id, object);
++         f_122673_.put(object.m_203334_(), id);
++
++         if (f_122678_ <= id) {
++            f_122678_ = id + 1;
++         }
++      }
++
++      fabric_getRemapEvent().invoker().onRemap(new net.fabricmc.fabric.impl.registry.sync.RemapStateImpl<>(this, oldIdMap, idMap));
++   }
++
++   @Override
++   public void unmap(String name) throws net.fabricmc.fabric.impl.registry.sync.RemapException {
++      if (fabric_prevIndexedEntries != null) {
++         List<ResourceLocation> addedIds = new ArrayList<>();
++
++         // Emit AddObject events for previously culled objects.
++         for (ResourceLocation id : fabric_prevEntries.keySet()) {
++            if (!f_205841_.containsKey(id)) {
++               assert fabric_prevIndexedEntries.containsKey(id);
++               addedIds.add(id);
++            }
++         }
++
++         f_205841_.clear();
++         f_205842_.clear();
++
++         f_205841_.putAll(fabric_prevEntries);
++
++         for (Map.Entry<ResourceLocation, Holder.Reference<T>> entry : fabric_prevEntries.entrySet()) {
++            ResourceKey<T> entryKey = ResourceKey.m_135785_(m_123023_(), entry.getKey());
++            f_205842_.put(entryKey, entry.getValue());
++         }
++
++         remap(name, fabric_prevIndexedEntries, net.fabricmc.fabric.impl.registry.sync.RemappableRegistry.RemapMode.AUTHORITATIVE);
++
++         for (ResourceLocation id : addedIds) {
++            fabric_getAddObjectEvent().invoker().onEntryAdded(f_122673_.getInt(f_205841_.get(id)), id, m_7745_(id));
++         }
++
++         fabric_prevIndexedEntries = null;
++         fabric_prevEntries = null;
++      }
++   }
++   // Fabric end
+ }

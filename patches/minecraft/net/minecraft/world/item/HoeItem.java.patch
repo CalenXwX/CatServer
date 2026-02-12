@@ -1,18 +1,23 @@
 --- a/net/minecraft/world/item/HoeItem.java
 +++ b/net/minecraft/world/item/HoeItem.java
-@@ -22,6 +_,12 @@
+@@ -21,8 +_,15 @@
+ import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.level.gameevent.GameEvent;
  
- public class HoeItem extends DiggerItem {
+-public class HoeItem extends DiggerItem {
+-   protected static final Map<Block, Pair<Predicate<UseOnContext>, Consumer<UseOnContext>>> f_41332_ = Maps.newHashMap(ImmutableMap.of(Blocks.f_50440_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_152481_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_50493_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_50546_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50493_.m_49966_())), Blocks.f_152549_, Pair.of((p_238242_) -> {
++public class HoeItem extends DiggerItem implements net.fabricmc.fabric.mixin.content.registry.HoeItemAccessor { // Fabric - HoeItemAccessor
 +   /**
 +    * @deprecated Forge: This map is patched out of vanilla code.
 +    * Listen to {@link net.minecraftforge.event.world.BlockEvent.BlockToolModificationEvent}
 +    * or override {@link net.minecraftforge.common.extensions.IForgeBlock#getToolModifiedState(BlockState, UseOnContext, net.minecraftforge.common.ToolAction, boolean)}.
 +    */
++   // CatServer - protected -> public for Fabric HoeItemAccessor
 +   @Deprecated
-    protected static final Map<Block, Pair<Predicate<UseOnContext>, Consumer<UseOnContext>>> f_41332_ = Maps.newHashMap(ImmutableMap.of(Blocks.f_50440_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_152481_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_50493_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_50546_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50493_.m_49966_())), Blocks.f_152549_, Pair.of((p_238242_) -> {
++   public static final Map<Block, Pair<Predicate<UseOnContext>, Consumer<UseOnContext>>> f_41332_ = Maps.newHashMap(ImmutableMap.of(Blocks.f_50440_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_152481_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_50493_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50093_.m_49966_())), Blocks.f_50546_, Pair.of(HoeItem::m_150856_, m_150858_(Blocks.f_50493_.m_49966_())), Blocks.f_152549_, Pair.of((p_238242_) -> {
        return true;
     }, m_150849_(Blocks.f_50493_.m_49966_(), Items.f_151017_))));
+ 
 @@ -33,7 +_,8 @@
     public InteractionResult m_6225_(UseOnContext p_41341_) {
        Level level = p_41341_.m_43725_();

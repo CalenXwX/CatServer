@@ -7,6 +7,7 @@ public class CatServer {
     public static final Logger LOGGER = LogManager.getLogger("CatServer");
     public static final String NATIVE_VERSION = "v1_20_R1";
     private static final CatServerConfig config = new CatServerConfig("catserver.yml");
+    public static final boolean fabricDisabled = Boolean.getBoolean("catserver.disableFabric");
 
     public static CatServerConfig getConfig() {
         return config;

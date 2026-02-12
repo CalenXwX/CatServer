@@ -1,9 +1,10 @@
 --- a/net/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity.java
-@@ -45,6 +_,19 @@
+@@ -45,7 +_,20 @@
  import net.minecraft.world.level.block.state.BlockState;
  import net.minecraft.world.phys.Vec3;
  
+-public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, RecipeHolder, StackedContentsCompatible {
 +// CraftBukkit start
 +import org.bukkit.craftbukkit.v1_20_R1.block.CraftBlock;
 +import org.bukkit.craftbukkit.v1_20_R1.entity.CraftHumanEntity;
@@ -17,9 +18,10 @@
 +import org.bukkit.inventory.CookingRecipe;
 +// CraftBukkit end
 +
- public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, RecipeHolder, StackedContentsCompatible {
++public abstract class AbstractFurnaceBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, RecipeHolder, StackedContentsCompatible, net.fabricmc.fabric.impl.transfer.item.SpecialLogicInventory { // Fabric - AbstractFurnaceBlockEntityMixin
     protected static final int f_154980_ = 0;
     protected static final int f_154981_ = 1;
+    protected static final int f_154982_ = 2;
 @@ -59,11 +_,12 @@
     public static final int f_154987_ = 4;
     public static final int f_154988_ = 200;
@@ -36,7 +38,7 @@
     protected final ContainerData f_58311_ = new ContainerData() {
        public int m_6413_(int p_58431_) {
           switch (p_58431_) {
-@@ -107,8 +_,10 @@
+@@ -107,77 +_,118 @@
     protected AbstractFurnaceBlockEntity(BlockEntityType<?> p_154991_, BlockPos p_154992_, BlockState p_154993_, RecipeType<? extends AbstractCookingRecipe> p_154994_) {
        super(p_154991_, p_154992_, p_154993_);
        this.f_222691_ = RecipeManager.m_220267_((RecipeType)p_154994_);
@@ -46,11 +48,134 @@
 +   /**@deprecated Forge: get burn times by calling ForgeHooks#getBurnTime(ItemStack)*/ @Deprecated
     public static Map<Item, Integer> m_58423_() {
        Map<Item, Integer> map = Maps.newLinkedHashMap();
-       m_58374_(map, Items.f_42448_, 20000);
-@@ -173,6 +_,40 @@
-       return map;
-    }
- 
+-      m_58374_(map, Items.f_42448_, 20000);
+-      m_58374_(map, Blocks.f_50353_, 16000);
+-      m_58374_(map, Items.f_42585_, 2400);
+-      m_58374_(map, Items.f_42413_, 1600);
+-      m_58374_(map, Items.f_42414_, 1600);
+-      m_204302_(map, ItemTags.f_13182_, 300);
+-      m_204302_(map, ItemTags.f_256904_, 300);
+-      m_204302_(map, ItemTags.f_13168_, 300);
+-      m_58374_(map, Blocks.f_244489_, 300);
+-      m_204302_(map, ItemTags.f_13174_, 300);
+-      m_58374_(map, Blocks.f_244193_, 300);
+-      m_204302_(map, ItemTags.f_13175_, 150);
+-      m_58374_(map, Blocks.f_244230_, 150);
+-      m_204302_(map, ItemTags.f_13178_, 300);
+-      m_204302_(map, ItemTags.f_13177_, 300);
+-      m_204302_(map, ItemTags.f_13176_, 300);
+-      m_204302_(map, ItemTags.f_254662_, 300);
+-      m_58374_(map, Blocks.f_50065_, 300);
+-      m_58374_(map, Blocks.f_50078_, 300);
+-      m_58374_(map, Blocks.f_244299_, 300);
+-      m_58374_(map, Blocks.f_50624_, 300);
+-      m_58374_(map, Blocks.f_50131_, 300);
+-      m_58374_(map, Blocks.f_50087_, 300);
+-      m_58374_(map, Blocks.f_50325_, 300);
+-      m_58374_(map, Blocks.f_50091_, 300);
+-      m_58374_(map, Blocks.f_50329_, 300);
+-      m_204302_(map, ItemTags.f_13191_, 300);
+-      m_58374_(map, Items.f_42411_, 300);
+-      m_58374_(map, Items.f_42523_, 300);
+-      m_58374_(map, Blocks.f_50155_, 300);
+-      m_204302_(map, ItemTags.f_13157_, 200);
+-      m_204302_(map, ItemTags.f_244389_, 800);
+-      m_58374_(map, Items.f_42421_, 200);
+-      m_58374_(map, Items.f_42420_, 200);
+-      m_58374_(map, Items.f_42424_, 200);
+-      m_58374_(map, Items.f_42423_, 200);
+-      m_58374_(map, Items.f_42422_, 200);
+-      m_204302_(map, ItemTags.f_13173_, 200);
+-      m_204302_(map, ItemTags.f_13155_, 1200);
+-      m_204302_(map, ItemTags.f_13167_, 100);
+-      m_204302_(map, ItemTags.f_13170_, 100);
+-      m_58374_(map, Items.f_42398_, 100);
+-      m_204302_(map, ItemTags.f_13180_, 100);
+-      m_58374_(map, Items.f_42399_, 100);
+-      m_204302_(map, ItemTags.f_215867_, 67);
+-      m_58374_(map, Blocks.f_50577_, 4001);
+-      m_58374_(map, Items.f_42717_, 300);
+-      m_58374_(map, Blocks.f_50571_, 50);
+-      m_58374_(map, Blocks.f_50036_, 100);
+-      m_58374_(map, Blocks.f_50616_, 50);
+-      m_58374_(map, Blocks.f_50617_, 300);
+-      m_58374_(map, Blocks.f_50618_, 300);
+-      m_58374_(map, Blocks.f_50621_, 300);
+-      m_58374_(map, Blocks.f_50622_, 300);
+-      m_58374_(map, Blocks.f_50625_, 300);
+-      m_58374_(map, Blocks.f_50715_, 300);
+-      m_58374_(map, Blocks.f_152541_, 100);
+-      m_58374_(map, Blocks.f_152542_, 100);
+-      m_58374_(map, Blocks.f_220833_, 300);
+-      return map;
+-   }
++      try {
++         m_58374_(map, Items.f_42448_, 20000);
++         m_58374_(map, Blocks.f_50353_, 16000);
++         m_58374_(map, Items.f_42585_, 2400);
++         m_58374_(map, Items.f_42413_, 1600);
++         m_58374_(map, Items.f_42414_, 1600);
++         m_204302_(map, ItemTags.f_13182_, 300);
++         m_204302_(map, ItemTags.f_256904_, 300);
++         m_204302_(map, ItemTags.f_13168_, 300);
++         m_58374_(map, Blocks.f_244489_, 300);
++         m_204302_(map, ItemTags.f_13174_, 300);
++         m_58374_(map, Blocks.f_244193_, 300);
++         m_204302_(map, ItemTags.f_13175_, 150);
++         m_58374_(map, Blocks.f_244230_, 150);
++         m_204302_(map, ItemTags.f_13178_, 300);
++         m_204302_(map, ItemTags.f_13177_, 300);
++         m_204302_(map, ItemTags.f_13176_, 300);
++         m_204302_(map, ItemTags.f_254662_, 300);
++         m_58374_(map, Blocks.f_50065_, 300);
++         m_58374_(map, Blocks.f_50078_, 300);
++         m_58374_(map, Blocks.f_244299_, 300);
++         m_58374_(map, Blocks.f_50624_, 300);
++         m_58374_(map, Blocks.f_50131_, 300);
++         m_58374_(map, Blocks.f_50087_, 300);
++         m_58374_(map, Blocks.f_50325_, 300);
++         m_58374_(map, Blocks.f_50091_, 300);
++         m_58374_(map, Blocks.f_50329_, 300);
++         m_204302_(map, ItemTags.f_13191_, 300);
++         m_58374_(map, Items.f_42411_, 300);
++         m_58374_(map, Items.f_42523_, 300);
++         m_58374_(map, Blocks.f_50155_, 300);
++         m_204302_(map, ItemTags.f_13157_, 200);
++         m_204302_(map, ItemTags.f_244389_, 800);
++         m_58374_(map, Items.f_42421_, 200);
++         m_58374_(map, Items.f_42420_, 200);
++         m_58374_(map, Items.f_42424_, 200);
++         m_58374_(map, Items.f_42423_, 200);
++         m_58374_(map, Items.f_42422_, 200);
++         m_204302_(map, ItemTags.f_13173_, 200);
++         m_204302_(map, ItemTags.f_13155_, 1200);
++         m_204302_(map, ItemTags.f_13167_, 100);
++         m_204302_(map, ItemTags.f_13170_, 100);
++         m_58374_(map, Items.f_42398_, 100);
++         m_204302_(map, ItemTags.f_13180_, 100);
++         m_58374_(map, Items.f_42399_, 100);
++         m_204302_(map, ItemTags.f_215867_, 67);
++         m_58374_(map, Blocks.f_50577_, 4001);
++         m_58374_(map, Items.f_42717_, 300);
++         m_58374_(map, Blocks.f_50571_, 50);
++         m_58374_(map, Blocks.f_50036_, 100);
++         m_58374_(map, Blocks.f_50616_, 50);
++         m_58374_(map, Blocks.f_50617_, 300);
++         m_58374_(map, Blocks.f_50618_, 300);
++         m_58374_(map, Blocks.f_50621_, 300);
++         m_58374_(map, Blocks.f_50622_, 300);
++         m_58374_(map, Blocks.f_50625_, 300);
++         m_58374_(map, Blocks.f_50715_, 300);
++         m_58374_(map, Blocks.f_152541_, 100);
++         m_58374_(map, Blocks.f_152542_, 100);
++         m_58374_(map, Blocks.f_220833_, 300);
++      } finally {
++         ((net.fabricmc.fabric.impl.content.registry.FuelRegistryImpl) net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE).apply(map); // Fabric - AbstractFurnaceBlockEntityMixin
++         return map;
++      }
++
++   }
++
 +   // CraftBukkit start - add fields and methods
 +   private int maxStack = MAX_STACK;
 +   public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
@@ -84,10 +209,25 @@
 +      return this.f_58320_; // PAIL private -> public
 +   }
 +   // CraftBukkit end
-+
+ 
     private static boolean m_58397_(Item p_58398_) {
        return p_58398_.m_204114_().m_203656_(ItemTags.f_13153_);
     }
+ 
+-   private static void m_204302_(Map<Item, Integer> p_204303_, TagKey<Item> p_204304_, int p_204305_) {
++   public static void m_204302_(Map<Item, Integer> p_204303_, TagKey<Item> p_204304_, int p_204305_) { // CatServer - private -> public for Fabric
+       for(Holder<Item> holder : BuiltInRegistries.f_257033_.m_206058_(p_204304_)) {
+          if (!m_58397_(holder.m_203334_())) {
+             p_204303_.put(holder.m_203334_(), p_204305_);
+@@ -186,7 +_,7 @@
+ 
+    }
+ 
+-   private static void m_58374_(Map<Item, Integer> p_58375_, ItemLike p_58376_, int p_58377_) {
++   public static void m_58374_(Map<Item, Integer> p_58375_, ItemLike p_58376_, int p_58377_) { // CatServer - private -> public for Fabric
+       Item item = p_58376_.m_5456_();
+       if (m_58397_(item)) {
+          if (SharedConstants.f_136183_) {
 @@ -205,9 +_,9 @@
        super.m_142466_(p_155025_);
        this.f_58310_ = NonNullList.m_122780_(this.m_6643_(), ItemStack.f_41583_);
@@ -138,12 +278,13 @@
 +                  p_155017_.f_58310_.set(1, itemstack.getCraftingRemainingItem());
 +               else
                 if (flag3) {
-                   Item item = itemstack.m_41720_();
+-                  Item item = itemstack.m_41720_();
++                  Item item = itemstack.m_41720_(); // Fabric - AbstractFurnaceBlockEntityMixin // CatServer - use forge logic
                    itemstack.m_41774_(1);
                    if (itemstack.m_41619_()) {
 -                     Item item1 = item.m_41469_();
 -                     p_155017_.f_58310_.set(1, item1 == null ? ItemStack.f_41583_ : new ItemStack(item1));
-+                     p_155017_.f_58310_.set(1, itemstack.getCraftingRemainingItem());
++                     p_155017_.f_58310_.set(1, itemstack.getCraftingRemainingItem()); // Fabric - AbstractFurnaceBlockEntityMixin // CatServer - use forge logic
                    }
                 }
              }
@@ -273,7 +414,7 @@
        } else {
           Item item = p_58343_.m_41720_();
 -         return m_58423_().getOrDefault(item, 0);
-+         return net.minecraftforge.common.ForgeHooks.getBurnTime(p_58343_, this.recipeType);
++         return net.minecraftforge.common.ForgeHooks.getBurnTime(p_58343_, this.recipeType); // Fabric - AbstractFurnaceBlockEntityMixin // CatServer - use forge logic
        }
     }
  
@@ -284,10 +425,25 @@
  
     public static boolean m_58399_(ItemStack p_58400_) {
 -      return m_58423_().containsKey(p_58400_.m_41720_());
-+      return net.minecraftforge.common.ForgeHooks.getBurnTime(p_58400_, null) > 0;
++      return net.minecraftforge.common.ForgeHooks.getBurnTime(p_58400_, null) > 0; // Fabric - AbstractFurnaceBlockEntityMixin // CatServer - use forge logic
     }
  
     public int[] m_7071_(Direction p_58363_) {
+@@ -403,6 +_,14 @@
+    }
+ 
+    public void m_6836_(int p_58333_, ItemStack p_58334_) {
++      // Fabric start - AbstractFurnaceBlockEntityMixin
++      {
++         if (fabric_suppressSpecialLogic) {
++            f_58310_.set(p_58333_, p_58334_);
++            return;
++         }
++      }
++      // Fabric end
+       ItemStack itemstack = this.f_58310_.get(p_58333_);
+       boolean flag = !p_58334_.m_41619_() && ItemStack.m_150942_(itemstack, p_58334_);
+       this.f_58310_.set(p_58333_, p_58334_);
 @@ -429,7 +_,7 @@
           return true;
        } else {
@@ -326,7 +482,7 @@
        p_155004_.m_7281_(list);
  
        for(Recipe<?> recipe : list) {
-@@ -466,33 +_,127 @@
+@@ -466,28 +_,94 @@
        this.f_58320_.clear();
     }
  
@@ -422,10 +578,10 @@
  
     public void m_5809_(StackedContents p_58342_) {
        for(ItemStack itemstack : this.f_58310_) {
-          p_58342_.m_36491_(itemstack);
+@@ -495,4 +_,59 @@
        }
  
-+   }
+    }
 +
 +   net.minecraftforge.common.util.LazyOptional<? extends net.minecraftforge.items.IItemHandler>[] handlers =
 +           net.minecraftforge.items.wrapper.SidedInvWrapper.create(this, Direction.UP, Direction.DOWN, Direction.NORTH);
@@ -453,5 +609,32 @@
 +   public void reviveCaps() {
 +      super.reviveCaps();
 +      this.handlers = net.minecraftforge.items.wrapper.SidedInvWrapper.create(this, Direction.UP, Direction.DOWN, Direction.NORTH);
-    }
++   }
++
++   // Fabric start - AbstractFurnaceBlockEntityMixin
++   private boolean fabric_suppressSpecialLogic = false;
++
++   @Override
++   public void fabric_setSuppress(boolean suppress) {
++      fabric_suppressSpecialLogic = suppress;
++   }
++
++   @Override
++   public void fabric_onFinalCommit(int slot, ItemStack oldStack, ItemStack newStack) {
++      if (slot == 0) {
++         ItemStack itemStack = oldStack;
++         ItemStack stack = newStack;
++
++         // Update cook time if needed. Code taken from AbstractFurnaceBlockEntity#setStack.
++         boolean bl = !stack.m_41619_() && ItemStack.m_150942_(stack, itemStack);
++
++         if (!bl) {
++            this.f_58319_ = m_222692_(this.f_58857_, this);
++            this.f_58318_ = 0;
++         }
++      }
++   }
++
++   private static final ThreadLocal<ItemStack> REMAINDER_STACK = new catserver.server.utils.FabricUnused.FabricUnusedThreadLocal<>(); // CatServer
++   // Fabric end
  }

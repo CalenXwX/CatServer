@@ -1,9 +1,26 @@
 --- a/net/minecraft/tags/TagEntry.java
 +++ b/net/minecraft/tags/TagEntry.java
-@@ -113,6 +_,18 @@
-       return stringbuilder.toString();
-    }
+@@ -25,11 +_,11 @@
+    }, (p_215931_) -> {
+       return p_215931_.f_215915_ ? Either.left(p_215931_.m_215924_()) : Either.right(p_215931_);
+    });
+-   private final ResourceLocation f_215913_;
++   public final ResourceLocation f_215913_; // CatServer - private -> public for Fabric ForcedTagEntry
+    private final boolean f_215914_;
+-   private final boolean f_215915_;
++   public final boolean f_215915_; // CatServer - private -> public for Fabric ForcedTagEntry
  
+-   private TagEntry(ResourceLocation p_215918_, boolean p_215919_, boolean p_215920_) {
++   protected TagEntry(ResourceLocation p_215918_, boolean p_215919_, boolean p_215920_) { // CatServer - private -> protected for Fabric ForcedTagEntry
+       this.f_215913_ = p_215918_;
+       this.f_215914_ = p_215919_;
+       this.f_215915_ = p_215920_;
+@@ -111,6 +_,18 @@
+       }
+ 
+       return stringbuilder.toString();
++   }
++
 +   public ResourceLocation getId() {
 +      return f_215913_;
 +   }
@@ -14,8 +31,6 @@
 +
 +   public boolean isTag() {
 +      return f_215914_;
-+   }
-+
+    }
+ 
     public interface Lookup<T> {
-       @Nullable
-       T m_213619_(ResourceLocation p_215956_);

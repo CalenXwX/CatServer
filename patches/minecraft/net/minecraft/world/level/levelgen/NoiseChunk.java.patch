@@ -1,0 +1,24 @@
+--- a/net/minecraft/world/level/levelgen/NoiseChunk.java
++++ b/net/minecraft/world/level/levelgen/NoiseChunk.java
+@@ -137,10 +_,20 @@
+ 
+       this.f_209163_ = new MaterialRuleList(builder.build());
+       this.f_209162_ = noiserouter1.f_209390_();
++
++      {
++         seed = ((net.fabricmc.fabric.impl.biome.MultiNoiseSamplerHooks)(Object)p_224344_.m_224579_()).fabric_getSeed(); // Fabric - ChunkNoiseSamplerMixin
++      }
+    }
+ 
++   private long seed;
++
+    protected Climate.Sampler m_224359_(NoiseRouter p_224360_, List<Climate.ParameterPoint> p_224361_) {
+-      return new Climate.Sampler(p_224360_.f_209384_().m_207456_(this::m_209213_), p_224360_.f_224392_().m_207456_(this::m_209213_), p_224360_.f_209386_().m_207456_(this::m_209213_), p_224360_.f_209387_().m_207456_(this::m_209213_), p_224360_.f_209388_().m_207456_(this::m_209213_), p_224360_.f_209389_().m_207456_(this::m_209213_), p_224361_);
++      Climate.Sampler ret = new Climate.Sampler(p_224360_.f_209384_().m_207456_(this::m_209213_), p_224360_.f_224392_().m_207456_(this::m_209213_), p_224360_.f_209386_().m_207456_(this::m_209213_), p_224360_.f_209387_().m_207456_(this::m_209213_), p_224360_.f_209388_().m_207456_(this::m_209213_), p_224360_.f_209389_().m_207456_(this::m_209213_), p_224361_);
++      {
++         ((net.fabricmc.fabric.impl.biome.MultiNoiseSamplerHooks)(Object)ret).fabric_setSeed(seed); // Fabric start - ChunkNoiseSamplerMixin
++      }
++      return ret;
+    }
+ 
+    @Nullable

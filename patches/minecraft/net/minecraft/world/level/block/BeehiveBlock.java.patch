@@ -10,10 +10,17 @@
  
     public void m_6240_(Level p_49584_, Player p_49585_, BlockPos p_49586_, BlockState p_49587_, @Nullable BlockEntity p_49588_, ItemStack p_49589_) {
        super.m_6240_(p_49584_, p_49585_, p_49586_, p_49587_, p_49588_, p_49589_);
-@@ -89,11 +_,12 @@
+@@ -89,11 +_,19 @@
        List<Bee> list = p_49650_.m_45976_(Bee.class, (new AABB(p_49651_)).m_82377_(8.0D, 6.0D, 8.0D));
        if (!list.isEmpty()) {
           List<Player> list1 = p_49650_.m_45976_(Player.class, (new AABB(p_49651_)).m_82377_(8.0D, 6.0D, 8.0D));
++         {
++            // Fabric start - BeehiveBlockMixin
++            // If a fake player broke the beehive, there will be no nearby players. This causes a crash later on as we try
++            // to pick a random player - we early return to avoid this.
++            if (list1.isEmpty()) return;
++            // Fabric end
++         }
 +         if (list1.isEmpty()) return; //Forge: Prevent Error when no players are around.
           int i = list1.size();
  

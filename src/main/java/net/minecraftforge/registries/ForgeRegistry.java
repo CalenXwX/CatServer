@@ -676,7 +676,7 @@ public class ForgeRegistry<V> implements IForgeRegistryInternal<V>, IForgeRegist
 
     @Override
     public boolean isLocked() {
-        return this.isFrozen;
+        return this.isFrozen && (!net.fabricmc.loader.impl.game.minecraft.Hooks.isFabricLoadingRegistries.get()); // CatServer
     }
 
     /**

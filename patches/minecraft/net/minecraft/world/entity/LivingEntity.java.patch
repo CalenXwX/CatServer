@@ -1,5 +1,13 @@
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
+@@ -18,6 +_,7 @@
+ import java.util.UUID;
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
++
+ import net.minecraft.BlockUtil;
+ import net.minecraft.advancements.CriteriaTriggers;
+ import net.minecraft.commands.arguments.EntityAnchorArgument;
 @@ -119,12 +_,38 @@
  import net.minecraft.world.scores.PlayerTeam;
  import org.slf4j.Logger;
@@ -581,7 +589,7 @@
        this.f_19804_.m_135381_(f_20961_, Mth.m_14036_(p_21154_, 0.0F, this.m_21233_()));
     }
  
-@@ -1036,11 +_,12 @@
+@@ -1036,27 +_,38 @@
     }
  
     public boolean m_6469_(DamageSource p_21016_, float p_21017_) {
@@ -595,7 +603,17 @@
           return false;
        } else if (p_21016_.m_269533_(DamageTypeTags.f_268745_) && this.m_21023_(MobEffects.f_19607_)) {
           return false;
-@@ -1051,12 +_,15 @@
+       } else {
++         {
++            // Fabric start - LivingEntityMixin
++            if (!net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DAMAGE.invoker().allowDamage(this, p_21016_, p_21017_)) {
++               return false;
++            }
++            // Fabric end
++         }
+          if (this.m_5803_() && !this.m_9236_().f_46443_) {
+             this.m_5796_();
+          }
  
           this.f_20891_ = 0;
           float f = p_21017_;
@@ -698,6 +716,15 @@
                    if (livingentity2 instanceof Player) {
                       Player player = (Player)livingentity2;
                       this.f_20888_ = player;
+@@ -1149,7 +_,7 @@
+             }
+          }
+ 
+-         if (this.m_21224_()) {
++         if (this.m_21224_() && net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DEATH.invoker().allowDeath(this, p_21016_, p_21017_)) { // Fabric - LivingEntityMixin
+             if (!this.m_21262_(p_21016_)) {
+                SoundEvent soundevent = this.m_5592_();
+                if (flag1 && soundevent != null) {
 @@ -1171,7 +_,7 @@
           if (this instanceof ServerPlayer) {
              CriteriaTriggers.f_10574_.m_35174_((ServerPlayer)this, p_21016_, f, p_21017_, flag);
@@ -784,6 +811,23 @@
           }
  
           this.f_20890_ = true;
+@@ -1298,12 +_,15 @@
+          Level level = this.m_9236_();
+          if (level instanceof ServerLevel) {
+             ServerLevel serverlevel = (ServerLevel)level;
+-            if (entity == null || entity.m_214076_(serverlevel, this)) {
++            if (entity == null || this.fabric$onEntityKilledOther(entity, serverlevel, this, entity.m_214076_(serverlevel, this))) { // Fabric - LivingEntityMixin
+                this.m_146850_(GameEvent.f_223707_);
+                this.m_6668_(p_21014_);
+                this.m_21268_(livingentity);
+             }
+ 
++            {
++               net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.invoker().afterDeath(this , p_21014_); // Fabric - LivingEntityMixin
++            }
+             this.m_9236_().m_7605_(this, (byte)3);
+          }
+ 
 @@ -1315,17 +_,25 @@
        if (!this.m_9236_().f_46443_) {
           boolean flag = false;
@@ -997,11 +1041,12 @@
              this.m_5496_(soundtype.m_56779_(), soundtype.m_56773_() * 0.5F, soundtype.m_56774_() * 0.75F);
           }
  
-@@ -1537,20 +_,38 @@
+@@ -1537,20 +_,39 @@
     protected void m_7909_(float p_21316_) {
     }
  
 +   // CatServer start - prevent break armor & fix mixin injection
++   // compat:fabric-mod:apoli-2.9.2+mc.1.20.x:io.github.apace100.apoli.mixin.LivingEntityMixin#preventArmorDamaging
 +   protected float getDamageAfterArmorAbsorb(DamageSource p_70655_1_, float p_70655_2_, boolean flag) {
 +      try {
 +         catserver.server.CatServerCaptures.getCatServerCaptures().LivingEntity$getDamageAfterArmorAbsorb$flag_bypassHurtArmor.push(this, flag);
@@ -1427,7 +1472,7 @@
        Map<EquipmentSlot, ItemStack> map = this.m_21319_();
        if (map != null) {
           this.m_21091_(map);
-@@ -2358,6 +_,7 @@
+@@ -2358,10 +_,14 @@
  
           ItemStack itemstack1 = this.m_6844_(equipmentslot);
           if (this.m_246525_(itemstack, itemstack1)) {
@@ -1435,6 +1480,13 @@
              if (map == null) {
                 map = Maps.newEnumMap(EquipmentSlot.class);
              }
+ 
++            {
++               net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.EQUIPMENT_CHANGE.invoker().onChange(this, equipmentslot, itemstack, itemstack1); // Fabric - LivingEntityMixin
++            }
+             map.put(equipmentslot, itemstack1);
+             if (!itemstack.m_41619_()) {
+                this.m_21204_().m_22161_(itemstack.m_41638_(equipmentslot));
 @@ -2489,6 +_,7 @@
  
        this.m_20334_(d1, d3, d5);
@@ -1505,9 +1557,19 @@
        this.m_9236_().m_46473_().m_7238_();
        if (!this.m_9236_().f_46443_ && this.m_6126_() && this.m_20071_()) {
           this.m_6469_(this.m_269291_().m_269063_(), 1.0F);
-@@ -2590,6 +_,8 @@
+@@ -2589,7 +_,18 @@
+    private void m_21323_() {
        boolean flag = this.m_20291_(7);
        if (flag && !this.m_20096_() && !this.m_20159_() && !this.m_21023_(MobEffects.f_19620_)) {
++         // Fabric start - LivingEntityMixin
++         {
++            org.spongepowered.asm.mixin.injection.callback.CallbackInfo info = new org.spongepowered.asm.mixin.injection.callback.CallbackInfo("fabric$injectElytraTick", true);
++            this.fabric$injectElytraTick(info);
++            if (info.isCancelled()) {
++               return;
++            }
++         }
++         // Fabric end
           ItemStack itemstack = this.m_6844_(EquipmentSlot.CHEST);
 +         flag = itemstack.canElytraFly(this) && itemstack.elytraFlightTick(this, this.f_20937_);
 +         if (false) //Forge: Moved to ElytraItem
@@ -1730,37 +1792,56 @@
           return false;
        } else {
           if (p_20988_) {
-@@ -3127,8 +_,8 @@
+@@ -3126,9 +_,9 @@
+          this.m_8127_();
        }
  
-       BlockState blockstate = this.m_9236_().m_8055_(p_21141_);
+-      BlockState blockstate = this.m_9236_().m_8055_(p_21141_);
 -      if (blockstate.m_60734_() instanceof BedBlock) {
 -         this.m_9236_().m_7731_(p_21141_, blockstate.m_61124_(BedBlock.f_49441_, Boolean.valueOf(true)), 3);
++      BlockState blockstate = this.fabric$modifyBedForOccupiedState(this.m_9236_().m_8055_(p_21141_), p_21141_); // Fabric - LivingEntityMixin
 +      if (blockstate.isBed(m_9236_(), p_21141_, this)) {
 +         blockstate.setBedOccupied(m_9236_(), p_21141_, this, true);
        }
  
        this.m_20124_(Pose.SLEEPING);
-@@ -3144,16 +_,16 @@
+@@ -3136,6 +_,10 @@
+       this.m_21250_(p_21141_);
+       this.m_20256_(Vec3.f_82478_);
+       this.f_19812_ = true;
++
++      {
++         net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.START_SLEEPING.invoker().onStartSleeping(this, p_21141_); // Fabric - LivingEntityMixin
++      }
+    }
+ 
+    private void m_21080_(BlockPos p_21081_) {
+@@ -3144,17 +_,20 @@
  
     private boolean m_21334_() {
        return this.m_21257_().map((p_289310_) -> {
 -         return this.m_9236_().m_8055_(p_289310_).m_60734_() instanceof BedBlock;
-+         return net.minecraftforge.event.ForgeEventFactory.fireSleepingLocationCheck(this, p_289310_);
++         return this.fabric$onIsSleepingInBed(p_289310_, net.minecraftforge.event.ForgeEventFactory.fireSleepingLocationCheck(this, p_289310_)); // Fabric - LivingEntityMixin
        }).orElse(false);
     }
  
     public void m_5796_() {
++      {
++         this.fabric$onWakeUp(); // Fabric - LivingEntityMixin
++      }
        this.m_21257_().filter(this.m_9236_()::m_46805_).ifPresent((p_261435_) -> {
-          BlockState blockstate = this.m_9236_().m_8055_(p_261435_);
+-         BlockState blockstate = this.m_9236_().m_8055_(p_261435_);
 -         if (blockstate.m_60734_() instanceof BedBlock) {
++         BlockState blockstate = this.fabric$modifyBedForOccupiedState(this.m_9236_().m_8055_(p_261435_), p_261435_); // Fabric - LivingEntityMixin
 +         if (blockstate.isBed(m_9236_(), p_261435_, this)) {
              Direction direction = blockstate.m_61143_(BedBlock.f_54117_);
 -            this.m_9236_().m_7731_(p_261435_, blockstate.m_61124_(BedBlock.f_49441_, Boolean.valueOf(false)), 3);
+-            Vec3 vec31 = BedBlock.m_260958_(this.m_6095_(), this.m_9236_(), p_261435_, direction, this.m_146908_()).orElseGet(() -> {
 +            blockstate.setBedOccupied(m_9236_(), p_261435_, this, false);
-             Vec3 vec31 = BedBlock.m_260958_(this.m_6095_(), this.m_9236_(), p_261435_, direction, this.m_146908_()).orElseGet(() -> {
++            Vec3 vec31 = this.fabric$modifyWakeUpPosition(this.m_9236_(), p_261435_, BedBlock.m_260958_(this.m_6095_(), this.m_9236_(), p_261435_, direction, this.m_146908_())).orElseGet(() -> { // Fabric - LivingEntityMixin
                 BlockPos blockpos = p_261435_.m_7494_();
                 return new Vec3((double)blockpos.m_123341_() + 0.5D, (double)blockpos.m_123342_() + 0.1D, (double)blockpos.m_123343_() + 0.5D);
+             });
 @@ -3175,7 +_,9 @@
     @Nullable
     public Direction m_21259_() {
@@ -1768,7 +1849,7 @@
 -      return blockpos != null ? BedBlock.m_49485_(this.m_9236_(), blockpos) : null;
 +      if (blockpos == null) return Direction.UP;
 +      BlockState state = this.m_9236_().m_8055_(blockpos);
-+      return !state.isBed(m_9236_(), blockpos, this) ? Direction.UP : state.getBedDirection(m_9236_(), blockpos);
++      return !state.isBed(m_9236_(), blockpos, this) ? Direction.UP : net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.MODIFY_SLEEPING_DIRECTION.invoker().modifySleepDirection(this, blockpos, (state.getBedDirection(m_9236_(), blockpos))); // Fabric - LivingEntityMixin
     }
  
     public boolean m_5830_() {
@@ -1865,12 +1946,102 @@
     public AABB m_6921_() {
        if (this.m_6844_(EquipmentSlot.HEAD).m_150930_(Items.f_42683_)) {
           float f = 0.5F;
-@@ -3257,6 +_,8 @@
+@@ -3257,6 +_,17 @@
     }
  
     public static EquipmentSlot m_147233_(ItemStack p_147234_) {
++      // Fabric start - LivingEntityMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<EquipmentSlot> info = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<EquipmentSlot>("fabric$onGetPreferredEquipmentSlot", true);
++         fabric$onGetPreferredEquipmentSlot(p_147234_, info);
++         if (info.isCancelled()) {
++            return info.getReturnValue();
++         }
++      }
++      // Fabric end
 +      final EquipmentSlot slot = p_147234_.getEquipmentSlot();
 +      if (slot != null) return slot; // FORGE: Allow modders to set a non-default equipment slot for a stack; e.g. a non-armor chestplate-slot item
        Equipable equipable = Equipable.m_269088_(p_147234_);
        return equipable != null ? equipable.m_40402_() : EquipmentSlot.MAINHAND;
     }
+@@ -3334,4 +_,80 @@
+ 
+    public static record Fallsounds(SoundEvent f_196626_, SoundEvent f_196627_) {
+    }
++
++   // Fabric start - LivingEntityMixin
++   /**
++    * Handle ALLOW and CUSTOM {@link net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents} when an entity is fall flying.
++    */
++   void fabric$injectElytraTick(org.spongepowered.asm.mixin.injection.callback.CallbackInfo info) {
++      LivingEntity self = this;
++
++      if (!net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents.ALLOW.invoker().allowElytraFlight(self)) {
++         // The entity is already fall flying by now, we just need to stop it.
++         if (!m_9236_().f_46443_) {
++            m_20115_(Entity.f_146807_, false);
++         }
++
++         info.cancel();
++      }
++
++      if (net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents.CUSTOM.invoker().useCustomElytra(self, true)) {
++         // The entity is already fall flying by now, so all we need to do is an early return to bypass vanilla's own elytra check.
++         info.cancel();
++      }
++   }
++
++   private static void fabric$onGetPreferredEquipmentSlot(ItemStack p_147234_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<EquipmentSlot> info) {
++      net.fabricmc.fabric.api.item.v1.EquipmentSlotProvider equipmentSlotProvider = ((net.fabricmc.fabric.impl.item.ItemExtensions) p_147234_.m_41720_()).fabric_getEquipmentSlotProvider();
++
++      if (equipmentSlotProvider != null) {
++         info.setReturnValue(equipmentSlotProvider.getPreferredEquipmentSlot(p_147234_));
++      }
++   }
++
++   private boolean fabric$onEntityKilledOther(Entity entity, ServerLevel serverWorld, @Nullable LivingEntity attacker, boolean result) {
++      net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.invoker().afterKilledOtherEntity(serverWorld, entity, attacker);
++      return result;
++   }
++
++   private void fabric$onWakeUp() {
++      BlockPos sleepingPos = m_21257_().orElse(null);
++
++      // If actually asleep - this method is often called with data loading, syncing etc. "just to be sure"
++      if (sleepingPos != null) {
++         net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.STOP_SLEEPING.invoker().onStopSleeping(this, sleepingPos);
++      }
++   }
++
++   private boolean fabric$onIsSleepingInBed(BlockPos sleepingPos, boolean ret) {
++      BlockState bedState = this.m_9236_().m_8055_(sleepingPos);
++      net.minecraft.world.InteractionResult result = net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.ALLOW_BED.invoker().allowBed(this, sleepingPos, bedState, ret);
++
++      if (result != net.minecraft.world.InteractionResult.PASS) {
++         ret = result.m_19077_();
++      }
++      return ret;
++   }
++
++   // This is needed 1) so that the vanilla logic in wakeUp runs for modded beds and 2) for the injector below.
++   // The injector is shared because method_18404 and sleep share much of the structure here.
++   private BlockState fabric$modifyBedForOccupiedState(BlockState state, BlockPos sleepingPos) {
++      net.minecraft.world.InteractionResult result = net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.ALLOW_BED.invoker().allowBed(this, sleepingPos, state, state.m_60734_() instanceof BedBlock);
++
++      // If a valid bed, replace with vanilla red bed so that the vanilla instanceof check succeeds.
++      return result.m_19077_() ? Blocks.f_50028_.m_49966_() : state;
++   }
++
++   private Optional<Vec3> fabric$modifyWakeUpPosition(net.minecraft.world.level.CollisionGetter world, BlockPos pos, Optional<Vec3> original) {
++      // Optional<Vec3> original = Optional.empty();
++      BlockState bedState = world.m_8055_(pos);
++
++      // if (bedState.getBlock() instanceof BedBlock) {
++      //    original = BedBlock.findStandUpPosition(type, world, pos, direction, yaw);
++      // }
++
++      Vec3 newPos = net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.MODIFY_WAKE_UP_POSITION.invoker().modifyWakeUpPosition(this, pos, bedState, original.orElse(null));
++      return Optional.ofNullable(newPos);
++   }
++   // Fabric end
+ }

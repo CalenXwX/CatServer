@@ -1,5 +1,14 @@
 --- a/net/minecraft/core/RegistrySetBuilder.java
 +++ b/net/minecraft/core/RegistrySetBuilder.java
+@@ -18,7 +_,7 @@
+ import net.minecraft.tags.TagKey;
+ 
+ public class RegistrySetBuilder {
+-   private final List<RegistrySetBuilder.RegistryStub<?>> f_254732_ = new ArrayList<>();
++   public final List<RegistrySetBuilder.RegistryStub<?>> f_254732_ = new ArrayList<>(); // CatServer - private -> public for Fabric FabricDataGenHelper
+ 
+    static <T> HolderGetter<T> m_254882_(final HolderLookup.RegistryLookup<T> p_255625_) {
+       return new RegistrySetBuilder.EmptyTagLookup<T>(p_255625_) {
 @@ -37,6 +_,10 @@
        return this.m_255162_(p_256261_, Lifecycle.stable(), p_256010_);
     }
@@ -20,15 +29,24 @@
           });
           p_256495_.forEach((p_256603_) -> {
              builder.put(p_256603_.m_135782_(), registrysetbuilder$universallookup);
-@@ -108,6 +_,11 @@
- 
+@@ -109,6 +_,11 @@
              public <S> HolderGetter<S> m_255420_(ResourceKey<? extends Registry<? extends S>> p_255961_) {
                 return (HolderGetter<S>) BuildState.this.f_254690_.getOrDefault(p_255961_.m_135782_(), BuildState.this.f_254749_);
-+            }
+             }
 +
 +            @Override
 +            public <S> Optional<HolderLookup.RegistryLookup<S>> registryLookup(ResourceKey<? extends Registry<? extends S>> registry) {
 +               return Optional.ofNullable((HolderLookup.RegistryLookup<S>) BuildState.this.f_254690_.get(registry.m_135782_()));
-             }
++            }
           };
+       }
+ 
+@@ -236,7 +_,7 @@
+       }
+    }
+ 
+-   static record RegistryStub<T>(ResourceKey<? extends Registry<T>> f_254738_, Lifecycle f_254728_, RegistrySetBuilder.RegistryBootstrap<T> f_254689_) {
++   public static record RegistryStub<T>(ResourceKey<? extends Registry<T>> f_254738_, Lifecycle f_254728_, RegistrySetBuilder.RegistryBootstrap<T> f_254689_) { // CatServer - public for Fabric FabricDataGenHelper
+       void m_254946_(RegistrySetBuilder.BuildState p_256272_) {
+          this.f_254689_.m_254966_(p_256272_.m_255274_());
        }

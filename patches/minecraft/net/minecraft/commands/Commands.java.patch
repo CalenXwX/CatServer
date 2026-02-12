@@ -49,13 +49,23 @@
           TestCommand.m_127946_(this.f_82090_);
           SpawnArmorTrimsCommand.m_266283_(this.f_82090_);
        }
-@@ -218,7 +_,16 @@
+@@ -218,7 +_,26 @@
        if (p_230943_.f_82144_) {
           PublishCommand.m_138184_(this.f_82090_);
        }
 -
 +      net.minecraftforge.event.ForgeEventFactory.onCommandRegister(this.f_82090_, p_230943_, p_230944_);
 +
++      {
++         /**
++          * Wait an inject in a constructor?
++          * This is a new addition to Fabric's fork of mixin.
++          * If you are not using fabric's fork of mixin this will fail.
++          *
++          * @reason Add commands before ambiguities are calculated.
++          */
++         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.invoker().register(this.f_82090_, p_230944_, p_230943_); // Fabric - CommandManagerMixin
++      }
 +      this.f_82090_.setConsumer((p_230954_, p_230955_, p_230956_) -> {
 +         p_230954_.getSource().m_81342_(p_230954_, p_230955_, p_230956_);
 +      }); // CatServer - rollback
@@ -212,3 +222,12 @@
           if (commandnode.canUse(p_82115_)) {
              ArgumentBuilder<SharedSuggestionProvider, ?> argumentbuilder = (ArgumentBuilder)commandnode.createBuilder();
              argumentbuilder.requires((p_82126_) -> {
+@@ -417,7 +_,7 @@
+       INTEGRATED(true, false);
+ 
+       final boolean f_82144_;
+-      final boolean f_82145_;
++      public final boolean f_82145_; // CatServer - public for Fabric CommandRegistry
+ 
+       private CommandSelection(boolean p_82151_, boolean p_82152_) {
+          this.f_82144_ = p_82151_;

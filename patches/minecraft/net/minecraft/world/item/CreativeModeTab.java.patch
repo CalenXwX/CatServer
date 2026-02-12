@@ -1,5 +1,23 @@
 --- a/net/minecraft/world/item/CreativeModeTab.java
 +++ b/net/minecraft/world/item/CreativeModeTab.java
+@@ -14,14 +_,14 @@
+ import net.minecraft.world.flag.FeatureFlagSet;
+ import net.minecraft.world.level.ItemLike;
+ 
+-public class CreativeModeTab {
++public class CreativeModeTab implements net.fabricmc.fabric.mixin.itemgroup.ItemGroupAccessor, net.fabricmc.fabric.impl.itemgroup.FabricItemGroup { // Fabric - ItemGroupAccessor
+    private final Component f_40764_;
+    String f_40766_ = "items.png";
+    boolean f_40767_ = true;
+    boolean f_40768_ = true;
+    boolean f_257018_ = false;
+-   private final CreativeModeTab.Row f_256931_;
+-   private final int f_256967_;
++   private CreativeModeTab.Row f_256931_; // Fabric - remove final
++   private int f_256967_; // Fabric - remove final
+    private final CreativeModeTab.Type f_256819_;
+    @Nullable
+    private ItemStack f_40770_;
 @@ -31,16 +_,40 @@
     private Consumer<List<ItemStack>> f_256965_;
     private final Supplier<ItemStack> f_256912_;
@@ -55,7 +73,7 @@
     public String m_40788_() {
        return this.f_40766_;
     }
-@@ -98,7 +_,7 @@
+@@ -98,9 +_,16 @@
        ResourceKey<CreativeModeTab> resourcekey = BuiltInRegistries.f_279662_.m_7854_(this).orElseThrow(() -> {
           return new IllegalStateException("Unregistered creative tab: " + this);
        });
@@ -63,7 +81,16 @@
 +      net.minecraftforge.common.ForgeHooks.onCreativeModeTabBuildContents(this, resourcekey, this.f_256824_, p_270156_, creativemodetab$itemdisplaybuilder);
        this.f_243839_ = creativemodetab$itemdisplaybuilder.f_244363_;
        this.f_243841_ = creativemodetab$itemdisplaybuilder.f_244585_;
++
++      // Fabric start - ItemGroupMixin
++      {
++         this.fabric$getStacks(p_270156_);
++      }
++      // Fabric end
++
        this.m_257466_();
+    }
+ 
 @@ -127,9 +_,34 @@
  
     }
@@ -227,3 +254,75 @@
              return creativemodetab;
           }
        }
+@@ -294,4 +_,71 @@
+       HOTBAR,
+       SEARCH;
+    }
++
++   // Fabric start - ItemGroupAccessor
++   @Override
++   public void setRow(CreativeModeTab.Row row) {
++      this.f_256931_ = row;
++   }
++
++   @Override
++   public void setColumn(int column) {
++      this.f_256967_ = column;
++   }
++   // Fabric end
++
++   // Fabric start - ItemGroupMixin
++   private int fabric_page = -1;
++
++   public void fabric$getStacks(CreativeModeTab.ItemDisplayParameters p_270156_) {
++      final CreativeModeTab self = this;
++      final ResourceKey<CreativeModeTab> registryKey = BuiltInRegistries.f_279662_.m_7854_(self).orElseThrow(() -> new IllegalStateException("Unregistered item group : " + self));
++
++      // Do not modify special item groups (except Operator Blocks) at all.
++      // Special item groups include Saved Hotbars, Search, and Survival Inventory.
++      // Note, search gets modified as part of the parent item group.
++      if (self.m_6563_() && registryKey != CreativeModeTabs.f_256837_) return;
++
++      // Sanity check for the injection point. It should be after these fields are set.
++      java.util.Objects.requireNonNull(f_243839_, "displayStacks");
++      java.util.Objects.requireNonNull(f_243841_, "searchTabStacks");
++
++      // Convert the entries to lists
++      var mutableDisplayStacks = new java.util.LinkedList<>(f_243839_);
++      var mutableSearchTabStacks = new java.util.LinkedList<>(f_243841_);
++      var entries = new net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries(p_270156_, mutableDisplayStacks, mutableSearchTabStacks);
++
++      final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.ModifyEntries> modifyEntriesEvent = net.fabricmc.fabric.impl.itemgroup.ItemGroupEventsImpl.getModifyEntriesEvent(registryKey);
++
++      if (modifyEntriesEvent != null) {
++         modifyEntriesEvent.invoker().modifyEntries(entries);
++      }
++
++      // Now trigger the global event
++      if (registryKey != CreativeModeTabs.f_256837_ || p_270156_.f_268429_()) {
++         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.invoker().modifyEntries(self, entries);
++      }
++
++      // Convert the stacks back to sets after the events had a chance to modify them
++      f_243839_.clear();
++      f_243839_.addAll(mutableDisplayStacks);
++
++      f_243841_.clear();
++      f_243841_.addAll(mutableSearchTabStacks);
++   }
++
++   @Override
++   public int getPage() {
++      if (fabric_page < 0) {
++         throw new IllegalStateException("Item group has no page");
++      }
++
++      return fabric_page;
++   }
++
++   @Override
++   public void setPage(int page) {
++      this.fabric_page = page;
++   }
++   // Fabric end
+ }

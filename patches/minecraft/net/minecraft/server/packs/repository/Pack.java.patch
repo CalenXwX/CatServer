@@ -35,6 +35,15 @@
           }
        } catch (Exception exception) {
           f_10399_.warn("Failed to read pack metadata", (Throwable)exception);
+@@ -93,7 +_,7 @@
+    }
+ 
+    public PackResources m_10445_() {
+-      return this.f_244124_.m_247679_(this.f_10401_);
++      return this.fabric$onCreateResourcePack(this.f_244124_.m_247679_(this.f_10401_));
+    }
+ 
+    public String m_10446_() {
 @@ -116,6 +_,8 @@
        return this.f_10409_;
     }
@@ -64,3 +73,15 @@
        }
     }
  
+@@ -177,4 +_,11 @@
+    public interface ResourcesSupplier {
+       PackResources m_247679_(String p_251717_);
+    }
++
++   // Fabric start - ResourcePackProfileMixin
++   private PackResources fabric$onCreateResourcePack(PackResources ret) { // CatServer
++      net.fabricmc.fabric.impl.resource.loader.ResourcePackSourceTracker.setSource(ret, f_10409_);
++      return ret; // CatServer
++   }
++   // Fabric end
+ }

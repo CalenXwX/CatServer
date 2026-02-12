@@ -125,4 +125,10 @@ public class ModValidator {
         loadingModList.addForScanning(backgroundScanHandler);
         return backgroundScanHandler;
     }
+
+    // CatServer start
+    public List<ModFile> getGameLibraries() {
+        return gameLibraries;
+    }
+    // CatServer end
 }

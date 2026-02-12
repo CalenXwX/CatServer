@@ -36,7 +36,7 @@
 +import org.bukkit.plugin.PluginManager;
 +// CraftBukkit end
 +
-+public abstract class Entity extends net.minecraftforge.common.capabilities.CapabilityProvider<Entity> implements Nameable, EntityAccess, CommandSource, net.minecraftforge.common.extensions.IForgeEntity {
++public abstract class Entity extends net.minecraftforge.common.capabilities.CapabilityProvider<Entity> implements Nameable, EntityAccess, CommandSource, net.minecraftforge.common.extensions.IForgeEntity, net.fabricmc.fabric.impl.dimension.Teleportable, net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl { // Fabric - EntityMixin AttachmentTargetsMixin
     private static final Logger f_19849_ = LogUtils.getLogger();
     public static final String f_146815_ = "id";
     public static final String f_146816_ = "Passengers";
@@ -639,7 +639,7 @@
           if (!this.f_19841_.isEmpty()) {
              ListTag listtag = new ListTag();
  
-@@ -1630,6 +_,10 @@
+@@ -1630,6 +_,13 @@
              p_20241_.m_128365_("Tags", listtag);
           }
  
@@ -647,6 +647,9 @@
 +         if (caps != null) p_20241_.m_128365_("ForgeCaps", caps);
 +         if (persistentData != null) p_20241_.m_128365_("ForgeData", persistentData.m_6426_());
 +
++         {
++            this.fabric_writeAttachmentsToNbt(p_20241_); // Fabric - EntityMixin
++         }
           this.m_7380_(p_20241_);
           if (this.m_20160_()) {
              ListTag listtag1 = new ListTag();
@@ -673,6 +676,16 @@
                 if (p_20259_.m_128425_("Tags", 9)) {
                    this.f_19841_.clear();
                    ListTag listtag3 = p_20259_.m_128437_("Tags", 8);
+@@ -1715,6 +_,9 @@
+                   }
+                }
+ 
++               {
++                  this.fabric_readAttachmentsFromNbt(p_20259_); // Fabric - EntityMixin
++               }
+                this.m_7378_(p_20259_);
+                if (this.m_6093_()) {
+                   this.m_20090_();
 @@ -1726,6 +_,43 @@
           } else {
              throw new IllegalStateException("Entity has invalid position");
@@ -991,7 +1004,7 @@
     }
  
     public boolean m_7306_(Entity p_20356_) {
-@@ -2410,32 +_,86 @@
+@@ -2410,35 +_,89 @@
  
     @Nullable
     public Entity m_5489_(ServerLevel p_20118_) {
@@ -1021,11 +1034,11 @@
 +
 +   @Nullable
 +   public Entity changeDimension(ServerLevel p_20118_, net.minecraftforge.common.util.ITeleporter teleporter) {
-+      if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(this, p_20118_.m_46472_())) return null;
++      if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(this, p_20118_.m_46472_())) return this.fabric$afterWorldChanged(null); // Fabric - EntityMixin
        if (this.m_9236_() instanceof ServerLevel && !this.m_213877_()) {
 +         // CatServer start
 +         if (p_20118_ == null) {
-+            return null;
++            return this.fabric$afterWorldChanged(null); // Fabric - EntityMixin
 +         }
 +         // CatServer end
           this.m_9236_().m_46473_().m_6180_("changeDimension");
@@ -1034,11 +1047,12 @@
 -         PortalInfo portalinfo = this.m_7937_(p_20118_);
 +         PortalInfo portalinfo = teleporter.getPortalInfo(this, p_20118_, this::m_7937_);
           if (portalinfo == null) {
+-            return null;
 +            // CatServer start - ensure pop
 +            this.m_9236_().m_46473_().m_7238_();
 +            this.m_9236_().m_46473_().m_7238_();
 +            // CatServer end
-             return null;
++            return this.fabric$afterWorldChanged(null); // Fabric - EntityMixin
           } else {
 +            // CatServer start
 +            if (portalinfo.world != null) {
@@ -1061,7 +1075,7 @@
 -                  ServerLevel.m_8617_(p_20118_);
 -               }
 +               serverLevel.m_143334_(entity);
-+               if (spawnPortal && serverLevel.m_46472_() == Level.f_46430_) {
++               if (spawnPortal && serverLevel.m_46472_() == (/* Fabric - EntityMixin */this.customTeleportTarget != null ? null : Level.f_46430_)) {
 +                  ServerLevel.makeObsidianPlatform(serverLevel, this); // CraftBukkit
 +               }
 +               // CraftBukkit start - Forward the CraftEntity to the new entity
@@ -1073,7 +1087,7 @@
 +               }
 +               // CraftBukkit end
              }
-+            return entity;
++            return this.fabric$afterWorldChanged(entity); // Fabric - EntityMixin
 +            }); //Forge: End vanilla logic
  
              this.m_6089_();
@@ -1082,16 +1096,29 @@
              p_20118_.m_8886_();
              this.m_9236_().m_46473_().m_7238_();
 -            return entity;
-+            return transportedEntity;
++            return this.fabric$afterWorldChanged(transportedEntity); // Fabric - EntityMixin
           }
        } else {
-          return null;
-@@ -2448,17 +_,31 @@
+-         return null;
++         return this.fabric$afterWorldChanged(null); // Fabric - EntityMixin
+       }
+    }
+ 
+@@ -2448,17 +_,40 @@
  
     @Nullable
     protected PortalInfo m_7937_(ServerLevel p_19923_) {
 -      boolean flag = this.m_9236_().m_46472_() == Level.f_46430_ && p_19923_.m_46472_() == Level.f_46428_;
 -      boolean flag1 = p_19923_.m_46472_() == Level.f_46430_;
++      // Fabric start - EntityMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<PortalInfo> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<PortalInfo>("fabric$getTeleportTarget", true);
++         this.fabric$getTeleportTarget(cir);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++      }
++      // Fabric end
 +      // CraftBukkit start
 +      if (p_19923_ == null) {
 +         return null;
@@ -1195,6 +1222,21 @@
     public boolean m_264318_(ServerLevel p_265257_, double p_265407_, double p_265727_, double p_265410_, Set<RelativeMovement> p_265083_, float p_265573_, float p_265094_) {
        float f = Mth.m_14036_(p_265094_, -90.0F, 90.0F);
        if (p_265257_ == this.m_9236_()) {
+@@ -2621,6 +_,14 @@
+          entity.m_20361_(this);
+          entity.m_7678_(p_265407_, p_265727_, p_265410_, p_265573_, f);
+          entity.m_5616_(p_265573_);
++         // Fabric start - EntityMixin
++         {
++            /**
++             * We need to fire the change world event for entities that are teleported using the `/teleport` command.
++             */
++            net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents.AFTER_ENTITY_CHANGE_WORLD.invoker().afterChangeWorld(this, entity, ((ServerLevel) this.m_9236_()), p_265257_);
++         }
++         // Fabric end
+          this.m_142467_(Entity.RemovalReason.CHANGED_DIMENSION);
+          p_265257_.m_143334_(entity);
+       }
 @@ -2679,8 +_,10 @@
        EntityDimensions entitydimensions = this.f_19815_;
        Pose pose = this.m_20089_();
@@ -1510,3 +1552,114 @@
        this.f_19853_ = p_285201_;
     }
  
+@@ -3387,4 +_,110 @@
+          return this.f_146957_;
+       }
+    }
++
++   // Fabric start - EntityMixin
++   @Nullable
++   protected PortalInfo customTeleportTarget;
++
++   @Override
++   public void fabric_setCustomTeleportTarget(PortalInfo teleportTarget) {
++      this.customTeleportTarget = teleportTarget;
++   }
++
++   public void fabric$getTeleportTarget(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<PortalInfo> cir) {
++      // Check if a destination has been set for the entity currently being teleported
++      PortalInfo customTarget = this.customTeleportTarget;
++
++      if (customTarget != null) {
++         cir.setReturnValue(customTarget);
++      }
++   }
++
++   private Entity fabric$afterWorldChanged(Entity ret) { // CatServer
++      // Ret will only have an entity if the teleport worked (entity not removed, teleportTarget was valid, entity was successfully created)
++
++      if (ret != null) {
++         net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents.AFTER_ENTITY_CHANGE_WORLD.invoker().afterChangeWorld(this, ret, (ServerLevel) this.f_19853_, (ServerLevel) ret.m_9236_());
++      }
++
++      return ret; // CatServer
++   }
++   // Fabric end
++
++   // Fabric start - AttachmentTargetsMixin
++   @Nullable
++   private java.util.IdentityHashMap<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, Object> fabric_dataAttachments = null;
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T getAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type) {
++      return fabric_dataAttachments == null ? null : (T) fabric_dataAttachments.get(type);
++   }
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T setAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type, @Nullable T value) {
++      /* // CatServer - never instance of BlockEntity or ChunkAccess
++      // Extremely inelegant, but the only alternative is separating out these two mixins and duplicating code
++      Object thisObject = this;
++
++      if (thisObject instanceof BlockEntity) {
++         ((BlockEntity) thisObject).setChanged();
++      } else if (thisObject instanceof net.minecraft.world.level.chunk.ChunkAccess) {
++         ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).setUnsaved(true);
++
++         if (type.isPersistent() && ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).getStatus().equals(net.minecraft.world.level.chunk.ChunkStatus.EMPTY)) {
++            net.fabricmc.fabric.impl.attachment.AttachmentEntrypoint.LOGGER.warn("Attaching persistent attachment {} to chunk with chunk status EMPTY. Attachment might be discarded.", type.identifier());
++         }
++      }
++      */
++
++      if (value == null) {
++         if (fabric_dataAttachments == null) {
++            return null;
++         }
++
++         T removed = (T) fabric_dataAttachments.remove(type);
++
++         if (fabric_dataAttachments.isEmpty()) {
++            fabric_dataAttachments = null;
++         }
++
++         return removed;
++      } else {
++         if (fabric_dataAttachments == null) {
++            fabric_dataAttachments = new java.util.IdentityHashMap<>();
++         }
++
++         return (T) fabric_dataAttachments.put(type, value);
++      }
++   }
++
++   @Override
++   public boolean hasAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<?> type) {
++      return fabric_dataAttachments != null && fabric_dataAttachments.containsKey(type);
++   }
++
++   @Override
++   public void fabric_writeAttachmentsToNbt(CompoundTag nbt) {
++      net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.serializeAttachmentData(nbt, fabric_dataAttachments);
++   }
++
++   @Override
++   public void fabric_readAttachmentsFromNbt(CompoundTag nbt) {
++      fabric_dataAttachments = net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.deserializeAttachmentData(nbt);
++   }
++
++   @Override
++   public boolean fabric_hasPersistentAttachments() {
++      return net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.hasPersistentAttachments(fabric_dataAttachments);
++   }
++
++   @Override
++   public java.util.Map<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, ?> fabric_getAttachments() {
++      return fabric_dataAttachments;
++   }
++   // Fabric end
+ }

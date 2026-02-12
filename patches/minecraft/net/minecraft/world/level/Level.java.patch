@@ -31,7 +31,7 @@
 +import org.bukkit.event.world.GenericGameEvent;
 +// CraftBukkit end
 +
-+public abstract class Level extends net.minecraftforge.common.capabilities.CapabilityProvider<Level> implements LevelAccessor, AutoCloseable, net.minecraftforge.common.extensions.IForgeLevel {
++public abstract class Level extends net.minecraftforge.common.capabilities.CapabilityProvider<Level> implements LevelAccessor, AutoCloseable, net.minecraftforge.common.extensions.IForgeLevel, net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl, net.fabricmc.fabric.impl.event.lifecycle.LoadedChunksCache { // Fabric - AttachmentTargetsMixin WorldMixin
     public static final Codec<ResourceKey<Level>> f_46427_ = ResourceKey.m_195966_(Registries.f_256858_);
     public static final ResourceKey<Level> f_46428_ = ResourceKey.m_135785_(Registries.f_256858_, new ResourceLocation("overworld"));
     public static final ResourceKey<Level> f_46429_ = ResourceKey.m_135785_(Registries.f_256858_, new ResourceLocation("the_nether"));
@@ -695,3 +695,104 @@
  
     public long m_183596_() {
        return (long)(this.f_186455_++);
+@@ -880,4 +_,100 @@
+       MOB,
+       TNT;
+    }
++
++   // Fabric start - AttachmentTargetsMixin
++   @Nullable
++   private java.util.IdentityHashMap<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, Object> fabric_dataAttachments = null;
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T getAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type) {
++      return fabric_dataAttachments == null ? null : (T) fabric_dataAttachments.get(type);
++   }
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T setAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type, @Nullable T value) {
++      /* // CatServer - never instance of BlockEntity or ChunkAccess
++      // Extremely inelegant, but the only alternative is separating out these two mixins and duplicating code
++      Object thisObject = this;
++
++      if (thisObject instanceof BlockEntity) {
++         ((BlockEntity) thisObject).setChanged();
++      } else if (thisObject instanceof net.minecraft.world.level.chunk.ChunkAccess) {
++         ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).setUnsaved(true);
++
++         if (type.isPersistent() && ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).getStatus().equals(net.minecraft.world.level.chunk.ChunkStatus.EMPTY)) {
++            net.fabricmc.fabric.impl.attachment.AttachmentEntrypoint.LOGGER.warn("Attaching persistent attachment {} to chunk with chunk status EMPTY. Attachment might be discarded.", type.identifier());
++         }
++      }
++      */
++
++      if (value == null) {
++         if (fabric_dataAttachments == null) {
++            return null;
++         }
++
++         T removed = (T) fabric_dataAttachments.remove(type);
++
++         if (fabric_dataAttachments.isEmpty()) {
++            fabric_dataAttachments = null;
++         }
++
++         return removed;
++      } else {
++         if (fabric_dataAttachments == null) {
++            fabric_dataAttachments = new java.util.IdentityHashMap<>();
++         }
++
++         return (T) fabric_dataAttachments.put(type, value);
++      }
++   }
++
++   @Override
++   public boolean hasAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<?> type) {
++      return fabric_dataAttachments != null && fabric_dataAttachments.containsKey(type);
++   }
++
++   @Override
++   public void fabric_writeAttachmentsToNbt(CompoundTag nbt) {
++      net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.serializeAttachmentData(nbt, fabric_dataAttachments);
++   }
++
++   @Override
++   public void fabric_readAttachmentsFromNbt(CompoundTag nbt) {
++      fabric_dataAttachments = net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.deserializeAttachmentData(nbt);
++   }
++
++   @Override
++   public boolean fabric_hasPersistentAttachments() {
++      return net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.hasPersistentAttachments(fabric_dataAttachments);
++   }
++
++   @Override
++   public java.util.Map<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, ?> fabric_getAttachments() {
++      return fabric_dataAttachments;
++   }
++   // Fabric end
++
++   // Fabric start - WorldMixin
++   private final java.util.Set<LevelChunk> loadedChunks = new java.util.HashSet<>();
++
++   @Override
++   public java.util.Set<LevelChunk> fabric_getLoadedChunks() {
++      return this.loadedChunks;
++   }
++
++   @Override
++   public void fabric_markLoaded(LevelChunk chunk) {
++      this.loadedChunks.add(chunk);
++   }
++
++   @Override
++   public void fabric_markUnloaded(LevelChunk chunk) {
++      this.loadedChunks.remove(chunk);
++   }
++   // Fabric end
+ }

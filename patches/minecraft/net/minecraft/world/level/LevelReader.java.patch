@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/level/LevelReader.java
 +++ b/net/minecraft/world/level/LevelReader.java
+@@ -22,7 +_,7 @@
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.phys.AABB;
+ 
+-public interface LevelReader extends BlockAndTintGetter, CollisionGetter, SignalGetter, BiomeManager.NoiseBiomeSource {
++public interface LevelReader extends BlockAndTintGetter, CollisionGetter, SignalGetter, BiomeManager.NoiseBiomeSource, net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView { // Fabric - WorldViewMixin
+    @Nullable
+    ChunkAccess m_6522_(int p_46823_, int p_46824_, ChunkStatus p_46825_, boolean p_46826_);
+ 
 @@ -182,6 +_,10 @@
     }
  
@@ -11,3 +20,20 @@
     @Deprecated
     default boolean m_46832_(BlockPos p_46833_, BlockPos p_46834_) {
        return this.m_46812_(p_46833_.m_123341_(), p_46833_.m_123342_(), p_46833_.m_123343_(), p_46834_.m_123341_(), p_46834_.m_123342_(), p_46834_.m_123343_());
+@@ -220,4 +_,16 @@
+       Registry<T> registry = this.m_9598_().m_175515_(p_249578_);
+       return registry.m_255303_().m_245140_(this.m_246046_());
+    }
++
++   // Fabric start - WorldViewMixin
++   @Override
++   default boolean hasBiomes() {
++      return true;
++   }
++
++   @Override
++   default Holder<Biome> getBiomeFabric(BlockPos pos) {
++      return m_204166_(pos);
++   }
++   // Fabric end
+ }

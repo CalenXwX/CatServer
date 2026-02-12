@@ -1,7 +1,12 @@
 --- a/net/minecraft/server/Bootstrap.java
 +++ b/net/minecraft/server/Bootstrap.java
-@@ -54,6 +_,13 @@
+@@ -52,8 +_,18 @@
+                EntitySelectorOptions.m_121426_();
+                DispenseItemBehavior.m_123402_();
                 CauldronInteraction.m_175649_();
++               {
++                  BuiltInRegistries.m_257453_(); // Fabric - BootstrapMixin
++               }
                 BuiltInRegistries.m_257498_();
                 CreativeModeTabs.m_280019_();
 +               net.minecraftforge.registries.GameData.vanillaSnapshot();
@@ -22,3 +27,41 @@
     }
  
     private static void m_135890_() {
+@@ -138,10 +_,36 @@
+          System.setErr(new LoggedPrintStream("STDERR", System.err));
+          System.setOut(new LoggedPrintStream("STDOUT", f_135866_));
+       }
+-
++      {
++         fabric$initialize(); // Fabric - BootstrapMixin
++      }
+    }
+ 
+    public static void m_135875_(String p_135876_) {
+       f_135866_.println(p_135876_);
+    }
++
++   // Fabric start - BootstrapMixin
++   private static void fabric$initialize() {
++      // These seemingly pointless accesses are done to make sure each
++      // static initializer is called, to register vanilla-provided blocks
++      // and items from the respective classes - otherwise, they would
++      // duplicate our calls from below.
++      Object oBlock = net.minecraft.world.level.block.Blocks.f_50016_;
++      Object oFluid = net.minecraft.world.level.material.Fluids.f_76191_;
++      Object oItem = net.minecraft.world.item.Items.f_41852_;
++
++      // state ID tracking
++      net.fabricmc.fabric.impl.registry.sync.trackers.StateIdTracker.register(BuiltInRegistries.f_256975_, Block.f_49791_, (block) -> block.m_49965_().m_61056_());
++      net.fabricmc.fabric.impl.registry.sync.trackers.StateIdTracker.register(BuiltInRegistries.f_257020_, net.minecraft.world.level.material.Fluid.f_76104_, (fluid) -> fluid.m_76144_().m_61056_());
++
++      // map tracking
++      net.fabricmc.fabric.impl.registry.sync.trackers.vanilla.BlockItemTracker.register(BuiltInRegistries.f_257033_);
++
++      // block initialization, like Blocks
++      net.fabricmc.fabric.impl.registry.sync.trackers.vanilla.BlockInitTracker.register(BuiltInRegistries.f_256975_);
++
++      net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager.bootstrapRegistries();
++   }
++   // Fabric end
+ }

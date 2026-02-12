@@ -5,12 +5,12 @@
        BiConsumer<String, String> biconsumer = builder::put;
        m_280428_(biconsumer, "/assets/minecraft/lang/en_us.json");
 -      final Map<String, String> map = builder.build();
-+      final Map<String, String> map = new java.util.HashMap<>(builder.build());
++      final Map<String, String> map = fabric$create(new java.util.HashMap<>(builder.build())); // Fabric - LanguageMixin
 +      net.minecraftforge.server.LanguageHook.captureLanguageMap(map);
        return new Language() {
           public String m_118919_(String p_128127_, String p_265421_) {
              return map.getOrDefault(p_128127_, p_265421_);
-@@ -55,6 +_,11 @@
+@@ -55,11 +_,16 @@
                 }, Style.f_131099_).isPresent();
              };
           }
@@ -22,13 +22,58 @@
        };
     }
  
-@@ -84,6 +_,9 @@
-    public static void m_128114_(Language p_128115_) {
+    private static void m_280428_(BiConsumer<String, String> p_282031_, String p_283638_) {
+-      try (InputStream inputstream = Language.class.getResourceAsStream(p_283638_)) {
++      try (InputStream inputstream = Language.class.getResourceAsStream(p_283638_)) { // Fabric - LanguageMixin // CatServer - use forge logic
+          m_128108_(inputstream, p_282031_);
+       } catch (JsonParseException | IOException ioexception) {
+          f_128101_.error("Couldn't read strings from {}", p_283638_, ioexception);
+@@ -85,6 +_,9 @@
        f_128104_ = p_128115_;
     }
-+
+ 
 +   // FORGE START
 +   public Map<String, String> getLanguageData() { return ImmutableMap.of(); }
- 
++
     public String m_6834_(String p_128111_) {
        return this.m_118919_(p_128111_, p_128111_);
+    }
+@@ -100,4 +_,38 @@
+    public List<FormattedCharSequence> m_128112_(List<FormattedText> p_128113_) {
+       return p_128113_.stream().map(this::m_5536_).collect(ImmutableList.toImmutableList());
+    }
++
++   // Fabric start - LanguageMixin
++   private static java.util.HashMap<String, String> fabric$create(java.util.HashMap<String, String> map) { // CatServer - ImmutableMap.Builder -> ImmutableMap
++      // Map<String, String> map = new java.util.HashMap<>(cir.buildOrThrow()); // CatServer - forge has created HashMap and buildOrThrow() is called in ImmutableMap.Builder#build()
++
++      for (java.nio.file.Path path : net.fabricmc.fabric.impl.resource.loader.ServerLanguageUtil.getModLanguageFiles()) {
++         loadFromPath(path, map::put);
++      }
++
++      return new java.util.HashMap<>(map); // CatServer - seems forge needs a HashMap
++   }
++
++   /* // CatServer - we use forge logic for vanilla language
++   private static InputStream readCorrectVanillaResource(Class instance, String path) throws IOException {
++      ModContainer mod = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow();
++      Path langPath = mod.findPath(path).orElse(null);
++
++      if (langPath == null) {
++         throw new IOException("Could not read %s from minecraft ModContainer".formatted(path));
++      } else {
++         return Files.newInputStream(langPath);
++      }
++   }
++   */
++
++   private static void loadFromPath(java.nio.file.Path path, BiConsumer<String, String> entryConsumer) {
++      try (InputStream stream = java.nio.file.Files.newInputStream(path)) {
++         f_128101_.debug("Loading translations from {}", path);
++         m_128108_(stream, entryConsumer);
++      } catch (JsonParseException | IOException e) {
++         f_128101_.error("Couldn't read strings from {}", path, e);
++      }
++   }
++   // Fabric end
+ }

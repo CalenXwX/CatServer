@@ -11,6 +11,15 @@
  
     private static Set<BlockState> m_218073_(Block p_218074_) {
        return ImmutableSet.copyOf(p_218074_.m_49965_().m_61056_());
+@@ -58,7 +_,7 @@
+       return ResourceKey.m_135785_(Registries.f_256805_, new ResourceLocation(p_218091_));
+    }
+ 
+-   private static PoiType m_218084_(Registry<PoiType> p_218085_, ResourceKey<PoiType> p_218086_, Set<BlockState> p_218087_, int p_218088_, int p_218089_) {
++   public static PoiType m_218084_(Registry<PoiType> p_218085_, ResourceKey<PoiType> p_218086_, Set<BlockState> p_218087_, int p_218088_, int p_218089_) { // CatServer - private -> public for Fabric PointOfInterestHelper
+       PoiType poitype = new PoiType(p_218087_, p_218088_, p_218089_);
+       Registry.m_194579_(p_218085_, p_218086_, poitype);
+       m_246216_(p_218085_.m_246971_(p_218086_), p_218087_);
 @@ -66,16 +_,10 @@
     }
  

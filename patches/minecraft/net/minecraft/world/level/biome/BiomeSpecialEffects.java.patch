@@ -1,5 +1,36 @@
 --- a/net/minecraft/world/level/biome/BiomeSpecialEffects.java
 +++ b/net/minecraft/world/level/biome/BiomeSpecialEffects.java
+@@ -38,18 +_,18 @@
+          return p_151760_.f_47938_;
+       })).apply(p_47971_, BiomeSpecialEffects::new);
+    });
+-   private final int f_47927_;
+-   private final int f_47928_;
+-   private final int f_47929_;
+-   private final int f_47930_;
+-   private final Optional<Integer> f_47931_;
+-   private final Optional<Integer> f_47932_;
+-   private final BiomeSpecialEffects.GrassColorModifier f_47933_;
+-   private final Optional<AmbientParticleSettings> f_47934_;
+-   private final Optional<Holder<SoundEvent>> f_47935_;
+-   private final Optional<AmbientMoodSettings> f_47936_;
+-   private final Optional<AmbientAdditionsSettings> f_47937_;
+-   private final Optional<Music> f_47938_;
++   public int f_47927_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public int f_47928_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public int f_47929_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public int f_47930_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<Integer> f_47931_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<Integer> f_47932_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public BiomeSpecialEffects.GrassColorModifier f_47933_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<AmbientParticleSettings> f_47934_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<Holder<SoundEvent>> f_47935_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<AmbientMoodSettings> f_47936_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<AmbientAdditionsSettings> f_47937_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Optional<Music> f_47938_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
+ 
+    BiomeSpecialEffects(int p_47941_, int p_47942_, int p_47943_, int p_47944_, Optional<Integer> p_47945_, Optional<Integer> p_47946_, BiomeSpecialEffects.GrassColorModifier p_47947_, Optional<AmbientParticleSettings> p_47948_, Optional<Holder<SoundEvent>> p_47949_, Optional<AmbientMoodSettings> p_47950_, Optional<AmbientAdditionsSettings> p_47951_, Optional<Music> p_47952_) {
+       this.f_47927_ = p_47941_;
 @@ -201,7 +_,7 @@
        }
     }

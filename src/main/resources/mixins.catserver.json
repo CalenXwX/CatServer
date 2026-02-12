@@ -1,0 +1,14 @@
+{
+    "package": "net.fabricmc.fabric.mixin.self_mixin",
+    "mixins": [
+        "dimension.TaggedChoiceMixin",
+        "dimension.TaggedChoiceTypeMixin",
+        "biome.MultiNoiseUtilMultiNoiseSamplerMixin"
+    ],
+    "client": [],
+    "server": [],
+    "refmap": "catserver.mixin.refmap.json",
+    "required": true,
+    "minVersion": "0.8.5",
+    "compatibilityLevel": "JAVA_8"
+}

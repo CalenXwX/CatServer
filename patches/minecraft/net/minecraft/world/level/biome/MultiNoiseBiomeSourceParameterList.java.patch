@@ -1,0 +1,11 @@
+--- a/net/minecraft/world/level/biome/MultiNoiseBiomeSourceParameterList.java
++++ b/net/minecraft/world/level/biome/MultiNoiseBiomeSourceParameterList.java
+@@ -51,7 +_,7 @@
+    public static record Preset(ResourceLocation f_273944_, MultiNoiseBiomeSourceParameterList.Preset.SourceProvider f_273865_) {
+       public static final MultiNoiseBiomeSourceParameterList.Preset f_273838_ = new MultiNoiseBiomeSourceParameterList.Preset(new ResourceLocation("nether"), new MultiNoiseBiomeSourceParameterList.Preset.SourceProvider() {
+          public <T> Climate.ParameterList<T> m_274430_(Function<ResourceKey<Biome>, T> p_275356_) {
+-            return new Climate.ParameterList<>(List.of(Pair.of(Climate.m_186788_(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F), p_275356_.apply(Biomes.f_48209_)), Pair.of(Climate.m_186788_(0.0F, -0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F), p_275356_.apply(Biomes.f_48199_)), Pair.of(Climate.m_186788_(0.4F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F), p_275356_.apply(Biomes.f_48200_)), Pair.of(Climate.m_186788_(0.0F, 0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.375F), p_275356_.apply(Biomes.f_48201_)), Pair.of(Climate.m_186788_(-0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.175F), p_275356_.apply(Biomes.f_48175_))));
++            return net.fabricmc.fabric.impl.biome.NetherBiomeData.withModdedBiomeEntries(new Climate.ParameterList<>(List.of(Pair.of(Climate.m_186788_(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F), p_275356_.apply(Biomes.f_48209_)), Pair.of(Climate.m_186788_(0.0F, -0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F), p_275356_.apply(Biomes.f_48199_)), Pair.of(Climate.m_186788_(0.4F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F), p_275356_.apply(Biomes.f_48200_)), Pair.of(Climate.m_186788_(0.0F, 0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.375F), p_275356_.apply(Biomes.f_48201_)), Pair.of(Climate.m_186788_(-0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.175F), p_275356_.apply(Biomes.f_48175_)))), p_275356_); // Fabric - NetherBiomePresetMixin
+          }
+       });
+       public static final MultiNoiseBiomeSourceParameterList.Preset f_273915_ = new MultiNoiseBiomeSourceParameterList.Preset(new ResourceLocation("overworld"), new MultiNoiseBiomeSourceParameterList.Preset.SourceProvider() {

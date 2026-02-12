@@ -103,11 +103,16 @@ public record ServerStatusPing(
     {
         this(
                 NetworkRegistry.buildChannelVersionsForListPing(),
-                Util.make(new HashMap<>(), map -> ModList.get().forEachModContainer((modid, mc) ->
+                // CatServer start - add fabric mods
+                Util.make(new HashMap<>(), map -> {
+                        ModList.get().forEachModContainer((modid, mc) ->
                         map.put(modid, mc.getCustomExtension(IExtensionPoint.DisplayTest.class)
                                 .map(IExtensionPoint.DisplayTest::suppliedVersion)
                                 .map(Supplier::get)
-                                .orElse(NetworkConstants.IGNORESERVERONLY)))),
+                                .orElse(NetworkConstants.IGNORESERVERONLY)));
+                        net.fabricmc.loader.impl.FabricLoaderImpl.mods.forEach(fabricMod -> map.put(fabricMod.getMetadata().getId(), fabricMod.getMetadata().getVersion().toString()));
+                }),
+                // CatServer end
                 NetworkConstants.FMLNETVERSION,
                 false
         );

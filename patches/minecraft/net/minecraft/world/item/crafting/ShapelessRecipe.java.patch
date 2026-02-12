@@ -20,11 +20,14 @@
  
     public ShapelessRecipe(ResourceLocation p_251840_, String p_249640_, CraftingBookCategory p_249390_, ItemStack p_252071_, NonNullList<Ingredient> p_250689_) {
        this.f_44241_ = p_251840_;
-@@ -27,6 +_,7 @@
+@@ -27,6 +_,10 @@
        this.f_244076_ = p_249390_;
        this.f_44243_ = p_252071_;
        this.f_44244_ = p_250689_;
 +      this.isSimple = p_250689_.stream().allMatch(Ingredient::isSimple);
++      {
++         this.fabric$cacheRequiresTesting(p_250689_); // Fabric - ShapelessRecipeMixin
++      }
     }
  
     public ResourceLocation m_6423_() {
@@ -50,9 +53,19 @@
     public String m_6076_() {
        return this.f_44242_;
     }
-@@ -55,17 +_,20 @@
+@@ -54,18 +_,30 @@
+    }
  
     public boolean m_5818_(CraftingContainer p_44262_, Level p_44263_) {
++      {
++         // Fabric start - ShapelessRecipeMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("fabric$customIngredientMatch", true);
++         this.fabric$customIngredientMatch(p_44262_, cir);
++         if (cir.isCancelled()) {
++            return cir.getReturnValueZ();
++         }
++         // Fabric end
++      }
        StackedContents stackedcontents = new StackedContents();
 +      java.util.List<ItemStack> inputs = new java.util.ArrayList<>();
        int i = 0;
@@ -99,3 +112,37 @@
                 nonnulllist.add(ingredient);
              }
           }
+@@ -130,4 +_,33 @@
+          p_44281_.m_130055_(p_44282_.f_44243_);
+       }
+    }
++
++   // Fabric start - ShapelessRecipeMixin
++   private boolean fabric_requiresTesting = false;
++
++   private void fabric$cacheRequiresTesting(NonNullList<Ingredient> input) {
++      for (Ingredient ingredient : input) {
++         if (ingredient.requiresTesting()) {
++            fabric_requiresTesting = true;
++            break;
++         }
++      }
++   }
++
++   public void fabric$customIngredientMatch(CraftingContainer craftingInventory, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
++      if (fabric_requiresTesting) {
++         java.util.List<ItemStack> nonEmptyStacks = new java.util.ArrayList<>(craftingInventory.m_6643_());
++
++         for (int i = 0; i < craftingInventory.m_6643_(); ++i) {
++            ItemStack stack = craftingInventory.m_8020_(i);
++
++            if (!stack.m_41619_()) {
++               nonEmptyStacks.add(stack);
++            }
++         }
++
++         cir.setReturnValue(net.fabricmc.fabric.impl.recipe.ingredient.ShapelessMatch.isMatch(nonEmptyStacks, f_44244_));
++      }
++   }
++   // Fabric end
+ }

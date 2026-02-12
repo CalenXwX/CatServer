@@ -1,24 +1,81 @@
 --- a/net/minecraft/server/packs/resources/FallbackResourceManager.java
 +++ b/net/minecraft/server/packs/resources/FallbackResourceManager.java
-@@ -98,8 +_,11 @@
+@@ -96,11 +_,30 @@
+       boolean flag = false;
+       String s = null;
  
++      {
++         this.fabric$getAllResources$resources.set(list); // Fabric - NamespaceResourceManagerMixin
++      }
        for(int i = this.f_10599_.size() - 1; i >= 0; --i) {
           FallbackResourceManager.PackEntry fallbackresourcemanager$packentry = this.f_10599_.get(i);
 -         PackResources packresources = fallbackresourcemanager$packentry.f_215433_;
 -         if (packresources != null) {
+-            IoSupplier<InputStream> iosupplier = packresources.m_214146_(this.f_10601_, p_215367_);
 +         PackResources pack = fallbackresourcemanager$packentry.f_215433_;
 +         if (pack != null) {
 +            var children = pack.getChildren();
 +            var packs = children == null ? List.of(pack) : children;
 +            for (final PackResources packresources : packs) {
-             IoSupplier<InputStream> iosupplier = packresources.m_214146_(this.f_10601_, p_215367_);
++            IoSupplier<InputStream> iosupplier;
++            {
++               // Fabric start - NamespaceResourceManagerMixin
++               if (pack instanceof net.fabricmc.fabric.impl.resource.loader.GroupResourcePack) {
++                  ((net.fabricmc.fabric.impl.resource.loader.GroupResourcePack) pack).appendResources(this.f_10601_, p_215367_, this.fabric$getAllResources$resources.get());
++
++                  // return null;
++                  iosupplier = null; // CatServer
++               } else {
++                  // return pack.getResource(type, id);
++                  iosupplier = packresources.m_214146_(this.f_10601_, p_215367_); // Fabric - NamespaceResourceManagerMixin // CatServer
++               }
++               // Fabric end
++            }
              if (iosupplier != null) {
                 IoSupplier<ResourceMetadata> iosupplier1;
-@@ -113,6 +_,7 @@
-                }
+                if (flag) {
+@@ -114,6 +_,7 @@
  
                 list.add(new Resource(packresources, iosupplier, iosupplier1));
-+            }
              }
++            }
           }
  
+          if (fallbackresourcemanager$packentry.m_215440_(p_215367_)) {
+@@ -125,6 +_,9 @@
+             flag = true;
+          }
+       }
++      {
++         this.fabric$getAllResources$resources.remove(); // CatServer
++      }
+ 
+       if (list.isEmpty() && s != null) {
+          f_10600_.warn("Resource {} not found, but was filtered by pack {}", p_215367_, s);
+@@ -142,7 +_,7 @@
+       return p_249669_.m_247449_(s);
+    }
+ 
+-   static ResourceLocation m_10624_(ResourceLocation p_10625_) {
++   public static ResourceLocation m_10624_(ResourceLocation p_10625_) { // CatServer - public for Fabric GroupResourcePack
+       return p_10625_.m_247449_(p_10625_.m_135815_() + ".mcmeta");
+    }
+ 
+@@ -218,7 +_,7 @@
+       };
+    }
+ 
+-   private static ResourceMetadata m_246183_(IoSupplier<InputStream> p_250103_) throws IOException {
++   public static ResourceMetadata m_246183_(IoSupplier<InputStream> p_250103_) throws IOException { // CatServer - private -> public for Fabric GroupResourcePack
+       try (InputStream inputstream = p_250103_.m_247737_()) {
+          return ResourceMetadata.m_215580_(inputstream);
+       }
+@@ -341,4 +_,8 @@
+ 
+    static record ResourceWithSource(PackResources f_244214_, IoSupplier<InputStream> f_244331_) {
+    }
++
++   // Fabric start - NamespaceResourceManagerMixin
++   private final ThreadLocal<List<Resource>> fabric$getAllResources$resources = new ThreadLocal<>();
++   // Fabric end
+ }

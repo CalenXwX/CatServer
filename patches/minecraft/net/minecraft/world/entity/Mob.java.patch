@@ -338,7 +338,7 @@
 +            if (CraftEventFactory.callEntityTransformEvent(this, t, transformReason).isCancelled()) {
 +               return null;
 +            }
-+            this.m_9236_().addFreshEntity(t, spawnReason);
++            this.m_9236_().addFreshEntity(this.fabric$afterEntityConverted(t, p_21408_), spawnReason); // Fabric - MobEntityMixin
 +            // CraftBukkit end
              if (this.m_20159_()) {
                 Entity entity = this.m_20202_();
@@ -437,11 +437,10 @@
        this.m_21455_(true, false);
        this.m_20158_().forEach((p_278936_) -> {
           if (!p_278936_.m_41619_()) {
-@@ -1449,5 +_,40 @@
-    public ItemStack m_142340_() {
+@@ -1450,4 +_,46 @@
        SpawnEggItem spawneggitem = SpawnEggItem.m_43213_(this.m_6095_());
        return spawneggitem == null ? null : new ItemStack(spawneggitem);
-+   }
+    }
 +
 +   /**
 +   * Returns the type of spawn that created this mob, if applicable.
@@ -476,5 +475,12 @@
 +         throw new UnsupportedOperationException("Late invocations of Mob#setSpawnCancelled are not permitted.");
 +      }
 +      this.spawnCancelled = cancel;
-    }
++   }
++
++   // Fabric start - MobEntityMixin
++   private Entity fabric$afterEntityConverted(Entity converted, boolean keepEquipment) {
++      net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.MOB_CONVERSION.invoker().onConversion(this, (Mob) converted, keepEquipment);
++      return converted;
++   }
++   // Fabric end
  }

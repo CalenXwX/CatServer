@@ -58,7 +58,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("deprecation")
-public interface IForgeBlock
+public interface IForgeBlock extends net.fabricmc.fabric.api.block.v1.FabricBlock // Fabric - BlockMixin
 {
     private Block self()
     {
@@ -257,6 +257,9 @@ public interface IForgeBlock
      */
     default void setBedOccupied(BlockState state, Level level, BlockPos pos, LivingEntity sleeper, boolean occupied)
     {
+        if (fabric$setOccupiedState$hasFabricHandled(level, pos, occupied, sleeper)) {
+            return;
+        }
         level.setBlock(pos, state.setValue(BedBlock.OCCUPIED, occupied), 3);
     }
 
@@ -992,4 +995,26 @@ public interface IForgeBlock
     {
         return null;
     }
+
+    // Fabric start - LivingEntityMixin
+    // The injector is shared because method_18404 and sleep share much of the structure here.
+    // CatServer - return value -> has Fabric handled
+    private static boolean fabric$setOccupiedState$hasFabricHandled(Level world, BlockPos pos, boolean occupied, LivingEntity this_sleeper) {
+        // This might have been replaced by a red bed above, so we get it again.
+        // Note that we *need* to replace it so the state.with(OCCUPIED, ...) call doesn't crash
+        // when the bed doesn't have the property.
+        BlockState originalState = world.getBlockState(pos);
+        // boolean occupied = state.getValue(BedBlock.OCCUPIED); // CatServer
+
+        if (net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.SET_BED_OCCUPATION_STATE.invoker().setBedOccupationState(this_sleeper, pos, originalState, occupied)) {
+            return true;
+        } else if (originalState.hasProperty(BedBlock.OCCUPIED)) {
+            // This check is widened from (instanceof BedBlock) to a property check to allow modded blocks
+            // that don't use the event.
+            return false; // return world.setBlock(pos, originalState.setValue(BedBlock.OCCUPIED, occupied), flags); // CatServer - run vanilla logic in thr original place of Forge
+        } else {
+            return true; // return false; // CatServer - then don't run vanilla logic
+        }
+    }
+    // Fabric end
 }

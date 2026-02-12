@@ -1,0 +1,159 @@
+--- a/net/minecraft/data/models/ModelProvider.java
++++ b/net/minecraft/data/models/ModelProvider.java
+@@ -30,10 +_,18 @@
+    public ModelProvider(PackOutput p_252226_) {
+       this.f_236325_ = p_252226_.m_245269_(PackOutput.Target.RESOURCE_PACK, "blockstates");
+       this.f_236326_ = p_252226_.m_245269_(PackOutput.Target.RESOURCE_PACK, "models");
++      {
++         fabric$init(p_252226_); // Fabric - ModelProviderMixin
++      }
+    }
+ 
+    public CompletableFuture<?> m_213708_(CachedOutput p_253790_) {
+       Map<Block, BlockStateGenerator> map = Maps.newHashMap();
++      // Fabric start - ModelProviderMixin
++      {
++         fabric$runHead(map);
++      }
++      // Fabric end
+       Consumer<BlockStateGenerator> consumer = (p_125120_) -> {
+          Block block = p_125120_.m_6968_();
+          BlockStateGenerator blockstategenerator = map.put(block, p_125120_);
+@@ -50,9 +_,37 @@
+          }
+       };
+       Consumer<Item> consumer1 = set::add;
+-      (new BlockModelGenerators(consumer, biconsumer, consumer1)).m_124510_();
+-      (new ItemModelGenerators(biconsumer)).m_125083_();
++      // Fabric start - ModelProviderMixin
++      {
++         BlockModelGenerators instance = new BlockModelGenerators(consumer, biconsumer, consumer1);
++         if (this instanceof net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider fabricModelProvider) {
++            fabricModelProvider.generateBlockStateModels(instance);
++         } else {
++            // Fallback to the vanilla registration when not a fabric provider
++            instance.m_124510_();
++         }
++      }
++
++      {
++         ItemModelGenerators instance = new ItemModelGenerators(biconsumer);
++         if (this instanceof net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider fabricModelProvider) {
++            fabricModelProvider.generateItemModels(instance);
++         } else {
++            // Fallback to the vanilla registration when not a fabric provider
++            instance.m_125083_();
++         }
++      }
++      // Fabric end
+       List<Block> list = BuiltInRegistries.f_256975_.m_123024_().filter((p_125117_) -> {
++         // Fabric start - ModelProviderMixin
++         {
++            org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("fabric$filterBlocksForProcessingMod", true);
++            fabric$filterBlocksForProcessingMod(p_125117_, cir);
++            if (cir.isCancelled()) {
++               return cir.getReturnValueZ();
++            }
++         }
++         // Fabric end
+          return !map.containsKey(p_125117_);
+       }).toList();
+       if (!list.isEmpty()) {
+@@ -65,6 +_,15 @@
+                   return;
+                }
+ 
++               // Fabric start - ModelProviderMixin
++               {
++                  org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable("fabric$filterItemsForProcessingMod", true);
++                  fabric$filterItemsForProcessingMod(p_125128_, cir, item);
++                  if (cir.isCancelled()) {
++                     return;
++                  }
++               }
++               // Fabric end
+                ResourceLocation resourcelocation = ModelLocationUtils.m_125571_(item);
+                if (!map1.containsKey(resourcelocation)) {
+                   map1.put(resourcelocation, new DelegatedModel(ModelLocationUtils.m_125576_(p_125128_)));
+@@ -72,9 +_,16 @@
+             }
+ 
+          });
+-         return CompletableFuture.allOf(this.m_252989_(p_253790_, map, (p_248016_) -> {
+-            return this.f_236325_.m_245731_(p_248016_.m_204297_().m_205785_().m_135782_());
+-         }), this.m_252989_(p_253790_, map1, this.f_236326_::m_245731_));
++
++         try {
++            return CompletableFuture.allOf(this.m_252989_(p_253790_, map, (p_248016_) -> {
++               return this.f_236325_.m_245731_(p_248016_.m_204297_().m_205785_().m_135782_());
++            }), this.m_252989_(p_253790_, map1, this.f_236326_::m_245731_));
++         } finally {
++            // Fabric start - ModelProviderMixin
++            fabric$runTail();
++            // Fabric end
++         }
+       }
+    }
+ 
+@@ -91,4 +_,61 @@
+    public final String m_6055_() {
+       return "Model Definitions";
+    }
++
++   // Fabric start - ModelProviderMixin
++   private net.fabricmc.fabric.api.datagen.v1.FabricDataOutput fabricDataOutput;
++
++   private static final ThreadLocal<net.fabricmc.fabric.api.datagen.v1.FabricDataOutput> fabricDataOutputThreadLocal = new ThreadLocal<>();
++
++   public void fabric$init(PackOutput p_252226_) {
++      if (p_252226_ instanceof net.fabricmc.fabric.api.datagen.v1.FabricDataOutput fabricDataOutput) {
++         this.fabricDataOutput = fabricDataOutput;
++      }
++   }
++
++   private static ThreadLocal<Map<Block, BlockStateGenerator>> blockStateMapThreadLocal = new ThreadLocal<>();
++
++   private void fabric$runHead(Map<Block, BlockStateGenerator> map) {
++      fabricDataOutputThreadLocal.set(fabricDataOutput);
++      blockStateMapThreadLocal.set(map);
++   }
++
++   private void fabric$runTail() {
++      fabricDataOutputThreadLocal.remove();
++      blockStateMapThreadLocal.remove();
++   }
++
++   private static void fabric$filterBlocksForProcessingMod(Block p_125117_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
++      net.fabricmc.fabric.api.datagen.v1.FabricDataOutput dataOutput = fabricDataOutputThreadLocal.get();
++
++      if (dataOutput != null) {
++         if (!dataOutput.isStrictValidationEnabled()) {
++            cir.setReturnValue(false);
++            return;
++         }
++
++         if (!BuiltInRegistries.f_256975_.m_7981_(p_125117_).m_135827_().equals(dataOutput.getModId())) {
++            // Skip over blocks that are not from the mod we are processing.
++            cir.setReturnValue(false);
++         }
++      }
++   }
++
++   private static void fabric$filterItemsForProcessingMod(Block p_125128_, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci, Item item) {
++      net.fabricmc.fabric.api.datagen.v1.FabricDataOutput dataOutput = fabricDataOutputThreadLocal.get();
++
++      if (dataOutput != null) {
++         // Only generate the item model if the block state json was registered
++         if (!blockStateMapThreadLocal.get().containsKey(p_125128_)) {
++            ci.cancel();
++            return;
++         }
++
++         if (!BuiltInRegistries.f_257033_.m_7981_(item).m_135827_().equals(dataOutput.getModId())) {
++            // Skip over any items from other mods.
++            ci.cancel();
++         }
++      }
++   }
++   // Fabric end
+ }

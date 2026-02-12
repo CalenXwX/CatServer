@@ -1,0 +1,19 @@
+--- a/net/minecraft/world/level/biome/BiomeSource.java
++++ b/net/minecraft/world/level/biome/BiomeSource.java
+@@ -37,8 +_,14 @@
+    protected abstract Stream<Holder<Biome>> m_274359_();
+ 
+    public Set<Holder<Biome>> m_207840_() {
+-      return this.f_47891_.get();
+-   }
++      return fabric_modifyBiomeSet(this.f_47891_.get()); // Fabric - BiomeSourceMixin
++   }
++
++   // Fabric start - BiomeSourceMixin
++   protected Set<Holder<Biome>> fabric_modifyBiomeSet(Set<Holder<Biome>> biomes) {
++      return biomes;
++   }
++   // Fabric end
+ 
+    public Set<Holder<Biome>> m_183399_(int p_186705_, int p_186706_, int p_186707_, int p_186708_, Climate.Sampler p_186709_) {
+       int i = QuartPos.m_175400_(p_186705_ - p_186708_);

@@ -1,22 +1,62 @@
 --- a/net/minecraft/server/packs/repository/PackRepository.java
 +++ b/net/minecraft/server/packs/repository/PackRepository.java
-@@ -23,7 +_,7 @@
+@@ -18,12 +_,17 @@
+ import net.minecraft.world.flag.FeatureFlagSet;
+ 
+ public class PackRepository {
+-   private final Set<RepositorySource> f_10497_;
++   private Set<RepositorySource> f_10497_; // Fabric - remove final
+    private Map<String, Pack> f_10498_ = ImmutableMap.of();
     private List<Pack> f_10499_ = ImmutableList.of();
  
     public PackRepository(RepositorySource... p_251886_) {
 -      this.f_10497_ = ImmutableSet.copyOf(p_251886_);
 +      this.f_10497_ = new java.util.LinkedHashSet<>(List.of(p_251886_)); //Forge: This needs to be a mutable set, so that we can add to it later on.
++      // Fabric start - ResourcePackManagerMixin
++      {
++         this.fabric$construct();
++      }
++      // Fabric end
     }
  
     public void m_10506_() {
-@@ -111,6 +_,10 @@
-    @Nullable
-    public Pack m_10507_(String p_10508_) {
+@@ -113,6 +_,10 @@
        return this.f_10498_.get(p_10508_);
-+   }
-+
-+   public synchronized void addPackFinder(RepositorySource packFinder) {
-+      this.f_10497_.add(packFinder);
     }
  
++   public synchronized void addPackFinder(RepositorySource packFinder) {
++      this.f_10497_.add(packFinder);
++   }
++
     public boolean m_10515_(String p_10516_) {
+       return this.f_10498_.containsKey(p_10516_);
+    }
+@@ -120,4 +_,28 @@
+    public List<PackResources> m_10525_() {
+       return this.f_10499_.stream().map(Pack::m_10445_).collect(ImmutableList.toImmutableList());
+    }
++
++   // Fabric start - ResourcePackManagerMixin
++   public void fabric$construct() {
++      // Use a LinkedHashSet to preserve ordering
++      f_10497_ = new java.util.LinkedHashSet<>(f_10497_);
++
++      // Search resource pack providers to find any server-related pack provider.
++      boolean shouldAddServerProvider = false;
++
++      for (RepositorySource provider : this.f_10497_) {
++         if (provider instanceof FolderRepositorySource
++                 && (((FolderRepositorySource) provider).f_10383_ == PackSource.f_10529_
++                 || ((FolderRepositorySource) provider).f_10383_ == PackSource.f_10530_)) {
++            shouldAddServerProvider = true;
++            break;
++         }
++      }
++
++      // On server, add the mod resource pack provider.
++      if (shouldAddServerProvider) {
++         f_10497_.add(new net.fabricmc.fabric.impl.resource.loader.ModResourcePackCreator(net.minecraft.server.packs.PackType.SERVER_DATA));
++      }
++   }
++   // Fabric end
+ }

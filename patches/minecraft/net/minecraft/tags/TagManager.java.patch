@@ -1,11 +1,116 @@
 --- a/net/minecraft/tags/TagManager.java
 +++ b/net/minecraft/tags/TagManager.java
-@@ -31,7 +_,7 @@
+@@ -1,6 +_,7 @@
+ package net.minecraft.tags;
+ 
+ import java.util.Collection;
++import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.CompletableFuture;
+@@ -16,7 +_,7 @@
+ import net.minecraft.server.packs.resources.ResourceManager;
+ import net.minecraft.util.profiling.ProfilerFiller;
+ 
+-public class TagManager implements PreparableReloadListener {
++public class TagManager implements PreparableReloadListener, net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener { // Fabric - KeyedResourceReloadListenerMixin
+    private static final Map<ResourceKey<? extends Registry<?>>, String> f_203902_ = Map.of(Registries.f_256747_, "tags/blocks", Registries.f_256939_, "tags/entity_types", Registries.f_256808_, "tags/fluids", Registries.f_256827_, "tags/game_events", Registries.f_256913_, "tags/items");
+    private final RegistryAccess f_144569_;
+    private List<TagManager.LoadResult<?>> f_203903_ = List.of();
+@@ -30,8 +_,18 @@
+    }
  
     public static String m_203918_(ResourceKey<? extends Registry<?>> p_203919_) {
++      {
++         // CatServer - Fabric only handles registries in DynamicRegistriesImpl.DYNAMIC_REGISTRY_KEYS
++         // Fabric start - TagManagerLoaderMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<String> info = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<String>("fabric$onGetPath", true);
++         fabric$onGetPath(p_203919_, info);
++         if (info.isCancelled()) {
++            return info.getReturnValue();
++         }
++         // Fabric end
++      }
        String s = f_203902_.get(p_203919_);
 -      return s != null ? s : "tags/" + p_203919_.m_135782_().m_135815_();
 +      return s != null ? s : "tags/" + net.minecraftforge.common.ForgeHooks.prefixNamespace(p_203919_.m_135782_());
     }
  
     public CompletableFuture<Void> m_5540_(PreparableReloadListener.PreparationBarrier p_13482_, ResourceManager p_13483_, ProfilerFiller p_13484_, ProfilerFiller p_13485_, Executor p_13486_, Executor p_13487_) {
+@@ -42,6 +_,9 @@
+          return new CompletableFuture[p_203906_];
+       })).thenCompose(p_13482_::m_6769_).thenAcceptAsync((p_203917_) -> {
+          this.f_203903_ = list.stream().map(CompletableFuture::join).collect(Collectors.toUnmodifiableList());
++         {
++            net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.setTags(this.f_203903_); // Fabric - TagManagerLoaderMixin
++         }
+       }, p_13487_);
+    }
+ 
+@@ -58,4 +_,66 @@
+ 
+    public static record LoadResult<T>(ResourceKey<? extends Registry<T>> f_203928_, Map<ResourceLocation, Collection<Holder<T>>> f_203929_) {
+    }
++
++   // Fabric start - KeyedResourceReloadListenerMixin
++   private ResourceLocation fabric$id;
++   private Collection<ResourceLocation> fabric$dependencies;
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public ResourceLocation getFabricId() {
++      if (this.fabric$id == null) {
++         /*Object self = this;
++
++         if (self instanceof RecipeManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.RECIPES;
++         } else if (self instanceof ServerAdvancementManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.ADVANCEMENTS;
++         } else if (self instanceof ServerFunctionLibrary) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.FUNCTIONS;
++         } else if (self instanceof LootDataManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.LOOT_TABLES;
++         } else if (self instanceof TagManager) */{
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS;
++         }/* else {
++            this.fabric$id = new ResourceLocation("minecraft", "private/" + self.getClass().getSimpleName().toLowerCase(Locale.ROOT));
++         }*/ // CatServer - only this class
++      }
++
++      return this.fabric$id;
++   }
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public Collection<ResourceLocation> getFabricDependencies() {
++      if (this.fabric$dependencies == null) {
++         /*Object self = this;
++
++         if (self instanceof TagManager) */{
++            this.fabric$dependencies = Collections.emptyList();
++         }/* else {
++            this.fabric$dependencies = Collections.singletonList(net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS);
++         }*/ // CatServer - only this class
++      }
++
++      return this.fabric$dependencies;
++   }
++   // Fabric end
++
++   // Fabric start - TagManagerLoaderMixin
++   private static void fabric$onGetPath(ResourceKey<? extends Registry<?>> registry, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<String> info) {
++      // TODO: Expand this change to static registries in the future.
++      if (!net.fabricmc.fabric.impl.registry.sync.DynamicRegistriesImpl.DYNAMIC_REGISTRY_KEYS.contains(registry)) {
++         return;
++      }
++
++      ResourceLocation id = registry.m_135782_();
++
++      // Vanilla doesn't mark namespaces in the directories of tags at all,
++      // so we prepend the directories with the namespace if it's a modded registry id.
++      if (!id.m_135827_().equals(ResourceLocation.f_179908_)) {
++         info.setReturnValue("tags/" + id.m_135827_() + "/" + id.m_135815_());
++      }
++   }
++   // Fabric end
+ }

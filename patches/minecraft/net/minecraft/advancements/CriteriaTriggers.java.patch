@@ -1,0 +1,11 @@
+--- a/net/minecraft/advancements/CriteriaTriggers.java
++++ b/net/minecraft/advancements/CriteriaTriggers.java
+@@ -45,7 +_,7 @@
+ import net.minecraft.advancements.critereon.UsingItemTrigger;
+ import net.minecraft.resources.ResourceLocation;
+ 
+-public class CriteriaTriggers {
++public class CriteriaTriggers implements net.fabricmc.fabric.mixin.object.builder.CriteriaAccessor { // Fabric - CriteriaAccessor
+    private static final Map<ResourceLocation, CriterionTrigger<?>> f_10566_ = Maps.newHashMap();
+    public static final ImpossibleTrigger f_10567_ = m_10595_(new ImpossibleTrigger());
+    public static final KilledTrigger f_10568_ = m_10595_(new KilledTrigger(new ResourceLocation("player_killed_entity")));

@@ -1,0 +1,49 @@
+--- a/net/minecraft/network/PacketEncoder.java
++++ b/net/minecraft/network/PacketEncoder.java
+@@ -10,7 +_,7 @@
+ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import org.slf4j.Logger;
+ 
+-public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
++public class PacketEncoder extends MessageToByteEncoder<Packet<?>> implements net.fabricmc.fabric.impl.recipe.ingredient.SupportedIngredientsPacketEncoder { // Fabric - PacketEncoderMixin
+    private static final Logger f_130538_ = LogUtils.getLogger();
+    private final PacketFlow f_130540_;
+ 
+@@ -36,7 +_,13 @@
+ 
+             try {
+                int j = friendlybytebuf.writerIndex();
++               {
++                  net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientSync.CURRENT_SUPPORTED_INGREDIENTS.set(fabric_supportedCustomIngredients); // Fabric - PacketEncoderMixin
++               }
+                p_130546_.m_5779_(friendlybytebuf);
++               {
++                  net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientSync.CURRENT_SUPPORTED_INGREDIENTS.set(null); // Fabric - PacketEncoderMixin
++               }
+                int k = friendlybytebuf.writerIndex() - j;
+                if (k > 8388608) {
+                   throw new IllegalArgumentException("Packet too big (is " + k + ", should be less than 8388608): " + p_130546_);
+@@ -46,6 +_,9 @@
+                }
+             } catch (Throwable throwable) {
+                f_130538_.error("Error receiving packet {}", i, throwable);
++               {
++                  net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientSync.CURRENT_SUPPORTED_INGREDIENTS.set(null); // Fabric - PacketEncoderMixin
++               }
+                if (p_130546_.m_6588_()) {
+                   throw new SkipPacketException(throwable);
+                } else {
+@@ -55,4 +_,13 @@
+          }
+       }
+    }
++
++   // Fabric start - PacketEncoderMixin
++   private java.util.Set<net.minecraft.resources.ResourceLocation> fabric_supportedCustomIngredients = java.util.Set.of();
++
++   @Override
++   public void fabric_setSupportedCustomIngredients(java.util.Set<net.minecraft.resources.ResourceLocation> supportedCustomIngredients) {
++      fabric_supportedCustomIngredients = supportedCustomIngredients;
++   }
++   // Fabric end
+ }

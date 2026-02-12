@@ -1,0 +1,14 @@
+--- a/net/minecraft/world/entity/ai/behavior/WorkAtComposter.java
++++ b/net/minecraft/world/entity/ai/behavior/WorkAtComposter.java
+@@ -16,8 +_,9 @@
+ import net.minecraft.world.level.block.ComposterBlock;
+ import net.minecraft.world.level.block.state.BlockState;
+ 
+-public class WorkAtComposter extends WorkAtPoi {
+-   private static final List<Item> f_24786_ = ImmutableList.of(Items.f_42404_, Items.f_42733_);
++public class WorkAtComposter extends WorkAtPoi implements net.fabricmc.fabric.mixin.content.registry.FarmerWorkTaskAccessor { // Fabric - FarmerWorkTaskAccessor
++   // CatServer - private -> public  remove final  for Fabric FarmerWorkTaskAccessor
++   public static List<Item> f_24786_ = ImmutableList.of(Items.f_42404_, Items.f_42733_);
+ 
+    protected void m_5628_(ServerLevel p_24790_, Villager p_24791_) {
+       Optional<GlobalPos> optional = p_24791_.m_6274_().m_21952_(MemoryModuleType.f_26360_);

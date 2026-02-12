@@ -45,7 +45,7 @@ import net.minecraftforge.common.ToolActions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface IForgeBlockState
+public interface IForgeBlockState extends net.fabricmc.fabric.api.block.v1.FabricBlockState // Fabric - BlockStateMixin
 {
     private BlockState self()
     {

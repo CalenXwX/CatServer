@@ -1,0 +1,90 @@
+--- a/net/minecraft/core/IdMapper.java
++++ b/net/minecraft/core/IdMapper.java
+@@ -10,7 +_,7 @@
+ import javax.annotation.Nullable;
+ import net.minecraft.Util;
+ 
+-public class IdMapper<T> implements IdMap<T> {
++public class IdMapper<T> implements IdMap<T>, net.fabricmc.fabric.impl.registry.sync.RemovableIdList<T> { // Fabric - IdListMixin
+    protected int f_122653_;
+    protected final Object2IntMap<T> f_122654_;
+    protected final List<T> f_122655_;
+@@ -63,4 +_,78 @@
+    public int m_13562_() {
+       return this.f_122654_.size();
+    }
++
++   // Fabric start - IdListMixin
++   @Override
++   public void fabric_clear() {
++      f_122653_ = 0;
++      f_122654_.clear();
++      f_122655_.clear();
++   }
++
++   private void fabric_removeInner(T o) {
++      int value = f_122654_.removeInt(o);
++      f_122655_.set(value, null);
++
++      while (f_122653_ > 1 && f_122655_.get(f_122653_ - 1) == null) {
++         f_122653_--;
++      }
++   }
++
++   @Override
++   public void fabric_remove(T o) {
++      if (f_122654_.containsKey(o)) {
++         fabric_removeInner(o);
++      }
++   }
++
++   @Override
++   public void fabric_removeId(int i) {
++      List<T> removals = new java.util.ArrayList<>();
++
++      for (T o : f_122654_.keySet()) {
++         int j = f_122654_.getInt(o);
++
++         if (i == j) {
++            removals.add(o);
++         }
++      }
++
++      removals.forEach(this::fabric_removeInner);
++   }
++
++   @Override
++   public void fabric_remapId(int from, int to) {
++      fabric_remapIds(it.unimi.dsi.fastutil.ints.Int2IntMaps.singleton(from, to));
++   }
++
++   @Override
++   public void fabric_remapIds(it.unimi.dsi.fastutil.ints.Int2IntMap map) {
++      // remap idMap
++      f_122654_.replaceAll((a, b) -> map.get((int) b));
++
++      // remap list
++      f_122653_ = 0;
++      List<T> oldList = new java.util.ArrayList<>(f_122655_);
++      f_122655_.clear();
++
++      for (int k = 0; k < oldList.size(); k++) {
++         T o = oldList.get(k);
++
++         if (o != null) {
++            int i = map.getOrDefault(k, k);
++
++            while (f_122655_.size() <= i) {
++               f_122655_.add(null);
++            }
++
++            f_122655_.set(i, o);
++
++            if (f_122653_ <= i) {
++               f_122653_ = i + 1;
++            }
++         }
++      }
++   }
++   // Fabric end
+ }

@@ -1,0 +1,11 @@
+--- a/net/minecraft/server/packs/repository/FolderRepositorySource.java
++++ b/net/minecraft/server/packs/repository/FolderRepositorySource.java
+@@ -25,7 +_,7 @@
+    private static final Logger f_244616_ = LogUtils.getLogger();
+    private final Path f_10382_;
+    private final PackType f_243749_;
+-   private final PackSource f_10383_;
++   public final PackSource f_10383_; // Fabric - private -> public
+ 
+    public FolderRepositorySource(Path p_251796_, PackType p_251664_, PackSource p_250854_) {
+       this.f_10382_ = p_251796_;

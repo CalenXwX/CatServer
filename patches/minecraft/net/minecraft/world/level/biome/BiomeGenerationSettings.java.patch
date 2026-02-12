@@ -1,13 +1,21 @@
 --- a/net/minecraft/world/level/biome/BiomeGenerationSettings.java
 +++ b/net/minecraft/world/level/biome/BiomeGenerationSettings.java
-@@ -39,6 +_,7 @@
+@@ -38,10 +_,11 @@
+          return p_186653_.f_47781_;
        })).apply(p_186655_, BiomeGenerationSettings::new);
     });
-    private final Map<GenerationStep.Carving, HolderSet<ConfiguredWorldCarver<?>>> f_47780_;
+-   private final Map<GenerationStep.Carving, HolderSet<ConfiguredWorldCarver<?>>> f_47780_;
+-   private final List<HolderSet<PlacedFeature>> f_47781_;
+-   private final Supplier<List<ConfiguredFeature<?, ?>>> f_47783_;
+-   private final Supplier<Set<PlacedFeature>> f_186648_;
++   public Map<GenerationStep.Carving, HolderSet<ConfiguredWorldCarver<?>>> f_47780_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
 +   private final java.util.Set<GenerationStep.Carving> carversView;
-    private final List<HolderSet<PlacedFeature>> f_47781_;
-    private final Supplier<List<ConfiguredFeature<?, ?>>> f_47783_;
-    private final Supplier<Set<PlacedFeature>> f_186648_;
++   public List<HolderSet<PlacedFeature>> f_47781_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Supplier<List<ConfiguredFeature<?, ?>>> f_47783_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Supplier<Set<PlacedFeature>> f_186648_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
+ 
+    BiomeGenerationSettings(Map<GenerationStep.Carving, HolderSet<ConfiguredWorldCarver<?>>> p_186650_, List<HolderSet<PlacedFeature>> p_186651_) {
+       this.f_47780_ = p_186650_;
 @@ -54,10 +_,15 @@
        this.f_186648_ = Suppliers.memoize(() -> {
           return p_186651_.stream().flatMap(HolderSet::m_203614_).map(Holder::m_203334_).collect(Collectors.toSet());

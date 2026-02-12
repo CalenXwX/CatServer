@@ -1,0 +1,31 @@
+--- a/net/minecraft/core/RegistryAccess.java
++++ b/net/minecraft/core/RegistryAccess.java
+@@ -65,7 +_,7 @@
+    public interface Frozen extends RegistryAccess {
+    }
+ 
+-   public static class ImmutableRegistryAccess implements RegistryAccess {
++   public static class ImmutableRegistryAccess implements RegistryAccess, net.fabricmc.fabric.impl.biome.modification.BiomeModificationMarker { // Fabric
+       private final Map<? extends ResourceKey<? extends Registry<?>>, ? extends Registry<?>> f_206223_;
+ 
+       public ImmutableRegistryAccess(List<? extends Registry<?>> p_248540_) {
+@@ -91,6 +_,19 @@
+       public Stream<RegistryAccess.RegistryEntry<?>> m_206193_() {
+          return this.f_206223_.entrySet().stream().map(RegistryAccess.RegistryEntry::m_206241_);
+       }
++
++      // Fabric start - DynamicRegistryManagerImmutableImplMixin
++      private boolean modified;
++
++      @Override
++      public void fabric_markModified() {
++         if (modified) {
++            throw new IllegalStateException("This dynamic registries instance has already been modified");
++         }
++
++         modified = true;
++      }
++      // Fabric end
+    }
+ 
+    public static record RegistryEntry<T>(ResourceKey<? extends Registry<T>> f_206233_, Registry<T> f_206234_) {

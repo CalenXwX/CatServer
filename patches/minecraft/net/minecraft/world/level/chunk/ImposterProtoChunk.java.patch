@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/level/chunk/ImposterProtoChunk.java
 +++ b/net/minecraft/world/level/chunk/ImposterProtoChunk.java
+@@ -29,7 +_,7 @@
+ import net.minecraft.world.ticks.BlackholeTickAccess;
+ import net.minecraft.world.ticks.TickContainerAccess;
+ 
+-public class ImposterProtoChunk extends ProtoChunk {
++public class ImposterProtoChunk extends ProtoChunk implements net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl { // Fabric - WrapperProtoChunkMixin
+    private final LevelChunk f_62685_;
+    private final boolean f_187918_;
+ 
 @@ -181,6 +_,11 @@
        this.f_62685_.m_284478_(p_285465_, p_285061_);
     }
@@ -12,3 +21,47 @@
     public TickContainerAccess<Block> m_183531_() {
        return this.f_187918_ ? this.f_62685_.m_183531_() : BlackholeTickAccess.m_193144_();
     }
+@@ -244,4 +_,43 @@
+    public ChunkSkyLightSources m_284400_() {
+       return this.f_62685_.m_284400_();
+    }
++
++   // Fabric start - WrapperProtoChunkMixin
++   @Override
++   @Nullable
++   public <T> T getAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type) {
++      return this.f_62685_.getAttached(type);
++   }
++
++   @Override
++   @Nullable
++   public <T> T setAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type, @Nullable T value) {
++      return this.f_62685_.setAttached(type, value);
++   }
++
++   @Override
++   public boolean hasAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<?> type) {
++      return this.f_62685_.hasAttached(type);
++   }
++
++   @Override
++   public void fabric_writeAttachmentsToNbt(CompoundTag nbt) {
++      ((net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl) this.f_62685_).fabric_writeAttachmentsToNbt(nbt);
++   }
++
++   @Override
++   public void fabric_readAttachmentsFromNbt(CompoundTag nbt) {
++      ((net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl) this.f_62685_).fabric_readAttachmentsFromNbt(nbt);
++   }
++
++   @Override
++   public boolean fabric_hasPersistentAttachments() {
++      return ((net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl) this.f_62685_).fabric_hasPersistentAttachments();
++   }
++
++   @Override
++   public Map<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, ?> fabric_getAttachments() {
++      return ((net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl) this.f_62685_).fabric_getAttachments();
++   }
++   // Fabric end
+ }

@@ -1,6 +1,11 @@
 --- a/net/minecraft/world/level/block/entity/RandomizableContainerBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/RandomizableContainerBlockEntity.java
-@@ -27,8 +_,8 @@
+@@ -23,12 +_,12 @@
+ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+ import net.minecraft.world.phys.Vec3;
+ 
+-public abstract class RandomizableContainerBlockEntity extends BaseContainerBlockEntity {
++public abstract class RandomizableContainerBlockEntity extends BaseContainerBlockEntity implements net.fabricmc.fabric.impl.transfer.item.SpecialLogicInventory { // Fabric - LootableContainerBlockEntityMixin
     public static final String f_155626_ = "LootTable";
     public static final String f_155627_ = "LootTableSeed";
     @Nullable
@@ -11,3 +16,34 @@
  
     protected RandomizableContainerBlockEntity(BlockEntityType<?> p_155629_, BlockPos p_155630_, BlockState p_155631_) {
        super(p_155629_, p_155630_, p_155631_);
+@@ -120,7 +_,11 @@
+          p_59617_.m_41764_(this.m_6893_());
+       }
+ 
+-      this.m_6596_();
++      // Fabric start - LootableContainerBlockEntityMixin
++      if (!fabric_suppressSpecialLogic) {
++         this.m_6596_();
++      }
++      // Fabric end
+    }
+ 
+    public boolean m_6542_(Player p_59619_) {
+@@ -148,4 +_,17 @@
+          return null;
+       }
+    }
++
++   // Fabric start - LootableContainerBlockEntityMixin
++   private boolean fabric_suppressSpecialLogic = false;
++
++   @Override
++   public void fabric_setSuppress(boolean suppress) {
++      fabric_suppressSpecialLogic = suppress;
++   }
++
++   @Override
++   public void fabric_onFinalCommit(int slot, ItemStack oldStack, ItemStack newStack) {
++   }
++   // Fabric end
+ }

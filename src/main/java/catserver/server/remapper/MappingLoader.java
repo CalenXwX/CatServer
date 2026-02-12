@@ -35,6 +35,8 @@ public class MappingLoader {
             loadNmsMappings(globalJarMapping, CatServer.NATIVE_VERSION);
             loadNmsPreMappings(globalPreJarMapping, CatServer.NATIVE_VERSION);
 
+            loadIntermediaryMappings(globalJarMapping, CatServer.NATIVE_VERSION); // Fabric
+
             fieldPackages = JarMapping.class.getDeclaredField("packages");
             fieldPackages.setAccessible(true);
 
@@ -61,6 +63,13 @@ public class MappingLoader {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Fabric
+    private static void loadIntermediaryMappings(JarMapping jarMapping, String obfVersion) throws IOException {
+        jarMapping.loadMappings(
+                new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/intermediary2srg.srg"))),
+                null, null, false);
     }
 
     private static void loadNmsMappings(JarMapping jarMapping, String obfVersion) throws IOException {

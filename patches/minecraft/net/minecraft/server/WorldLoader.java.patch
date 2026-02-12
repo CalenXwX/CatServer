@@ -5,7 +5,7 @@
           CloseableResourceManager closeableresourcemanager = pair.getSecond();
           LayeredRegistryAccess<RegistryLayer> layeredregistryaccess = RegistryLayer.m_245849_();
 -         LayeredRegistryAccess<RegistryLayer> layeredregistryaccess1 = m_245736_(closeableresourcemanager, layeredregistryaccess, RegistryLayer.WORLDGEN, RegistryDataLoader.f_243803_);
-+         LayeredRegistryAccess<RegistryLayer> layeredregistryaccess1 = m_245736_(closeableresourcemanager, layeredregistryaccess, RegistryLayer.WORLDGEN, net.minecraftforge.registries.DataPackRegistriesHooks.getDataPackRegistries());
++         LayeredRegistryAccess<RegistryLayer> layeredregistryaccess1 = m_245736_(closeableresourcemanager, layeredregistryaccess, RegistryLayer.WORLDGEN, net.minecraftforge.registries.DataPackRegistriesHooks.getDataPackRegistries()); // Fabric - SaveLoadingMixin // CatServer - we redirect Fabric's DynamicRegistriesImpl.DYNAMIC_REGISTRIES to Forge's DataPackRegistriesHooks.DATA_PACK_REGISTRIES
           RegistryAccess.Frozen registryaccess$frozen = layeredregistryaccess1.m_246035_(RegistryLayer.DIMENSIONS);
           RegistryAccess.Frozen registryaccess$frozen1 = RegistryDataLoader.m_247207_(closeableresourcemanager, registryaccess$frozen, RegistryDataLoader.f_244547_);
           WorldDataConfiguration worlddataconfiguration = pair.getFirst();

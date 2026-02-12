@@ -5,12 +5,12 @@
  import net.minecraft.network.protocol.Packet;
  
 -public class ServerboundCustomQueryPacket implements Packet<ServerLoginPacketListener> {
-+public class ServerboundCustomQueryPacket implements Packet<ServerLoginPacketListener>, net.minecraftforge.network.ICustomPacket<ServerboundCustomQueryPacket>
++public class ServerboundCustomQueryPacket implements Packet<ServerLoginPacketListener>, net.minecraftforge.network.ICustomPacket<ServerboundCustomQueryPacket>, net.fabricmc.fabric.mixin.networking.accessor.LoginQueryResponseC2SPacketAccessor // Fabric - LoginQueryResponseC2SPacketAccessor
 +{
     private static final int f_179821_ = 1048576;
     private final int f_134825_;
     @Nullable
-@@ -46,4 +_,8 @@
+@@ -46,4 +_,21 @@
     public FriendlyByteBuf m_179825_() {
        return this.f_134826_;
     }
@@ -18,4 +18,17 @@
 +   @Override public int getIndex() { return m_179824_(); }
 +   @Override public net.minecraft.resources.ResourceLocation getName() { return net.minecraftforge.network.LoginWrapper.WRAPPER; }
 +   @org.jetbrains.annotations.Nullable @Override public FriendlyByteBuf getInternalData() { return m_179825_(); }
++
++   // Fabric start - LoginQueryResponseC2SPacketAccessor
++   @Override
++   public int getQueryId() {
++      return this.f_134825_;
++   }
++
++   @Nullable
++   @Override
++   public FriendlyByteBuf getResponse() {
++      return this.f_134826_;
++   }
++   // Fabric end
  }

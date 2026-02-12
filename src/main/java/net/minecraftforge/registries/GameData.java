@@ -338,6 +338,15 @@ public class GameData {
                 aggregate.addSuppressed(t);
             }
         }
+        // CatServer start - from net.minencraft.server.Main#main
+        // Fabric start - EntrypointPatch
+        {
+            if (!catserver.server.CatServer.fabricDisabled) {
+                net.fabricmc.loader.impl.game.minecraft.Hooks.startServer(null, null); // Fabric - EntrypointPatch
+            }
+        }
+        // Fabric end
+        // CatServer end
         if (aggregate.getSuppressed().length > 0)
         {
             LOGGER.fatal("Failed to register some entries, see suppressed exceptions for details", aggregate);

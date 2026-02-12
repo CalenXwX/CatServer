@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/entity/npc/VillagerType.java
 +++ b/net/minecraft/world/entity/npc/VillagerType.java
+@@ -20,7 +_,7 @@
+    public static final VillagerType f_35824_ = m_35831_("swamp");
+    public static final VillagerType f_35825_ = m_35831_("taiga");
+    private final String f_35826_;
+-   private static final Map<ResourceKey<Biome>, VillagerType> f_35827_ = Util.m_137469_(Maps.newHashMap(), (p_35834_) -> {
++   public static final Map<ResourceKey<Biome>, VillagerType> f_35827_ = Util.m_137469_(Maps.newHashMap(), (p_35834_) -> { // CatServer - private -> public for Fabric VillagerTypeHelper
+       p_35834_.put(Biomes.f_48159_, f_35819_);
+       p_35834_.put(Biomes.f_48203_, f_35819_);
+       p_35834_.put(Biomes.f_48194_, f_35819_);
 @@ -67,4 +_,9 @@
     public static VillagerType m_204073_(Holder<Biome> p_204074_) {
        return p_204074_.m_203543_().map(f_35827_::get).orElse(f_35821_);

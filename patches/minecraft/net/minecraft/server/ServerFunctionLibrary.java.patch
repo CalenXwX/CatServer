@@ -1,0 +1,73 @@
+--- a/net/minecraft/server/ServerFunctionLibrary.java
++++ b/net/minecraft/server/ServerFunctionLibrary.java
+@@ -7,10 +_,7 @@
+ import com.mojang.logging.LogUtils;
+ import java.io.BufferedReader;
+ import java.io.IOException;
+-import java.util.Collection;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Optional;
++import java.util.*;
+ import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.CompletionException;
+ import java.util.concurrent.Executor;
+@@ -31,7 +_,7 @@
+ import net.minecraft.world.phys.Vec3;
+ import org.slf4j.Logger;
+ 
+-public class ServerFunctionLibrary implements PreparableReloadListener {
++public class ServerFunctionLibrary implements PreparableReloadListener, net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener { // Fabric - KeyedResourceReloadListenerMixin
+    private static final Logger f_136043_ = LogUtils.getLogger();
+    private static final FileToIdConverter f_244053_ = new FileToIdConverter("functions", ".mcfunction");
+    private volatile Map<ResourceLocation, CommandFunction> f_136046_ = ImmutableMap.of();
+@@ -111,4 +_,49 @@
+          throw new CompletionException(ioexception);
+       }
+    }
++
++   // Fabric start - KeyedResourceReloadListenerMixin
++   private ResourceLocation fabric$id;
++   private Collection<ResourceLocation> fabric$dependencies;
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public ResourceLocation getFabricId() {
++      if (this.fabric$id == null) {
++         /*Object self = this;
++
++         if (self instanceof RecipeManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.RECIPES;
++         } else if (self instanceof ServerAdvancementManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.ADVANCEMENTS;
++         } else if (self instanceof ServerFunctionLibrary) */{
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.FUNCTIONS;
++         }/* else if (self instanceof LootDataManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.LOOT_TABLES;
++         } else if (self instanceof TagManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS;
++         } else {
++            this.fabric$id = new ResourceLocation("minecraft", "private/" + self.getClass().getSimpleName().toLowerCase(Locale.ROOT));
++         }*/ // CatServer - only this class
++      }
++
++      return this.fabric$id;
++   }
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public Collection<ResourceLocation> getFabricDependencies() {
++      if (this.fabric$dependencies == null) {
++         /*Object self = this;
++
++         if (self instanceof TagManager) {
++            this.fabric$dependencies = Collections.emptyList();
++         } else */{
++            this.fabric$dependencies = Collections.singletonList(net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS);
++         } // CatServer - only this class
++      }
++
++      return this.fabric$dependencies;
++   }
++   // Fabric end
+ }

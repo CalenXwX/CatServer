@@ -42,6 +42,12 @@ dependencies {
 
     testCompileOnly("org.jetbrains:annotations:${JETBRAINS_ANNOTATIONS_VERSION}")
     testRuntimeOnly("cpw.mods:bootstraplauncher:${BOOTSTRAPLAUNCHER_VERSION}")
+
+    // CatServer start - for Fabric loader
+    api("org.ow2.asm:asm-util:${ASM_VERSION}")
+    api("org.ow2.asm:asm-analysis:${ASM_VERSION}")
+    api("net.fabricmc:sponge-mixin:0.17.0+mixin.0.8.7")
+    // CatServer end
 }
 
 task sourcesJar(type: Jar) {

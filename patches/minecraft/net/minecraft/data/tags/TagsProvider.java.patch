@@ -66,7 +66,7 @@
           Predicate<ResourceLocation> predicate = (p_255496_) -> {
              return registrylookup.m_254902_(ResourceKey.m_135785_(this.f_254716_, p_255496_)).isPresent();
           };
-@@ -75,14 +_,16 @@
+@@ -75,14 +_,21 @@
              ResourceLocation resourcelocation = p_255499_.getKey();
              TagBuilder tagbuilder = p_255499_.getValue();
              List<TagEntry> list = tagbuilder.m_215904_();
@@ -84,6 +84,11 @@
 +               JsonElement jsonelement = TagFile.f_215958_.encodeStart(JsonOps.INSTANCE, new TagFile(list, tagbuilder.isReplace(), removed)).getOrThrow(false, f_126541_::error);
 +               Path path = this.getPath(resourcelocation);
 +               if (path == null) return CompletableFuture.completedFuture(null); // Forge: Allow running this data provider without writing it. Recipe provider needs valid tags.
++               // Fabric start - TagProviderMixin
++               {
++                  this.fabric$addReplaced(tagbuilder, jsonelement);
++               }
++               // Fabric end
                 return DataProvider.m_253162_(p_253684_, jsonelement, path);
              }
           }).toArray((p_253442_) -> {
@@ -114,13 +119,14 @@
           return TagBuilder.m_215899_();
        });
     }
-@@ -118,11 +_,13 @@
+@@ -118,20 +_,22 @@
        });
     }
  
 -   public static class TagAppender<T> {
+-      private final TagBuilder f_126568_;
 +   public static class TagAppender<T> implements net.minecraftforge.common.extensions.IForgeTagAppender<T> {
-       private final TagBuilder f_126568_;
++      public final TagBuilder f_126568_; // CatServer - private -> public for Fabric FabricTagBuilder
 +      private final String modId;
  
 -      protected TagAppender(TagBuilder p_256426_) {
@@ -130,12 +136,23 @@
 +         this.modId = modId;
        }
  
-       public final TagsProvider.TagAppender<T> m_255204_(ResourceKey<T> p_256138_) {
-@@ -152,6 +_,19 @@
-       public TagsProvider.TagAppender<T> m_176841_(ResourceLocation p_176842_) {
+-      public final TagsProvider.TagAppender<T> m_255204_(ResourceKey<T> p_256138_) {
++      public TagsProvider.TagAppender<T> m_255204_(ResourceKey<T> p_256138_) { // CatServer - remove final for Fabric FabricTagBuilder
+          this.f_126568_.m_215900_(p_256138_.m_135782_());
+          return this;
+       }
+ 
+-      @SafeVarargs
+-      public final TagsProvider.TagAppender<T> m_211101_(ResourceKey<T>... p_211102_) {
++      // @SafeVarargs // CatServer - removed final, so @SafeVarargs is not allowed
++      public TagsProvider.TagAppender<T> m_211101_(ResourceKey<T>... p_211102_) { // CatServer - remove final for Fabric FabricTagBuilder
+          for(ResourceKey<T> resourcekey : p_211102_) {
+             this.f_126568_.m_215900_(resourcekey.m_135782_());
+          }
+@@ -153,6 +_,19 @@
           this.f_126568_.m_215909_(p_176842_);
           return this;
-+      }
+       }
 +
 +      public TagsProvider.TagAppender<T> add(TagEntry tag) {
 +          f_126568_.m_215902_(tag);
@@ -148,6 +165,20 @@
 +
 +      public String getModID() {
 +          return modId;
-       }
++      }
     }
  
+    @FunctionalInterface
+@@ -167,4 +_,12 @@
+          return this.apply(p_275413_).isPresent();
+       }
+    }
++
++   // Fabric start - TagProviderMixin
++   public void fabric$addReplaced(TagBuilder tagbuilder, JsonElement jsonelement) {
++      /*if (tagbuilder instanceof net.fabricmc.fabric.impl.datagen.FabricTagBuilder fabricTagBuilder) */{ // CatServer - compile error: Pattern type 'FabricTagBuilder' is a supertype of expression type 'TagBuilder'
++         jsonelement.getAsJsonObject().addProperty("replace", tagbuilder.fabric_isReplaced());
++      }
++   }
++   // Fabric end
+ }

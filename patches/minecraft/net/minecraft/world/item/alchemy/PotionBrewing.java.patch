@@ -1,5 +1,16 @@
 --- a/net/minecraft/world/item/alchemy/PotionBrewing.java
 +++ b/net/minecraft/world/item/alchemy/PotionBrewing.java
+@@ -12,8 +_,8 @@
+ 
+ public class PotionBrewing {
+    public static final int f_151252_ = 20;
+-   private static final List<PotionBrewing.Mix<Potion>> f_43494_ = Lists.newArrayList();
+-   private static final List<PotionBrewing.Mix<Item>> f_43495_ = Lists.newArrayList();
++   public static final List<PotionBrewing.Mix<Potion>> f_43494_ = Lists.newArrayList(); // CatServer - private -> public for Fabric FabricBrewingRecipeRegistry
++   public static final List<PotionBrewing.Mix<Item>> f_43495_ = Lists.newArrayList(); // CatServer - private -> public for Fabric FabricBrewingRecipeRegistry
+    private static final List<Ingredient> f_43496_ = Lists.newArrayList();
+    private static final Predicate<ItemStack> f_43497_ = (p_43528_) -> {
+       for(Ingredient ingredient : f_43496_) {
 @@ -57,7 +_,7 @@
        int i = 0;
  
@@ -58,11 +69,13 @@
        }
     }
  
-@@ -209,18 +_,18 @@
+@@ -208,19 +_,19 @@
+       }
     }
  
-    private static void m_43513_(Potion p_43514_, Item p_43515_, Potion p_43516_) {
+-   private static void m_43513_(Potion p_43514_, Item p_43515_, Potion p_43516_) {
 -      f_43494_.add(new PotionBrewing.Mix<>(p_43514_, Ingredient.m_43929_(p_43515_), p_43516_));
++   public static void m_43513_(Potion p_43514_, Item p_43515_, Potion p_43516_) { // CatServer - private -> public compat:fabric-mod:shape-shifter-curse-1.8.2:net.onixary.shapeShifterCurseFabric.items.RegCustomPotions#registerPotionsRecipes
 +      f_43494_.add(new PotionBrewing.Mix<>(net.minecraftforge.registries.ForgeRegistries.POTIONS, p_43514_, Ingredient.m_43929_(p_43515_), p_43516_));
     }
  

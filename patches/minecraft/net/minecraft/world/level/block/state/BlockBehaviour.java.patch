@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/level/block/state/BlockBehaviour.java
 +++ b/net/minecraft/world/level/block/state/BlockBehaviour.java
+@@ -75,7 +_,7 @@
+ import net.minecraft.world.phys.shapes.Shapes;
+ import net.minecraft.world.phys.shapes.VoxelShape;
+ 
+-public abstract class BlockBehaviour implements FeatureElement {
++public abstract class BlockBehaviour implements FeatureElement, net.fabricmc.fabric.mixin.object.builder.AbstractBlockAccessor { // Fabric - AbstractBlockAccessor
+    protected static final Direction[] f_60441_ = new Direction[]{Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH, Direction.DOWN, Direction.UP};
+    protected final boolean f_60443_;
+    protected final float f_60444_;
 @@ -102,6 +_,17 @@
        this.f_60438_ = p_60452_.f_60903_;
        this.f_243733_ = p_60452_.f_244138_;
@@ -108,6 +117,15 @@
           return this.f_278134_;
        }
  
+@@ -941,7 +_,7 @@
+       XYZ;
+    }
+ 
+-   public static class Properties {
++   public static class Properties extends catserver.server.utils.CatServerBlockProperties implements net.fabricmc.fabric.mixin.object.builder.AbstractBlockSettingsAccessor { // Fabric - AbstractBlockSettingsAccessor
+       Function<BlockState, MapColor> f_283880_ = (p_284884_) -> {
+          return MapColor.f_283808_;
+       };
 @@ -972,8 +_,9 @@
        boolean f_243850_ = true;
        NoteBlockInstrument f_279538_ = NoteBlockInstrument.HARP;
@@ -119,6 +137,24 @@
        };
        BlockBehaviour.StatePredicate f_60898_ = (p_284888_, p_284889_, p_284890_) -> {
           return p_284888_.m_60838_(p_284889_, p_284890_);
+@@ -992,7 +_,7 @@
+       FeatureFlagSet f_244138_ = FeatureFlags.f_244377_;
+       Optional<BlockBehaviour.OffsetFunction> f_271289_ = Optional.empty();
+ 
+-      private Properties() {
++      protected Properties() { // CatServer - private -> protected for Fabric FabricBlockSettings
+       }
+ 
+       public static BlockBehaviour.Properties m_284310_() {
+@@ -1078,7 +_,7 @@
+          return this;
+       }
+ 
+-      public BlockBehaviour.Properties m_60953_(ToIntFunction<BlockState> p_60954_) {
++      public BlockBehaviour.Properties lightLevel(ToIntFunction<BlockState> p_60954_) {
+          this.f_60886_ = p_60954_;
+          return this;
+       }
 @@ -1111,9 +_,15 @@
           return this;
        }
@@ -136,3 +172,261 @@
        }
  
        public BlockBehaviour.Properties m_278183_() {
+@@ -1242,6 +_,245 @@
+          this.f_279630_ = true;
+          return this;
+       }
++
++      // Fabric start - AbstractBlockSettingsAccessor
++      /* GETTERS */
++      @Override
++      public float getHardness() {
++         return this.f_60888_;
++      }
++
++      @Override
++      public float getResistance() {
++         return this.f_60887_;
++      }
++
++      @Override
++      public boolean getCollidable() {
++         return this.f_60884_;
++      }
++
++      @Override
++      public boolean getRandomTicks() {
++         return this.f_60890_;
++      }
++
++      @Override
++      public ToIntFunction<BlockState> getLuminance() {
++         return this.f_60886_;
++      }
++
++      @Override
++      public Function<BlockState, MapColor> getMapColorProvider() {
++         return this.f_283880_;
++      }
++
++      @Override
++      public SoundType getSoundGroup() {
++         return this.f_60885_;
++      }
++
++      @Override
++      public float getSlipperiness() {
++         return this.f_60891_;
++      }
++
++      @Override
++      public float getVelocityMultiplier() {
++         return this.f_60892_;
++      }
++
++      @Override
++      public float getJumpVelocityMultiplier() {
++         return this.f_60893_;
++      }
++
++      @Override
++      public boolean getDynamicBounds() {
++         return this.f_60903_;
++      }
++
++      @Override
++      public boolean getOpaque() {
++         return this.f_60895_;
++      }
++
++      @Override
++      public boolean getIsAir() {
++         return this.f_60896_;
++      }
++
++      @Override
++      public boolean isToolRequired() {
++         return this.f_60889_;
++      }
++
++      @Override
++      public BlockBehaviour.StateArgumentPredicate<EntityType<?>> getAllowsSpawningPredicate() {
++         return this.f_60897_;
++      }
++
++      @Override
++      public BlockBehaviour.StatePredicate getSolidBlockPredicate() {
++         return this.f_60898_;
++      }
++
++      @Override
++      public BlockBehaviour.StatePredicate getSuffocationPredicate() {
++         return this.f_60899_;
++      }
++
++      @Override
++      public BlockBehaviour.StatePredicate getBlockVisionPredicate() {
++         return this.f_60900_;
++      }
++
++      @Override
++      public BlockBehaviour.StatePredicate getPostProcessPredicate() {
++         return this.f_60901_;
++      }
++
++      @Override
++      public BlockBehaviour.StatePredicate getEmissiveLightingPredicate() {
++         return this.f_60902_;
++      }
++
++      @Override
++      public Optional<BlockBehaviour.OffsetFunction> getOffsetter() {
++         return this.f_271289_;
++      }
++
++      @Override
++      public ResourceLocation getLootTableId() {
++         return this.f_60894_;
++      }
++
++      @Override
++      public boolean getBlockBreakParticles() {
++         return this.f_243850_;
++      }
++
++      @Override
++      public FeatureFlagSet getRequiredFeatures() {
++         return this.f_244138_;
++      }
++
++      @Override
++      public boolean getBurnable() {
++         return this.f_278123_;
++      }
++
++      @Override
++      public boolean getLiquid() {
++         return this.f_278418_;
++      }
++
++      @Override
++      public boolean getForceNotSolid() {
++         return this.f_279665_;
++      }
++
++      @Override
++      public boolean getForceSolid() {
++         return this.f_279618_;
++      }
++
++      @Override
++      public PushReaction getPistonBehavior() {
++         return this.f_278130_;
++      }
++
++      @Override
++      public NoteBlockInstrument getInstrument() {
++         return this.f_279538_;
++      }
++
++      @Override
++      public boolean getReplaceable() {
++         return this.f_279630_;
++      }
++
++      /* SETTERS */
++      @Override
++      public void setCollidable(boolean collidable) {
++         this.f_60884_ = collidable;
++      }
++
++      @Override
++      public void setRandomTicks(boolean ticksRandomly) {
++         this.f_60890_ = ticksRandomly;
++      }
++
++      @Override
++      public void setMapColorProvider(Function<BlockState, MapColor> mapColorProvider) {
++         this.f_283880_ = mapColorProvider;
++      }
++
++      @Override
++      public void setDynamicBounds(boolean dynamicBounds) {
++         this.f_60903_ = dynamicBounds;
++      }
++
++      @Override
++      public void setOpaque(boolean opaque) {
++         this.f_60895_ = opaque;
++      }
++
++      @Override
++      public void setIsAir(boolean isAir) {
++         this.f_60896_ = isAir;
++      }
++
++      @Override
++      public void setLootTableId(ResourceLocation lootTableId) {
++         this.f_60894_ = lootTableId;
++      }
++
++      @Override
++      public void setToolRequired(boolean toolRequired) {
++         this.f_60889_ = toolRequired;
++      }
++
++      @Override
++      public void setBlockBreakParticles(boolean blockBreakParticles) {
++         this.f_243850_ = blockBreakParticles;
++      }
++
++      @Override
++      public void setRequiredFeatures(FeatureFlagSet requiredFeatures) {
++         this.f_244138_ = requiredFeatures;
++      }
++
++      @Override
++      public void setOffsetter(Optional<BlockBehaviour.OffsetFunction> offsetter) {
++         this.f_271289_ = offsetter;
++      }
++
++      @Override
++      public void setBurnable(boolean burnable) {
++         this.f_278123_ = burnable;
++      }
++
++      @Override
++      public void setLiquid(boolean liquid) {
++         this.f_278418_ = liquid;
++      }
++
++      @Override
++      public void setForceNotSolid(boolean forceNotSolid) {
++         this.f_279665_ = forceNotSolid;
++      }
++
++      @Override
++      public void setForceSolid(boolean forceSolid) {
++         this.f_279618_ = forceSolid;
++      }
++
++      @Override
++      public void setReplaceable(boolean replaceable) {
++         this.f_279630_ = replaceable;
++      }
++      // Fabric end
+    }
+ 
+    public interface StateArgumentPredicate<A> {
+@@ -1251,4 +_,11 @@
+    public interface StatePredicate {
+       boolean m_61035_(BlockState p_61036_, BlockGetter p_61037_, BlockPos p_61038_);
+    }
++
++   // Fabric start - AbstractBlockAccessor
++   @Override
++   public BlockBehaviour.Properties getSettings() {
++      return this.f_60439_;
++   }
++   // Fabric end
+ }

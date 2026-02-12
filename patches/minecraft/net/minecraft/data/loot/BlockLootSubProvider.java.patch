@@ -1,5 +1,14 @@
 --- a/net/minecraft/data/loot/BlockLootSubProvider.java
 +++ b/net/minecraft/data/loot/BlockLootSubProvider.java
+@@ -72,7 +_,7 @@
+ import net.minecraft.world.level.storage.loot.providers.number.NumberProvider;
+ import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+ 
+-public abstract class BlockLootSubProvider implements LootTableSubProvider {
++public abstract class BlockLootSubProvider implements LootTableSubProvider, net.fabricmc.fabric.api.datagen.v1.loot.FabricBlockLootTableGenerator { // Fabric - BlockLootTableGeneratorMixin
+    protected static final LootItemCondition.Builder f_243678_ = MatchTool.m_81997_(ItemPredicate.Builder.m_45068_().m_45071_(new EnchantmentPredicate(Enchantments.f_44985_, MinMaxBounds.Ints.m_55386_(1))));
+    protected static final LootItemCondition.Builder f_244217_ = f_243678_.m_81807_();
+    protected static final LootItemCondition.Builder f_243905_ = MatchTool.m_81997_(ItemPredicate.Builder.m_45068_().m_151445_(Items.f_42574_));
 @@ -265,11 +_,15 @@
  
     protected abstract void m_245660_();
@@ -17,3 +26,12 @@
           if (block.m_245993_(this.f_243739_)) {
              ResourceLocation resourcelocation = block.m_60589_();
              if (resourcelocation != BuiltInLootTables.f_78712_ && set.add(resourcelocation)) {
+@@ -324,7 +_,7 @@
+       this.m_247577_(p_251966_, p_251699_.apply(p_251966_));
+    }
+ 
+-   protected void m_247577_(Block p_250610_, LootTable.Builder p_249817_) {
++   public void m_247577_(Block p_250610_, LootTable.Builder p_249817_) { // CatServer - protected -> public for Fabric
+       this.f_244441_.put(p_250610_.m_60589_(), p_249817_);
+    }
+ }

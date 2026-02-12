@@ -1,12 +1,22 @@
 --- a/net/minecraft/server/ServerAdvancementManager.java
 +++ b/net/minecraft/server/ServerAdvancementManager.java
-@@ -22,22 +_,39 @@
+@@ -7,6 +_,7 @@
+ import com.google.gson.JsonObject;
+ import com.mojang.logging.LogUtils;
+ import java.util.Collection;
++import java.util.Collections;
+ import java.util.Map;
+ import javax.annotation.Nullable;
+ import net.minecraft.advancements.Advancement;
+@@ -21,23 +_,40 @@
+ import net.minecraft.world.level.storage.loot.LootDataManager;
  import org.slf4j.Logger;
  
- public class ServerAdvancementManager extends SimpleJsonResourceReloadListener {
+-public class ServerAdvancementManager extends SimpleJsonResourceReloadListener {
 -   private static final Logger f_136021_ = LogUtils.getLogger();
 -   private static final Gson f_136022_ = (new GsonBuilder()).create();
 -   private AdvancementList f_136023_ = new AdvancementList();
++public class ServerAdvancementManager extends SimpleJsonResourceReloadListener implements net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener { // Fabric - KeyedResourceReloadListenerMixin
 +   public static final Logger f_136021_ = LogUtils.getLogger(); // CatServer - private -> public
 +   public static final Gson f_136022_ = (new GsonBuilder()).create(); // CatServer - private -> public
 +   public AdvancementList f_136023_ = new AdvancementList(); // CatServer - private -> public
@@ -44,3 +54,53 @@
              map.put(p_278903_, advancement$builder);
           } catch (Exception exception) {
              f_136021_.error("Parsing error loading custom advancement {}: {}", p_278903_, exception.getMessage());
+@@ -64,4 +_,49 @@
+    public Collection<Advancement> m_136028_() {
+       return this.f_136023_.m_139344_();
+    }
++
++   // Fabric start - KeyedResourceReloadListenerMixin
++   private ResourceLocation fabric$id;
++   private Collection<ResourceLocation> fabric$dependencies;
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public ResourceLocation getFabricId() {
++      if (this.fabric$id == null) {
++         /*Object self = this;
++
++         if (self instanceof RecipeManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.RECIPES;
++         } else if (self instanceof ServerAdvancementManager) */{
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.ADVANCEMENTS;
++         }/* else if (self instanceof ServerFunctionLibrary) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.FUNCTIONS;
++         } else if (self instanceof LootDataManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.LOOT_TABLES;
++         } else if (self instanceof TagManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS;
++         } else {
++            this.fabric$id = new ResourceLocation("minecraft", "private/" + self.getClass().getSimpleName().toLowerCase(Locale.ROOT));
++         }*/ // CatServer - only this class
++      }
++
++      return this.fabric$id;
++   }
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public Collection<ResourceLocation> getFabricDependencies() {
++      if (this.fabric$dependencies == null) {
++         /*Object self = this;
++
++         if (self instanceof TagManager) {
++            this.fabric$dependencies = Collections.emptyList();
++         } else */{
++            this.fabric$dependencies = Collections.singletonList(net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS);
++         } // CatServer - only this class
++      }
++
++      return this.fabric$dependencies;
++   }
++   // Fabric end
+ }

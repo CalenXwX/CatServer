@@ -1,6 +1,16 @@
 --- a/net/minecraft/core/registries/BuiltInRegistries.java
 +++ b/net/minecraft/core/registries/BuiltInRegistries.java
-@@ -114,41 +_,89 @@
+@@ -106,49 +_,97 @@
+ import org.apache.commons.lang3.Validate;
+ import org.slf4j.Logger;
+ 
+-public class BuiltInRegistries {
++public class BuiltInRegistries implements net.fabricmc.fabric.mixin.registry.sync.RegistriesAccessor { // Fabric - RegistriesAccessor
+    private static final Logger f_256744_ = LogUtils.getLogger();
+    private static final Map<ResourceLocation, Supplier<?>> f_256751_ = Maps.newLinkedHashMap();
+    public static final ResourceLocation f_256779_ = new ResourceLocation("root");
+-   private static final WritableRegistry<WritableRegistry<?>> f_256935_ = new MappedRegistry<>(ResourceKey.m_135788_(f_256779_), Lifecycle.stable());
++   public static final WritableRegistry<WritableRegistry<?>> f_256935_ = new MappedRegistry<>(ResourceKey.m_135788_(f_256779_), Lifecycle.stable()); // CatServer - private -> public for Fabric RegistriesAccessor
     public static final DefaultedRegistry<GameEvent> f_256726_ = m_257834_(Registries.f_256827_, "step", (p_260052_) -> {
        return GameEvent.f_157785_;
     });
@@ -299,6 +309,24 @@
     private static <T> DefaultedRegistry<T> m_257762_(ResourceKey<? extends Registry<T>> p_260010_, String p_260220_, Lifecycle p_260139_, BuiltInRegistries.RegistryBootstrap<T> p_260185_) {
        return m_257895_(p_260010_, new DefaultedMappedRegistry<>(p_260220_, p_260010_, p_260139_, true), p_260185_, p_260139_);
     }
+@@ -324,7 +_,16 @@
+       m_257864_(f_257047_);
+    }
+ 
+-   private static void m_257453_() {
++   public static void m_257453_() { // Fabric - private -> public
++      {
++         // Fabric start - RegistriesMixin
++         if (hasInitialised) {
++            return;
++         }
++
++         hasInitialised = true;
++         // Fabric end
++      }
+       f_256751_.forEach((p_259863_, p_259387_) -> {
+          if (p_259387_.get() == null) {
+             f_256744_.error("Unable to bootstrap registry '{}'", (Object)p_259863_);
 @@ -350,7 +_,7 @@
  
           if (p_259410_ instanceof DefaultedRegistry) {
@@ -308,3 +336,12 @@
           }
  
        });
+@@ -360,4 +_,8 @@
+    interface RegistryBootstrap<T> {
+       T m_257957_(Registry<T> p_260128_);
+    }
++
++   // Fabric start - RegistriesMixin
++   private static boolean hasInitialised = false;
++   // Fabric end
+ }

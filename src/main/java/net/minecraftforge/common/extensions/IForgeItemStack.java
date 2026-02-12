@@ -43,7 +43,7 @@ import java.util.Objects;
 /*
  * Extension added to ItemStack that bounces to ItemSack sensitive Item methods. Typically this is just for convince.
  */
-public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
+public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>, net.fabricmc.fabric.api.item.v1.FabricItemStack // CatServer
 {
     // Helpers for accessing Item data
     private ItemStack self()
@@ -59,7 +59,7 @@ public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
      */
     default ItemStack getCraftingRemainingItem()
     {
-        return self().getItem().getCraftingRemainingItem(self());
+        return this.getRecipeRemainder(); // CatServer - replace vanilla method with fabric method
     }
 
     /**

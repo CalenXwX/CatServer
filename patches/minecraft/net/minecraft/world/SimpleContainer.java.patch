@@ -4,13 +4,14 @@
  import net.minecraft.world.item.Item;
  import net.minecraft.world.item.ItemStack;
  
+-public class SimpleContainer implements Container, StackedContentsCompatible {
 +// CraftBukkit start
 +import org.bukkit.Location;
 +import org.bukkit.craftbukkit.v1_20_R1.entity.CraftHumanEntity;
 +import org.bukkit.entity.HumanEntity;
 +// CraftBukkit end
 +
- public class SimpleContainer implements Container, StackedContentsCompatible {
++public class SimpleContainer implements Container, StackedContentsCompatible, net.fabricmc.fabric.impl.transfer.item.SpecialLogicInventory { // Fabric - SimpleInventoryMixin
     private final int f_19146_;
     private final NonNullList<ItemStack> f_19147_;
     @Nullable
@@ -92,3 +93,34 @@
        this.f_19146_ = p_19150_;
        this.f_19147_ = NonNullList.m_122780_(p_19150_, ItemStack.f_41583_);
     }
+@@ -131,7 +_,11 @@
+          p_19163_.m_41764_(this.m_6893_());
+       }
+ 
+-      this.m_6596_();
++      // Fabric start - SimpleInventoryMixin
++      if (!fabric_suppressSpecialLogic) {
++         this.m_6596_();
++      }
++      // Fabric end
+    }
+ 
+    public int m_6643_() {
+@@ -238,4 +_,17 @@
+ 
+       return listtag;
+    }
++
++   // Fabric start - SimpleInventoryMixin
++   private boolean fabric_suppressSpecialLogic = false;
++
++   @Override
++   public void fabric_setSuppress(boolean suppress) {
++      fabric_suppressSpecialLogic = suppress;
++   }
++
++   @Override
++   public void fabric_onFinalCommit(int slot, ItemStack oldStack, ItemStack newStack) {
++   }
++   // Fabric end
+ }

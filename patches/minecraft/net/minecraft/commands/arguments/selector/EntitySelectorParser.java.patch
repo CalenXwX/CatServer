@@ -1,5 +1,14 @@
 --- a/net/minecraft/commands/arguments/selector/EntitySelectorParser.java
 +++ b/net/minecraft/commands/arguments/selector/EntitySelectorParser.java
+@@ -29,7 +_,7 @@
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.Vec3;
+ 
+-public class EntitySelectorParser {
++public class EntitySelectorParser implements net.fabricmc.fabric.api.command.v2.FabricEntitySelectorReader { // Fabric - EntitySelectorReaderMixin
+    public static final char f_175112_ = '@';
+    private static final char f_175116_ = '[';
+    private static final char f_175117_ = ']';
 @@ -194,8 +_,21 @@
        };
     }
@@ -80,3 +89,26 @@
     }
  
     private CompletableFuture<Suggestions> m_121286_(SuggestionsBuilder p_121287_, Consumer<SuggestionsBuilder> p_121288_) {
+@@ -632,4 +_,22 @@
+    public void m_121368_(boolean p_121369_) {
+       this.f_121188_ = p_121369_;
+    }
++
++   // Fabric start - EntitySelectorReaderMixin
++   private final java.util.Set<net.minecraft.resources.ResourceLocation> flags = new java.util.HashSet<>();
++
++   @Override
++   public void setCustomFlag(net.minecraft.resources.ResourceLocation key, boolean value) {
++      if (value) {
++         this.flags.add(key);
++      } else {
++         this.flags.remove(key);
++      }
++   }
++
++   @Override
++   public boolean getCustomFlag(net.minecraft.resources.ResourceLocation key) {
++      return this.flags.contains(key);
++   }
++   // Fabric end
+ }

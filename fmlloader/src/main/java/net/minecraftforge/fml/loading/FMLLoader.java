@@ -263,4 +263,10 @@ public class FMLLoader
     public static VersionInfo versionInfo() {
         return versionInfo;
     }
+
+    // CatServer start
+    public static List<ModFile> getGameLibraries() {
+        return modValidator.getGameLibraries();
+    }
+    // CatServer end
 }

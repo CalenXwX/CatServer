@@ -1,6 +1,6 @@
 --- a/net/minecraft/world/food/FoodData.java
 +++ b/net/minecraft/world/food/FoodData.java
-@@ -7,26 +_,66 @@
+@@ -7,26 +_,73 @@
  import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.GameRules;
  
@@ -58,15 +58,22 @@
 -         this.m_38707_(foodproperties.m_38744_(), foodproperties.m_38745_());
 +         FoodProperties foodproperties = p_38714_.getFoodProperties(entity);
 +         // CatServer start
-+         if (this.entityhuman == null) {
-+            this.m_38707_(foodproperties.m_38744_(), foodproperties.m_38745_());
-+         } else {
++         int nutrition = foodproperties.m_38744_();
++         boolean bukkitEventCancelled = false;
++         if (this.entityhuman != null) {
 +            // CraftBukkit start
 +            int oldFoodLevel = f_38696_;
-+            org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.v1_20_R1.event.CraftEventFactory.callFoodLevelChangeEvent(entityhuman, foodproperties.m_38744_() + oldFoodLevel, p_38714_);
-+            if (!event.isCancelled()) {
-+               this.m_38707_(event.getFoodLevel() - oldFoodLevel, foodproperties.m_38745_());
++            org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.v1_20_R1.event.CraftEventFactory.callFoodLevelChangeEvent(entityhuman, nutrition + oldFoodLevel, p_38714_);
++            bukkitEventCancelled = event.isCancelled();
++
++            if (!bukkitEventCancelled) {
++               nutrition = event.getFoodLevel() - oldFoodLevel;
 +            }
++         }
++         if (!bukkitEventCancelled) {
++            this.m_38707_(nutrition, foodproperties.m_38745_()); // CatServer - unique this.eat() for mixin compat:fabric-mod:apoli-2.9.2+mc.1.20.x:io.github.apace100.apoli.mixin.HungerManagerMixin#executeAdditionalEatAction
++         }
++         if (this.entityhuman != null) {
 +            ((ServerPlayer) entityhuman).getBukkitEntity().sendHealthUpdate();
 +            // CraftBukkit end
 +         }

@@ -1,9 +1,10 @@
 --- a/net/minecraft/world/level/storage/loot/LootTable.java
 +++ b/net/minecraft/world/level/storage/loot/LootTable.java
-@@ -32,6 +_,13 @@
+@@ -32,21 +_,28 @@
  import org.apache.commons.lang3.ArrayUtils;
  import org.slf4j.Logger;
  
+-public class LootTable {
 +// CraftBukkit start
 +import java.util.stream.Collectors;
 +import org.bukkit.craftbukkit.v1_20_R1.event.CraftEventFactory;
@@ -11,10 +12,10 @@
 +import org.bukkit.event.world.LootGenerateEvent;
 +// CraftBukkit end
 +
- public class LootTable {
++public class LootTable implements net.fabricmc.fabric.api.loot.v1.FabricLootSupplier, net.fabricmc.fabric.mixin.loot.LootTableAccessor { // Fabric - LootTableMixin LootTableAccessor
     static final Logger f_79107_ = LogUtils.getLogger();
     public static final LootTable f_79105_ = new LootTable(LootContextParamSets.f_81410_, (ResourceLocation)null, new LootPool[0], new LootItemFunction[0]);
-@@ -39,14 +_,14 @@
+    public static final LootContextParamSet f_79106_ = LootContextParamSets.f_81420_;
     final LootContextParamSet f_79108_;
     @Nullable
     final ResourceLocation f_286958_;
@@ -125,10 +126,11 @@
  
     private void m_230924_(ObjectArrayList<ItemStack> p_230925_, int p_230926_, RandomSource p_230927_) {
        List<ItemStack> list = Lists.newArrayList();
-@@ -205,6 +_,50 @@
+@@ -205,7 +_,51 @@
        return new LootTable.Builder();
     }
  
+-   public static class Builder implements FunctionUserBuilder<LootTable.Builder> {
 +   //======================== FORGE START =============================================
 +   private boolean isFrozen = false;
 +   public void freeze() {
@@ -173,9 +175,61 @@
 +   }
 +   //======================== FORGE END ===============================================
 +
-    public static class Builder implements FunctionUserBuilder<LootTable.Builder> {
++   public static class Builder implements FunctionUserBuilder<LootTable.Builder>, net.fabricmc.fabric.api.loot.v2.FabricLootTableBuilder { // Fabric - LootTableBuilderMixin
        private final List<LootPool> f_79156_ = Lists.newArrayList();
        private final List<LootItemFunction> f_79157_ = Lists.newArrayList();
+       private LootContextParamSet f_79158_ = LootTable.f_79106_;
+@@ -239,6 +_,50 @@
+       public LootTable m_79167_() {
+          return new LootTable(this.f_79158_, this.f_287003_, this.f_79156_.toArray(new LootPool[0]), this.f_79157_.toArray(new LootItemFunction[0]));
+       }
++
++      // Fabric start - LootTableBuilderMixin
++      private LootTable.Builder self() {
++         // noinspection ConstantConditions
++         return this;
++      }
++
++      @Override
++      public LootTable.Builder pool(LootPool pool) {
++         this.f_79156_.add(pool);
++         return self();
++      }
++
++      @Override
++      public LootTable.Builder apply(LootItemFunction function) {
++         this.f_79157_.add(function);
++         return self();
++      }
++
++      @Override
++      public LootTable.Builder pools(java.util.Collection<? extends LootPool> pools) {
++         this.f_79156_.addAll(pools);
++         return self();
++      }
++
++      @Override
++      public LootTable.Builder apply(java.util.Collection<? extends LootItemFunction> functions) {
++         this.f_79157_.addAll(functions);
++         return self();
++      }
++
++      @Override
++      public LootTable.Builder modifyPools(Consumer<? super LootPool.Builder> modifier) {
++         java.util.ListIterator<LootPool> iterator = f_79156_.listIterator();
++
++         while (iterator.hasNext()) {
++            LootPool.Builder poolBuilder = net.fabricmc.fabric.api.loot.v2.FabricLootPoolBuilder.copyOf(iterator.next());
++            modifier.accept(poolBuilder);
++            iterator.set(poolBuilder.m_79082_());
++         }
++
++         return self();
++      }
++      // Fabric end
+    }
+ 
+    public static class Serializer implements JsonDeserializer<LootTable>, JsonSerializer<LootTable> {
 @@ -278,7 +_,7 @@
              jsonobject.addProperty("random_sequence", p_79177_.f_286958_.toString());
           }
@@ -185,3 +239,37 @@
              jsonobject.add("pools", p_79179_.serialize(p_79177_.f_79109_));
           }
  
+@@ -289,4 +_,33 @@
+          return jsonobject;
+       }
+    }
++
++   // Fabric start - LootTableMixin
++   @Override
++   public List<LootPool> getPools() {
++      return com.google.common.collect.ImmutableList.copyOf(f_79109_);
++   }
++
++   @Override
++   public List<LootItemFunction> getFunctions() {
++      return com.google.common.collect.ImmutableList.copyOf(f_79110_);
++   }
++   // Fabric end
++
++   // Fabric start - LootTableAccessor
++   @Override
++   public LootPool[] fabric_getPools() {
++      return this.f_79109_.toArray(LootPool[]::new);
++   }
++
++   @Override
++   public LootItemFunction[] fabric_getFunctions() {
++      return this.f_79110_;
++   }
++
++   @Override
++   public ResourceLocation fabric_getRandomSequenceId() {
++      return this.f_286958_;
++   }
++   // Fabric end
+ }

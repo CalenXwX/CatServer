@@ -1,6 +1,6 @@
 --- a/net/minecraft/server/packs/resources/SimpleJsonResourceReloadListener.java
 +++ b/net/minecraft/server/packs/resources/SimpleJsonResourceReloadListener.java
-@@ -49,4 +_,8 @@
+@@ -49,4 +_,43 @@
        }
  
     }
@@ -8,4 +8,39 @@
 +   protected ResourceLocation getPreparedPath(ResourceLocation rl) {
 +      return rl.m_247449_(this.f_10765_ + "/" + rl.m_135815_() + ".json");
 +   }
++
++   // Fabric start - JsonDataLoaderMixin
++   @Override
++   @SuppressWarnings("unchecked")
++   protected void fabric_applyResourceConditions(ResourceManager resourceManager, ProfilerFiller profiler, Object object) {
++      profiler.m_6180_("Fabric resource conditions: %s".formatted(f_10765_));
++
++      java.util.Iterator<Map.Entry<ResourceLocation, JsonElement>> it = ((Map<ResourceLocation, JsonElement>) object).entrySet().iterator();
++      boolean debugLogEnabled = net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.LOGGER.isDebugEnabled();
++
++      while (it.hasNext()) {
++         Map.Entry<ResourceLocation, JsonElement> entry = it.next();
++         JsonElement resourceData = entry.getValue();
++
++         if (resourceData.isJsonObject()) {
++            com.google.gson.JsonObject obj = resourceData.getAsJsonObject();
++
++            if (obj.has(net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions.CONDITIONS_KEY)) {
++               boolean matched = net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions.objectMatchesConditions(obj);
++
++               if (!matched) {
++                  it.remove();
++               }
++
++               if (debugLogEnabled) {
++                  String verdict = matched ? "Allowed" : "Rejected";
++                  net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.LOGGER.debug("{} resource of type {} with id {}", verdict, f_10765_, entry.getKey());
++               }
++            }
++         }
++      }
++
++      profiler.m_7238_();
++   }
++   // Fabric end
  }

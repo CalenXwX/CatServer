@@ -5,21 +5,55 @@
  import net.minecraft.world.phys.shapes.VoxelShape;
  
 -public abstract class Fluid {
-+public abstract class Fluid implements net.minecraftforge.common.extensions.IForgeFluid {
++public abstract class Fluid implements net.minecraftforge.common.extensions.IForgeFluid, net.fabricmc.fabric.impl.transfer.fluid.FluidVariantCache { // Fabric - FluidMixin
     public static final IdMapper<FluidState> f_76104_ = new IdMapper<>();
     protected final StateDefinition<Fluid, FluidState> f_76105_;
     private FluidState f_76103_;
-@@ -101,6 +_,13 @@
-    }
+@@ -102,7 +_,23 @@
  
     public abstract VoxelShape m_7999_(FluidState p_76137_, BlockGetter p_76138_, BlockPos p_76139_);
-+
+ 
 +   private net.minecraftforge.fluids.FluidType forgeFluidType;
 +   @Override
 +   public net.minecraftforge.fluids.FluidType getFluidType() {
 +      if (forgeFluidType == null) forgeFluidType = net.minecraftforge.common.ForgeHooks.getVanillaFluidType(this);
 +      return forgeFluidType;
 +   }
- 
++
     public Optional<SoundEvent> m_142520_() {
++      // Fabric start - FluidMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Optional<SoundEvent>> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Optional<SoundEvent>>("fabric$hookGetBucketFillSound", true);
++         this.fabric$hookGetBucketFillSound(cir);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++      }
++      // Fabric end
        return Optional.empty();
+    }
+ 
+@@ -111,4 +_,23 @@
+    public Holder.Reference<Fluid> m_205069_() {
+       return this.f_205066_;
+    }
++
++   // Fabric start - FluidMixin
++   @SuppressWarnings("ConstantConditions")
++   private final net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant fabric_cachedFluidVariant = new net.fabricmc.fabric.impl.transfer.fluid.FluidVariantImpl(this, null);
++
++   @Override
++   public net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant fabric_getCachedFluidVariant() {
++      return fabric_cachedFluidVariant;
++   }
++
++   public void fabric$hookGetBucketFillSound(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Optional<SoundEvent>> cir) {
++      Fluid fluid = this;
++      Optional<SoundEvent> sound = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getHandlerOrDefault(fluid).getFillSound(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(fluid));
++
++      if (sound.isPresent()) {
++         cir.setReturnValue(sound);
++      }
++   }
++   // Fabric end
+ }

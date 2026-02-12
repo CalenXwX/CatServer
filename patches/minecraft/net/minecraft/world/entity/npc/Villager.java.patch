@@ -1,9 +1,10 @@
 --- a/net/minecraft/world/entity/npc/Villager.java
 +++ b/net/minecraft/world/entity/npc/Villager.java
-@@ -89,6 +_,13 @@
+@@ -89,13 +_,20 @@
  import net.minecraft.world.phys.AABB;
  import org.slf4j.Logger;
  
+-public class Villager extends AbstractVillager implements ReputationEventHandler, VillagerDataHolder {
 +// CraftBukkit start
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.v1_20_R1.event.CraftEventFactory;
@@ -11,9 +12,18 @@
 +import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 +// CraftBukkit end
 +
- public class Villager extends AbstractVillager implements ReputationEventHandler, VillagerDataHolder {
++public class Villager extends AbstractVillager implements ReputationEventHandler, VillagerDataHolder, net.fabricmc.fabric.mixin.content.registry.VillagerEntityAccessor { // Fabric - VillagerEntityAccessor
     private static final Logger f_201976_ = LogUtils.getLogger();
     private static final EntityDataAccessor<VillagerData> f_35371_ = SynchedEntityData.m_135353_(Villager.class, EntityDataSerializers.f_135043_);
+    public static final int f_149997_ = 12;
+-   public static final Map<Item, Integer> f_35369_ = ImmutableMap.of(Items.f_42406_, 4, Items.f_42620_, 1, Items.f_42619_, 1, Items.f_42732_, 1);
++   public static Map<Item, Integer> f_35369_ = ImmutableMap.of(Items.f_42406_, 4, Items.f_42620_, 1, Items.f_42619_, 1, Items.f_42732_, 1); // Fabric - VillagerEntityAccessor remove final
+    private static final int f_149999_ = 2;
+-   private static final Set<Item> f_35372_ = ImmutableSet.of(Items.f_42406_, Items.f_42620_, Items.f_42619_, Items.f_42405_, Items.f_42404_, Items.f_42732_, Items.f_42733_, Items.f_271133_, Items.f_276594_);
++   public static Set<Item> f_35372_ = ImmutableSet.of(Items.f_42406_, Items.f_42620_, Items.f_42619_, Items.f_42405_, Items.f_42404_, Items.f_42732_, Items.f_42733_, Items.f_271133_, Items.f_276594_); // Fabric - VillagerEntityAccessor private -> public  remove final
+    private static final int f_150000_ = 10;
+    private static final int f_150001_ = 1200;
+    private static final int f_150002_ = 24000;
 @@ -204,6 +_,17 @@
        return this.f_35366_;
     }
@@ -136,7 +146,7 @@
 +            if (CraftEventFactory.callEntityTransformEvent(this, witch, EntityTransformEvent.TransformReason.LIGHTNING).isCancelled()) {
 +               return;
 +            }
-+            p_35409_.addFreshEntityWithPassengers(witch, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.LIGHTNING);
++            p_35409_.addFreshEntityWithPassengers(this.fabric$afterWitchConversion(witch), org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.LIGHTNING); // Fabric - VillagerEntityMixin
 +            // CraftBukkit end
              this.m_35524_();
              this.m_146870_();
@@ -150,3 +160,15 @@
                 list.forEach(GolemSensor::m_26649_);
              }
           }
+@@ -891,4 +_,11 @@
+          return false;
+       }
+    }
++
++   // Fabric start - VillagerEntityMixin
++   private Entity fabric$afterWitchConversion(Entity converted) {
++      net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.MOB_CONVERSION.invoker().onConversion(this, (Mob) converted, false);
++      return converted;
++   }
++   // Fabric end
+ }

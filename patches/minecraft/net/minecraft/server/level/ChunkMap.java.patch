@@ -1,18 +1,20 @@
 --- a/net/minecraft/server/level/ChunkMap.java
 +++ b/net/minecraft/server/level/ChunkMap.java
-@@ -103,6 +_,12 @@
+@@ -103,7 +_,13 @@
  import org.apache.commons.lang3.mutable.MutableObject;
  import org.slf4j.Logger;
  
+-public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider {
 +// CraftBukkit start
 +import net.minecraft.world.level.levelgen.WorldGenSettings;
 +import org.bukkit.craftbukkit.v1_20_R1.generator.CustomChunkGenerator;
 +import org.bukkit.entity.Player;
 +// CraftBukkit end
 +
- public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider {
++public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider, net.fabricmc.fabric.mixin.networking.accessor.ThreadedAnvilChunkStorageAccessor { // Fabric - ThreadedAnvilChunkStorageAccessor
     private static final byte f_143034_ = -1;
     private static final byte f_143035_ = 0;
+    private static final byte f_143036_ = 1;
 @@ -115,7 +_,7 @@
     public static final int f_143032_ = 32;
     public static final int f_143033_ = ChunkLevel.m_287154_(FullChunkStatus.ENTITY_TICKING);
@@ -65,11 +67,20 @@
           return p_140179_;
        }
     }
-@@ -503,6 +_,7 @@
+@@ -503,6 +_,16 @@
              if (this.f_140131_.remove(p_140182_, p_140183_) && p_203002_ != null) {
                 if (p_203002_ instanceof LevelChunk) {
                    ((LevelChunk)p_203002_).m_62913_(false);
 +                  net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.level.ChunkEvent.Unload(p_203002_));
++                  {
++                     // Fabric start - ThreadedAnvilChunkStorageMixin
++                     /**
++                      * Injection is inside of tryUnloadChunk.
++                      * We inject just after "setLoadedToWorld" is made false, since here the WorldChunk is guaranteed to be unloaded.
++                      */
++                     net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents.CHUNK_UNLOAD.invoker().onChunkUnload(this.f_140133_, (LevelChunk) p_203002_);
++                     // Fabric end
++                  }
                 }
  
                 this.m_140258_(p_203002_);
@@ -84,7 +95,7 @@
        }
  
     }
-@@ -713,8 +_,14 @@
+@@ -713,10 +_,30 @@
              levelchunk.m_62952_();
              if (this.f_140132_.add(chunkpos.m_45588_())) {
                 levelchunk.m_62913_(true);
@@ -98,7 +109,23 @@
 +               }
              }
  
++            {
++               // Fabric start - ThreadedAnvilChunkStorageMixin
++               /**
++                * Injection is inside of convertToFullChunk?
++                *
++                * <p>The following is expected contractually
++                *
++                * <ul><li>the chunk being loaded MUST be a WorldChunk.
++                * <li>everything within the chunk has been loaded into the world. Entities, BlockEntities, etc.</ul>
++                */
++               // We fire the event at TAIL since the chunk is guaranteed to be a WorldChunk then.
++               net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(this.f_140133_, levelchunk);
++               // Fabric end
++            }
              return levelchunk;
+          });
+       }, (p_214951_) -> {
 @@ -819,6 +_,7 @@
  
              this.f_140133_.m_46473_().m_6174_("chunkSave");
@@ -191,7 +218,7 @@
     }
  
 -   class TrackedEntity {
-+   public class TrackedEntity { // CatServer - public
++   public class TrackedEntity implements net.fabricmc.fabric.mixin.networking.accessor.EntityTrackerAccessor { // CatServer - public // Fabric - EntityTrackerAccessor
        final ServerEntity f_140471_;
        final Entity f_140472_;
        private final int f_140473_;
@@ -217,10 +244,26 @@
              if (flag) {
                 if (this.f_140475_.add(p_140498_.f_8906_)) {
                    this.f_140471_.m_8541_(p_140498_);
-@@ -1413,4 +_,22 @@
+@@ -1412,5 +_,37 @@
+          }
  
        }
-    }
+-   }
++
++      // Fabric start - EntityTrackerAccessor
++      @Override
++      public Set<ServerPlayerConnection> getPlayersTracking() {
++         return this.f_140475_;
++      }
++      // Fabric end
++   }
++
++   // Fabric start - ThreadedAnvilChunkStorageAccessor
++   @Override
++   public Int2ObjectMap<net.fabricmc.fabric.mixin.networking.accessor.EntityTrackerAccessor> getEntityTrackers() {
++      return (Int2ObjectMap)this.f_140150_;
++   }
++   // Fabric end
 +
 +   // CatServer start - mixin compat:fabric-mod:c2me-notickvd-0.2.0-c3me-alpha.11.61:com.ishland.c2me.notickvd.mixin.MixinThreadedAnvilChunkStorage#m_214908_
 +   private static java.util.stream.Stream<Entity> catserver$postLoadProtoChunk$LambdaContainer(ServerLevel p_143065_, java.util.stream.Stream<Entity> vanillaValue) {

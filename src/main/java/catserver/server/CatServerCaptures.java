@@ -53,6 +53,7 @@ public class CatServerCaptures {
     public final CatCaptureValueStack<Player, EntityExhaustionEvent.ExhaustionReason> Player$causeFoodExhaustion$reason = withDefaultValue(EntityExhaustionEvent.ExhaustionReason.UNKNOWN);
     public final CatCaptureValueStack<Void, BrewingStandBlockEntity> BrewingStandBlockEntity$doBrew$tileentitybrewingstand = withDefaultValue(null); // Nullable
     public final CatCaptureValueStack<Void, Entity> RedStoneOreBlock$interact$entity = withDefaultValue(null); // Nullable
+    public final CatCaptureValueStack<ServerPlayer, MenuProvider> ServerPlayer$openMenu$p_9033_ = withDefaultValue(null); // Nullable
     public final CatCaptureValueStack<ServerPlayer, PlayerSpawnChangeEvent.Cause> ServerPlayer$startSleepInBed$setRespawnPosition$cause = withDefaultValue(PlayerSpawnChangeEvent.Cause.UNKNOWN); // Nullable
     public final CatCaptureValueStack<LivingEntity, Boolean> LivingEntity$actuallyHurt$return = withDefaultValue(false);
     public final CatCaptureValueStack<LivingEntity, Boolean> LivingEntity$getDamageAfterArmorAbsorb$flag_bypassHurtArmor = withDefaultValue(false);

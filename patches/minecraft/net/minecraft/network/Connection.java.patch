@@ -1,5 +1,14 @@
 --- a/net/minecraft/network/Connection.java
 +++ b/net/minecraft/network/Connection.java
+@@ -47,7 +_,7 @@
+ import org.slf4j.Marker;
+ import org.slf4j.MarkerFactory;
+ 
+-public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
++public class Connection extends SimpleChannelInboundHandler<Packet<?>> implements net.fabricmc.fabric.impl.networking.ChannelInfoHolder { // Fabric - ClientConnectionMixin
+    private static final float f_178299_ = 0.75F;
+    private static final Logger f_129465_ = LogUtils.getLogger();
+    public static final Marker f_129459_ = MarkerFactory.getMarker("NETWORK");
 @@ -72,8 +_,13 @@
     });
     private final PacketFlow f_129466_;
@@ -16,7 +25,7 @@
     private PacketListener f_129470_;
     private Component f_129471_;
     private boolean f_129472_;
-@@ -86,6 +_,8 @@
+@@ -86,15 +_,24 @@
     private boolean f_129479_;
     @Nullable
     private volatile Component f_290021_;
@@ -25,7 +34,12 @@
  
     public Connection(PacketFlow p_129482_) {
        this.f_129466_ = p_129482_;
-@@ -95,6 +_,10 @@
++      {
++         this.playChannels = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>()); // Fabric - ClientConnectionMixin
++      }
+    }
+ 
+    public void channelActive(ChannelHandlerContext p_129525_) throws Exception {
        super.channelActive(p_129525_);
        this.f_129468_ = p_129525_.channel();
        this.f_129469_ = this.f_129468_.remoteAddress();
@@ -36,7 +50,7 @@
  
        try {
           this.m_129498_(ConnectionProtocol.HANDSHAKING);
-@@ -111,8 +_,10 @@
+@@ -111,11 +_,16 @@
     public void m_129498_(ConnectionProtocol p_129499_) {
        this.f_129468_.attr(f_129461_).set(p_129499_);
        this.f_129468_.attr(BundlerInfo.f_263730_).set(p_129499_);
@@ -47,6 +61,46 @@
     }
  
     public void channelInactive(ChannelHandlerContext p_129527_) {
++      {
++         this.fabric$handleDisconnect(); // Fabric - ClientConnectionMixin
++      }
+       this.m_129507_(Component.m_237115_("disconnect.endOfStream"));
+    }
+ 
+@@ -134,10 +_,29 @@
+                if (flag) {
+                   f_129465_.debug("Failed to sent packet", p_129534_);
+                   ConnectionProtocol connectionprotocol = this.m_178315_();
+-                  Packet<?> packet = (Packet<?>)(connectionprotocol == ConnectionProtocol.LOGIN ? new ClientboundLoginDisconnectPacket(component) : new ClientboundDisconnectPacket(component));
+-                  this.m_243124_(packet, PacketSendListener.m_243092_(() -> {
+-                     this.m_129507_(component);
+-                  }));
++                  // Fabric start - ClientConnectionMixin
++                  // CatServer start
++                  Packet<?> packet;
++                  if (connectionprotocol == ConnectionProtocol.LOGIN || this.f_129470_ instanceof net.minecraft.server.network.ServerLoginPacketListenerImpl) { // CatServer - ServerLoginPacketListenerImpl implements DisconnectPacketSource
++                     packet = new ClientboundLoginDisconnectPacket(component); // ((DisconnectPacketSource) handler).createDisconnectPacket(disconnectMessage)
++                  } else if (this.f_129470_ instanceof net.minecraft.server.network.ServerGamePacketListenerImpl) { // CatServer - ServerGamePacketListenerImpl implements DisconnectPacketSource
++                     packet = new ClientboundDisconnectPacket(component); // ((DisconnectPacketSource) handler).createDisconnectPacket(disconnectMessage)
++                  } else if (this.f_129470_ instanceof net.fabricmc.fabric.impl.networking.DisconnectPacketSource) {
++                     // CatServer - neither ServerLoginPacketListenerImpl nor ServerGamePacketListenerImpl but DisconnectPacketSource
++                     packet = ((net.fabricmc.fabric.impl.networking.DisconnectPacketSource) this.f_129470_).createDisconnectPacket(component);
++                  } else {
++                     // CatServer - not DisconnectPacketSource
++                     packet = null;
++                  }
++                  if (packet != null) {
++                     this.m_243124_(packet, PacketSendListener.m_243092_(() -> {
++                        this.m_129507_(component);
++                     }));
++                  } else {
++                     this.m_129507_(component); // Don't send packet if we cannot send proper packets
++                  }
++                  // CatServer end
++                  // Fabric end
+                   this.m_129540_();
+                } else {
+                   f_129465_.debug("Double fault", p_129534_);
 @@ -147,6 +_,7 @@
  
           }
@@ -55,6 +109,30 @@
     }
  
     protected void channelRead0(ChannelHandlerContext p_129487_, Packet<?> p_129488_) {
+@@ -192,6 +_,9 @@
+    private void m_129520_(Packet<?> p_129521_, @Nullable PacketSendListener p_243246_) {
+       ConnectionProtocol connectionprotocol = ConnectionProtocol.m_129592_(p_129521_);
+       ConnectionProtocol connectionprotocol1 = this.m_178315_();
++      {
++         this.fabric$checkPacket(p_129521_); // Fabric - ClientConnectionMixin
++      }
+       ++this.f_129475_;
+       if (connectionprotocol1 != connectionprotocol) {
+          if (connectionprotocol == null) {
+@@ -218,6 +_,13 @@
+       }
+ 
+       ChannelFuture channelfuture = this.f_129468_.writeAndFlush(p_243260_);
++      {
++         // Fabric start - ClientConnectionMixin
++         if (this.fabric$sendInternal(p_243290_, channelfuture)) {
++            return;
++         }
++         // Fabric end
++      }
+       if (p_243290_ != null) {
+          channelfuture.addListener((p_243167_) -> {
+             if (p_243167_.isSuccess()) {
 @@ -285,12 +_,15 @@
     }
  
@@ -106,18 +184,54 @@
           }
  
        }
-@@ -437,6 +_,14 @@
- 
-    public float m_129543_() {
+@@ -439,6 +_,14 @@
        return this.f_129477_;
-+   }
-+
+    }
+ 
 +   public Channel channel() {
 +      return this.f_129468_;
 +   }
 +
 +   public PacketFlow getDirection() {
 +      return this.f_129466_;
-    }
- 
++   }
++
     static class PacketHolder {
+       final Packet<?> f_129558_;
+       @Nullable
+@@ -449,4 +_,35 @@
+          this.f_129559_ = p_243266_;
+       }
+    }
++
++   // Fabric start - ClientConnectionMixin
++   private java.util.Collection<net.minecraft.resources.ResourceLocation> playChannels;
++
++   private void fabric$checkPacket(Packet<?> packet) {
++      if (this.f_129470_ instanceof net.fabricmc.fabric.impl.networking.PacketCallbackListener) {
++         ((net.fabricmc.fabric.impl.networking.PacketCallbackListener) this.f_129470_).sent(packet);
++      }
++   }
++
++   private void fabric$handleDisconnect() {
++      if (f_129470_ instanceof net.fabricmc.fabric.impl.networking.NetworkHandlerExtensions) { // not the case for client/server query
++         ((net.fabricmc.fabric.impl.networking.NetworkHandlerExtensions) f_129470_).getAddon().handleDisconnect();
++      }
++   }
++
++   private boolean fabric$sendInternal(@Nullable PacketSendListener listener, ChannelFuture channelFuture) {
++      boolean cancel = false;
++      if (listener instanceof net.fabricmc.fabric.impl.networking.GenericFutureListenerHolder holder) {
++         channelFuture.addListener(holder.getDelegate());
++         channelFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
++         cancel = true;
++      }
++      return cancel;
++   }
++
++   @Override
++   public java.util.Collection<net.minecraft.resources.ResourceLocation> getPendingChannelsNames() {
++      return this.playChannels;
++   }
++   // Fabric end
+ }

@@ -1,9 +1,11 @@
 --- a/net/minecraft/world/item/crafting/Ingredient.java
 +++ b/net/minecraft/world/item/crafting/Ingredient.java
-@@ -30,14 +_,22 @@
+@@ -29,15 +_,23 @@
+ import net.minecraft.world.item.ItemStack;
  import net.minecraft.world.level.ItemLike;
  
- public class Ingredient implements Predicate<ItemStack> {
+-public class Ingredient implements Predicate<ItemStack> {
++public class Ingredient implements Predicate<ItemStack>, net.fabricmc.fabric.api.recipe.v1.ingredient.FabricIngredient { // Fabric - IngredientMixin
 +   //Because Mojang caches things... we need to invalidate them.. so... here we go..
 +   private static final java.util.concurrent.atomic.AtomicInteger INVALIDATION_COUNTER = new java.util.concurrent.atomic.AtomicInteger();
 +   public static void invalidateAll() {
@@ -14,7 +16,7 @@
     private final Ingredient.Value[] f_43902_;
     @Nullable
 -   private ItemStack[] f_43903_;
-+   private ItemStack[] f_43903_; // CatServer - [1.20.1:compat:mod:ModernFix:5.24.4] Don't access it directly in craft bukkit classes and use getItems() instead. ModernFix overwrites Ingredient#getItems() and Ingredient#itemStacks is always null.
++   protected ItemStack[] f_43903_; // CatServer - [1.20.1:compat:mod:ModernFix:5.24.4] Don't access it directly in craft bukkit classes and use getItems() instead. ModernFix overwrites Ingredient#getItems() and Ingredient#itemStacks is always null. // CatServer - private -> protected for Fabric CustomIngredientImpl
     @Nullable
     private IntList f_43904_;
 +   private int invalidationCounter;
@@ -50,10 +52,12 @@
           ItemStack[] aitemstack = this.m_43908_();
           this.f_43904_ = new IntArrayList(aitemstack.length);
  
-@@ -87,6 +_,10 @@
+@@ -86,7 +_,11 @@
+       return this.f_43904_;
     }
  
-    public final void m_43923_(FriendlyByteBuf p_43924_) {
+-   public final void m_43923_(FriendlyByteBuf p_43924_) {
++   public void m_43923_(FriendlyByteBuf p_43924_) { // CatServer - remove final for Fabric CustomIngredientImpl
 +      if (!this.isVanilla()) {
 +         net.minecraftforge.common.crafting.CraftingHelper.write(p_43924_, this);
 +         return;
@@ -100,26 +104,55 @@
     public static Ingredient m_43938_(Stream<? extends Ingredient.Value> p_43939_) {
        Ingredient ingredient = new Ingredient(p_43939_);
        return ingredient.m_43947_() ? f_43901_ : ingredient;
-@@ -136,7 +_,9 @@
+@@ -136,7 +_,18 @@
     }
  
     public static Ingredient m_43940_(FriendlyByteBuf p_43941_) {
 -      return m_43938_(p_43941_.<ItemStack>m_236845_(FriendlyByteBuf::m_130267_).stream().map(Ingredient.ItemValue::new));
++      {
++         // Fabric start - IngredientMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Ingredient> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Ingredient>("fabric$injectFromPacket", true);
++         fabric$injectFromPacket(p_43941_, cir);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++         // Fabric end
++      }
 +      var size = p_43941_.m_130242_();
 +      if (size == -1) return net.minecraftforge.common.crafting.CraftingHelper.getIngredient(p_43941_.m_130281_(), p_43941_);
 +      return m_43938_(Stream.generate(() -> new Ingredient.ItemValue(p_43941_.m_130267_())).limit(size));
     }
  
     public static Ingredient m_43917_(@Nullable JsonElement p_43918_) {
-@@ -145,6 +_,8 @@
+@@ -145,7 +_,18 @@
  
     public static Ingredient m_288218_(@Nullable JsonElement p_289022_, boolean p_288974_) {
        if (p_289022_ != null && !p_289022_.isJsonNull()) {
 +         Ingredient ret = net.minecraftforge.common.crafting.CraftingHelper.getIngredient(p_289022_, p_288974_);
 +         if (ret != null) return ret;
           if (p_289022_.isJsonObject()) {
++            {
++               // Fabric start - IngredientMixin
++               org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Ingredient> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Ingredient>("fabric$injectFromJson", true);
++               fabric$injectFromJson(p_289022_, cir);
++               if (cir.isCancelled()) {
++                  return cir.getReturnValue();
++               }
++               // Fabric end
++            }
              return m_43938_(Stream.of(m_43919_(p_289022_.getAsJsonObject())));
           } else if (p_289022_.isJsonArray()) {
+             JsonArray jsonarray = p_289022_.getAsJsonArray();
+@@ -165,6 +_,9 @@
+    }
+ 
+    public static Ingredient.Value m_43919_(JsonObject p_289797_) {
++      {
++         fabric$injectEntryFromJson(p_289797_); // Fabric - IngredientMixin
++      }
+       if (p_289797_.has("item") && p_289797_.has("tag")) {
+          throw new JsonParseException("An ingredient entry is either a tag or an item, not both");
+       } else if (p_289797_.has("item")) {
 @@ -179,6 +_,12 @@
        }
     }
@@ -143,3 +176,56 @@
           return list;
        }
  
+@@ -226,4 +_,52 @@
+ 
+       JsonObject m_6544_();
+    }
++
++   // Fabric start - IngredientMixin
++   /**
++    * Inject right when vanilla detected a json object and check for our custom key.
++    */
++   private static void fabric$injectFromJson(JsonElement json, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Ingredient> cir) {
++      JsonObject obj = json.getAsJsonObject();
++
++      if (obj.has(net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientImpl.TYPE_KEY)) {
++         ResourceLocation id = new ResourceLocation(GsonHelper.m_13906_(obj, net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientImpl.TYPE_KEY));
++         net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredientSerializer<?> serializer = net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredientSerializer.get(id);
++
++         if (serializer != null) {
++            cir.setReturnValue(serializer.read(obj).toVanilla());
++         } else {
++            throw new IllegalArgumentException("Unknown custom ingredient type: " + id);
++         }
++      }
++   }
++
++   /**
++    * Throw exception when someone attempts to use our custom key inside an array ingredient.
++    * The {@link net.fabricmc.fabric.impl.recipe.ingredient.builtin.AnyIngredient} should be used instead.
++    */
++   private static void fabric$injectEntryFromJson(JsonObject obj) {
++      if (obj.has(net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientImpl.TYPE_KEY)) {
++         throw new IllegalArgumentException("Custom ingredient cannot be used inside an array ingredient. You can replace the array by a fabric:any ingredient.");
++      }
++   }
++
++   private static void fabric$injectFromPacket(FriendlyByteBuf buf, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Ingredient> cir) {
++      int index = buf.readerIndex();
++
++      if (buf.m_130242_() == net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientImpl.PACKET_MARKER) {
++         ResourceLocation type = buf.m_130281_();
++         net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredientSerializer<?> serializer = net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredientSerializer.get(type);
++
++         if (serializer == null) {
++            throw new IllegalArgumentException("Cannot deserialize custom ingredient of unknown type " + type);
++         }
++
++         cir.setReturnValue(serializer.read(buf).toVanilla());
++      } else {
++         // Reset index for vanilla's normal deserialization logic.
++         buf.readerIndex(index);
++      }
++   }
++   // Fabric end
+ }

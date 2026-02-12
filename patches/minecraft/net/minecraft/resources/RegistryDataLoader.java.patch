@@ -1,11 +1,21 @@
 --- a/net/minecraft/resources/RegistryDataLoader.java
 +++ b/net/minecraft/resources/RegistryDataLoader.java
+@@ -59,6 +_,9 @@
+          return p_250249_.m_245364_(Lifecycle.stable(), map);
+       }).toList();
+       RegistryOps.RegistryInfoLookup registryops$registryinfolookup = m_255261_(p_249916_, list);
++      {
++         fabric$beforeLoad(list); // Fabric - RegistryLoaderMixin
++      }
+       list.forEach((p_255508_) -> {
+          p_255508_.getSecond().m_245441_(p_252046_, registryops$registryinfolookup);
+       });
 @@ -123,7 +_,7 @@
     }
  
     private static String m_246502_(ResourceLocation p_252033_) {
 -      return p_252033_.m_135815_();
-+      return net.minecraftforge.common.ForgeHooks.prefixNamespace(p_252033_); // FORGE: add non-vanilla registry namespace to loader directory, same format as tag directory (see net.minecraft.tags.TagManager#getTagDir(ResourceKey))
++      return net.minecraftforge.common.ForgeHooks.prefixNamespace(p_252033_); // FORGE: add non-vanilla registry namespace to loader directory, same format as tag directory (see net.minecraft.tags.TagManager#getTagDir(ResourceKey)) // Fabric - RegistryLoaderMixin // CatServer - Forge's logic contains Fabric's, so we use Forge's and ignore Fabric's injection
     }
  
     static <E> void m_255048_(RegistryOps.RegistryInfoLookup p_256369_, ResourceManager p_256349_, ResourceKey<? extends Registry<E>> p_255792_, WritableRegistry<E> p_256211_, Decoder<E> p_256232_, Map<ResourceKey<?>, Exception> p_255884_) {
@@ -17,3 +27,20 @@
              DataResult<E> dataresult = p_256232_.parse(registryops, jsonelement);
              E e = dataresult.getOrThrow(false, (p_248715_) -> {
              });
+@@ -162,4 +_,16 @@
+          return Pair.of(writableregistry, registrydataloader$loader);
+       }
+    }
++
++   // Fabric start - RegistryLoaderMixin
++   private static void fabric$beforeLoad(List<Pair<WritableRegistry<?>, RegistryDataLoader.Loader>> registriesList) {
++      Map<ResourceKey<? extends Registry<?>>, Registry<?>> registries = new java.util.IdentityHashMap<>(registriesList.size());
++
++      for (Pair<WritableRegistry<?>, ?> pair : registriesList) {
++         registries.put(pair.getFirst().m_123023_(), pair.getFirst());
++      }
++
++      net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback.EVENT.invoker().onRegistrySetup(new net.fabricmc.fabric.impl.registry.sync.DynamicRegistryViewImpl(registries));
++   }
++   // Fabric end
+ }

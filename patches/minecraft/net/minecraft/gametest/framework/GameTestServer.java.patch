@@ -16,6 +16,15 @@
  import org.slf4j.Logger;
  
  public class GameTestServer extends MinecraftServer {
+@@ -70,7 +_,7 @@
+          throw new IllegalArgumentException("No test batches were given!");
+       } else {
+          p_206609_.m_10506_();
+-         WorldDataConfiguration worlddataconfiguration = new WorldDataConfiguration(new DataPackConfig(new ArrayList<>(p_206609_.m_10514_()), List.of()), FeatureFlags.f_244280_.m_247355_());
++         WorldDataConfiguration worlddataconfiguration = new WorldDataConfiguration(net.fabricmc.fabric.impl.resource.loader.ModResourcePackUtil.createTestServerSettings(new ArrayList<>(p_206609_.m_10514_()), List.of()), FeatureFlags.f_244280_.m_247355_()); // Fabric - TestServerMixin
+          LevelSettings levelsettings = new LevelSettings("Test Level", GameType.CREATIVE, false, Difficulty.NORMAL, true, f_177589_, worlddataconfiguration);
+          WorldLoader.PackConfig worldloader$packconfig = new WorldLoader.PackConfig(p_206609_, worlddataconfiguration, false, true);
+          WorldLoader.InitConfig worldloader$initconfig = new WorldLoader.InitConfig(worldloader$packconfig, Commands.CommandSelection.DEDICATED, 4);
 @@ -105,13 +_,14 @@
     public boolean m_7038_() {
        this.m_129823_(new PlayerList(this, this.m_247573_(), this.f_129745_, 1) {

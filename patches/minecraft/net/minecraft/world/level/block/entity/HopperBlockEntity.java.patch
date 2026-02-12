@@ -87,7 +87,7 @@
                 m_155232_(p_155579_, p_155580_, p_155581_);
                 return true;
              }
-@@ -130,7 +_,8 @@
+@@ -130,8 +_,18 @@
        return true;
     }
  
@@ -95,8 +95,18 @@
 +   private static boolean ejectItems(Level p_155563_, BlockPos p_155564_, BlockState p_155565_, HopperBlockEntity p_155566_) { // CraftBukkit // CatServer - forge patched
 +      if (net.minecraftforge.items.VanillaInventoryCodeHooks.insertHook(p_155566_)) return true;
        Container container = m_155592_(p_155563_, p_155564_, p_155565_);
++      // Fabric start - HopperBlockEntityMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("fabric$hookInsert", true);
++         fabric$hookInsert(p_155563_, p_155564_, p_155565_, p_155566_, cir, container);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++      }
++      // Fabric end
        if (container == null) {
           return false;
+       } else {
 @@ -142,12 +_,42 @@
              for(int i = 0; i < p_155566_.m_6643_(); ++i) {
                 if (!p_155566_.m_8020_(i).m_41619_()) {
@@ -141,13 +151,22 @@
                    p_155566_.m_6836_(i, itemstack);
                 }
              }
-@@ -175,11 +_,13 @@
+@@ -175,11 +_,22 @@
     }
  
     public static boolean m_155552_(Level p_155553_, Hopper p_155554_) {
 +      Boolean ret = net.minecraftforge.items.VanillaInventoryCodeHooks.extractHook(p_155553_, p_155554_);
 +      if (ret != null) return ret;
        Container container = m_155596_(p_155553_, p_155554_);
++      // Fabric start - HopperBlockEntityMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("fabric$hookExtract", true);
++         fabric$hookExtract(p_155553_, p_155554_, cir, container);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++      }
++      // Fabric end
        if (container != null) {
           Direction direction = Direction.DOWN;
           return m_59397_(container, direction) ? false : m_59339_(container, direction).anyMatch((p_59363_) -> {
@@ -310,11 +329,10 @@
        BlockState blockstate = p_59348_.m_8055_(blockpos);
        Block block = blockstate.m_60734_();
        if (block instanceof WorldlyContainerHolder) {
-@@ -411,5 +_,14 @@
- 
+@@ -412,4 +_,56 @@
     protected AbstractContainerMenu m_6555_(int p_59312_, Inventory p_59313_) {
        return new HopperMenu(p_59312_, p_59313_, this);
-+   }
+    }
 +
 +   @Override
 +   protected net.minecraftforge.items.IItemHandler createUnSidedHandler() {
@@ -323,5 +341,48 @@
 +
 +   public long getLastUpdateTime() {
 +      return this.f_59303_;
-    }
++   }
++
++   // Fabric start - HopperBlockEntityMixin
++   private static void fabric$hookInsert(Level p_155563_, BlockPos p_155564_, BlockState p_155565_, Container p_155566_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir, Container targetInventory) {
++      // Let vanilla handle the transfer if it found an inventory.
++      if (targetInventory != null) return;
++
++      // Otherwise inject our transfer logic.
++      Direction direction = p_155565_.m_61143_(HopperBlock.f_54021_);
++      BlockPos targetPos = p_155564_.m_121945_(direction);
++      net.fabricmc.fabric.api.transfer.v1.storage.Storage<net.fabricmc.fabric.api.transfer.v1.item.ItemVariant> target = net.fabricmc.fabric.api.transfer.v1.item.ItemStorage.SIDED.find(p_155563_, targetPos, direction.m_122424_());
++
++      if (target != null) {
++         long moved = net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil.move(
++                 net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage.of(p_155566_, direction),
++                 target,
++                 iv -> true,
++                 1,
++                 null
++         );
++         cir.setReturnValue(moved == 1);
++      }
++   }
++
++   private static void fabric$hookExtract(Level p_155553_, Hopper p_155554_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir, Container inputInventory) {
++      // Let vanilla handle the transfer if it found an inventory.
++      if (inputInventory != null) return;
++
++      // Otherwise inject our transfer logic.
++      BlockPos sourcePos = BlockPos.m_274561_(p_155554_.m_6343_(), p_155554_.m_6358_() + 1.0D, p_155554_.m_6446_());
++      net.fabricmc.fabric.api.transfer.v1.storage.Storage<net.fabricmc.fabric.api.transfer.v1.item.ItemVariant> source = net.fabricmc.fabric.api.transfer.v1.item.ItemStorage.SIDED.find(p_155553_, sourcePos, Direction.DOWN);
++
++      if (source != null) {
++         long moved = net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil.move(
++                 source,
++                 net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage.of(p_155554_, Direction.UP),
++                 iv -> true,
++                 1,
++                 null
++         );
++         cir.setReturnValue(moved == 1);
++      }
++   }
++   // Fabric end
  }

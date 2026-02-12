@@ -19,4 +19,11 @@ public record VersionInfo(String forgeVersion, String mcVersion, String mcpVersi
     public String mcAndMCPVersion() {
         return mcVersion + "-" + mcpVersion;
     }
+
+    // CatServer start
+
+    public String datafixerupperVersion() {
+        return "6.0.8";
+    }
+    // CatServer end
 }

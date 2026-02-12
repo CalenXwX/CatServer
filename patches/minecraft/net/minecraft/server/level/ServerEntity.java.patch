@@ -92,15 +92,21 @@
           this.f_8510_.f_19864_ = false;
        }
  
-@@ -215,6 +_,7 @@
+@@ -215,18 +_,29 @@
     public void m_8534_(ServerPlayer p_8535_) {
        this.f_8510_.m_6452_(p_8535_);
        p_8535_.f_8906_.m_9829_(new ClientboundRemoveEntitiesPacket(this.f_8510_.m_19879_()));
 +      net.minecraftforge.event.ForgeEventFactory.onStopEntityTracking(this.f_8510_, p_8535_);
++      {
++         net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents.STOP_TRACKING.invoker().onStopTracking(this.f_8510_, p_8535_); // Fabric - EntityTrackerEntryMixin
++      }
     }
  
     public void m_8541_(ServerPlayer p_8542_) {
-@@ -222,11 +_,15 @@
++      {
++         net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents.START_TRACKING.invoker().onStartTracking(this.f_8510_, p_8542_); // Fabric - EntityTrackerEntryMixin
++      }
+       List<Packet<ClientGamePacketListener>> list = new ArrayList<>();
        this.m_289200_(p_8542_, list::add);
        p_8542_.f_8906_.m_9829_(new ClientboundBundlePacket(list));
        this.f_8510_.m_6457_(p_8542_);

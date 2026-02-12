@@ -1,9 +1,35 @@
 --- a/net/minecraft/world/item/ShearsItem.java
 +++ b/net/minecraft/world/item/ShearsItem.java
-@@ -49,6 +_,38 @@
-       }
+@@ -34,19 +_,58 @@
     }
  
+    public boolean m_8096_(BlockState p_43087_) {
++      {
++         // Fabric start - ShearsItemMixin
++         if (p_43087_.m_204336_(net.fabricmc.fabric.api.mininglevel.v1.FabricMineableTags.SHEARS_MINEABLE)) {
++            return true;
++         }
++         // Fabric end
++      }
+       return p_43087_.m_60713_(Blocks.f_50033_) || p_43087_.m_60713_(Blocks.f_50088_) || p_43087_.m_60713_(Blocks.f_50267_);
+    }
+ 
+    public float m_8102_(ItemStack p_43084_, BlockState p_43085_) {
+       if (!p_43085_.m_60713_(Blocks.f_50033_) && !p_43085_.m_204336_(BlockTags.f_13035_)) {
+          if (p_43085_.m_204336_(BlockTags.f_13089_)) {
+-            return 5.0F;
++            return this.fabric$onGetMiningSpeedMultiplier(p_43085_, 5.0F); // Fabric - ShearsItemMixin
+          } else {
+-            return !p_43085_.m_60713_(Blocks.f_50191_) && !p_43085_.m_60713_(Blocks.f_152475_) ? super.m_8102_(p_43084_, p_43085_) : 2.0F;
++            return this.fabric$onGetMiningSpeedMultiplier(p_43085_, !p_43085_.m_60713_(Blocks.f_50191_) && !p_43085_.m_60713_(Blocks.f_152475_) ? super.m_8102_(p_43084_, p_43085_) : 2.0F); // Fabric - ShearsItemMixin
+          }
+       } else {
+-         return 15.0F;
+-      }
++         return this.fabric$onGetMiningSpeedMultiplier(p_43085_, 15.0F); // Fabric - ShearsItemMixin
++      }
++   }
++
 +   @Override
 +   public net.minecraft.world.InteractionResult m_6880_(ItemStack stack, net.minecraft.world.entity.player.Player playerIn, LivingEntity entity, net.minecraft.world.InteractionHand hand) {
 +      if (entity instanceof net.minecraftforge.common.IForgeShearable target) {
@@ -34,8 +60,28 @@
 +   @Override
 +   public boolean canPerformAction(ItemStack stack, net.minecraftforge.common.ToolAction toolAction) {
 +      return net.minecraftforge.common.ToolActions.DEFAULT_SHEARS_ACTIONS.contains(toolAction);
-+   }
-+
+    }
+ 
     public InteractionResult m_6225_(UseOnContext p_186371_) {
-       Level level = p_186371_.m_43725_();
-       BlockPos blockpos = p_186371_.m_8083_();
+@@ -78,4 +_,21 @@
+ 
+       return super.m_6225_(p_186371_);
+    }
++
++   // Fabric start - ShearsItemMixin
++   private float fabric$onGetMiningSpeedMultiplier(BlockState state, float ret) {
++      if (ret == 1.0f) { // if not caught by vanilla checks
++         if (state.m_204336_(net.fabricmc.fabric.api.mininglevel.v1.FabricMineableTags.SHEARS_MINEABLE)) { // mimics MiningToolItem.getMiningSpeedMultiplier
++            // In vanilla 1.17, shears have three special mining speed multiplier values:
++            //   - cobweb and leaves return 15.0
++            //   - wool returns 5.0
++            //   - vines and glow lichen return 2.0
++            // As the most "neutral" option out of these three,
++            // we'll use 5.0 as it's not extremely fast nor extremely slow.
++            ret = 5.0f;
++         }
++      }
++      return ret;
++   }
++   // Fabric end
+ }

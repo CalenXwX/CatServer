@@ -163,4 +163,27 @@ public class ModifiableBiomeInfo
             }
         }
     }
+
+    // CatServer start
+    public void catserver$replaceBiomeInfo(final Holder<Biome> biome, final net.minecraftforge.common.world.ModifiableBiomeInfo.BiomeInfo.Builder fabricModifiedBiomeInfoBuilder) {
+        // we replace the BiomeInfo which is active
+        if (this.modifiedBiomeInfo == null) {
+            this.modifiedBiomeInfo = fabricModifiedBiomeInfoBuilder.build();
+        } else {
+            // ServerLifecycleHooks#runModifiers
+            final java.util.List<net.minecraftforge.common.world.BiomeModifier> biomeModifiers = net.minecraft.server.MinecraftServer.getServer().registryAccess().registryOrThrow(net.minecraftforge.registries.ForgeRegistries.Keys.BIOME_MODIFIERS)
+                    .holders()
+                    .map(Holder::value)
+                    .toList();
+            for (BiomeModifier.Phase phase : BiomeModifier.Phase.values())
+            {
+                for (BiomeModifier modifier : biomeModifiers)
+                {
+                    modifier.modify(biome, phase, fabricModifiedBiomeInfoBuilder);
+                }
+            }
+            this.modifiedBiomeInfo = fabricModifiedBiomeInfoBuilder.build();
+        }
+    }
+    // CatServer end
 }

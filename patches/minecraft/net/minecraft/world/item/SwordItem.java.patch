@@ -1,6 +1,33 @@
 --- a/net/minecraft/world/item/SwordItem.java
 +++ b/net/minecraft/world/item/SwordItem.java
-@@ -67,4 +_,9 @@
+@@ -37,9 +_,9 @@
+ 
+    public float m_8102_(ItemStack p_43288_, BlockState p_43289_) {
+       if (p_43289_.m_60713_(Blocks.f_50033_)) {
+-         return 15.0F;
++         return fabric$onGetMiningSpeedMultiplier(p_43289_, 15.0F); // Fabric - SwordItemMixin
+       } else {
+-         return p_43289_.m_204336_(BlockTags.f_278398_) ? 1.5F : 1.0F;
++         return fabric$onGetMiningSpeedMultiplier(p_43289_, p_43289_.m_204336_(BlockTags.f_278398_) ? 1.5F : 1.0F); // Fabric - SwordItemMixin
+       }
+    }
+ 
+@@ -61,10 +_,45 @@
+    }
+ 
+    public boolean m_8096_(BlockState p_43298_) {
++      {
++         // Fabric start - SwordItemMixin
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> info = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("fabric$onIsSuitableFor", true);
++         this.fabric$onIsSuitableFor(p_43298_, info);
++         if (info.isCancelled()) {
++            return info.getReturnValueZ();
++         }
++         // Fabric end
++      }
+       return p_43298_.m_60713_(Blocks.f_50033_);
+    }
+ 
     public Multimap<Attribute, AttributeModifier> m_7167_(EquipmentSlot p_43274_) {
        return p_43274_ == EquipmentSlot.MAINHAND ? this.f_43267_ : super.m_7167_(p_43274_);
     }
@@ -9,4 +36,25 @@
 +   public boolean canPerformAction(ItemStack stack, net.minecraftforge.common.ToolAction toolAction) {
 +      return net.minecraftforge.common.ToolActions.DEFAULT_SWORD_ACTIONS.contains(toolAction);
 +   }
++
++   // Fabric start - SwordItemMixin
++   private void fabric$onIsSuitableFor(BlockState state, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> info) {
++      if (state.m_204336_(net.fabricmc.fabric.api.mininglevel.v1.FabricMineableTags.SWORD_MINEABLE)) {
++         int miningLevel = m_43314_().m_6604_();
++
++         if (miningLevel >= net.fabricmc.fabric.api.mininglevel.v1.MiningLevelManager.getRequiredMiningLevel(state)) {
++            info.setReturnValue(true);
++         }
++      }
++   }
++
++   private float fabric$onGetMiningSpeedMultiplier(BlockState state, float ret) {
++      if (ret == 1.0f) { // if not caught by vanilla checks
++         if (state.m_204336_(net.fabricmc.fabric.api.mininglevel.v1.FabricMineableTags.SWORD_MINEABLE)) { // mimics MiningToolItem.getMiningSpeedMultiplier
++            ret = m_43314_().m_6624_();
++         }
++      }
++      return ret;
++   }
++   // Fabric end
  }

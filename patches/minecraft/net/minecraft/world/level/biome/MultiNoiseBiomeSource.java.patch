@@ -1,0 +1,30 @@
+--- a/net/minecraft/world/level/biome/MultiNoiseBiomeSource.java
++++ b/net/minecraft/world/level/biome/MultiNoiseBiomeSource.java
+@@ -15,7 +_,7 @@
+ import net.minecraft.util.VisibleForDebug;
+ import net.minecraft.world.level.levelgen.NoiseRouterData;
+ 
+-public class MultiNoiseBiomeSource extends BiomeSource {
++public class MultiNoiseBiomeSource extends BiomeSource implements net.fabricmc.fabric.impl.biome.BiomeSourceAccess { // Fabric
+    private static final MapCodec<Holder<Biome>> f_273882_ = Biome.f_47431_.fieldOf("biome");
+    public static final MapCodec<Climate.ParameterList<Holder<Biome>>> f_48424_ = Climate.ParameterList.m_274436_(f_273882_).fieldOf("biomes");
+    private static final MapCodec<Holder<MultiNoiseBiomeSourceParameterList>> f_273891_ = MultiNoiseBiomeSourceParameterList.f_273930_.fieldOf("preset").withLifecycle(Lifecycle.stable());
+@@ -80,4 +_,18 @@
+       OverworldBiomeBuilder overworldbiomebuilder = new OverworldBiomeBuilder();
+       p_207895_.add("Biome builder PV: " + OverworldBiomeBuilder.m_187155_(d0) + " C: " + overworldbiomebuilder.m_187189_((double)f) + " E: " + overworldbiomebuilder.m_187209_((double)f1) + " T: " + overworldbiomebuilder.m_187220_((double)f2) + " H: " + overworldbiomebuilder.m_187231_((double)f3));
+    }
++
++   // Fabric start - MultiNoiseBiomeSourceMixin
++   private boolean modifyBiomeEntries = true;
++
++   @Override
++   public void fabric_setModifyBiomeEntries(boolean modifyBiomeEntries) {
++      this.modifyBiomeEntries = modifyBiomeEntries;
++   }
++
++   @Override
++   public boolean fabric_shouldModifyBiomeEntries() {
++      return this.modifyBiomeEntries;
++   }
++   // Fabric end
+ }

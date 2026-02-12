@@ -71,7 +71,7 @@ class NamespacedWrapper<T> extends MappedRegistry<T> implements ILockableRegistr
     @Override
     public Holder.Reference<T> registerMapping(int id, ResourceKey<T> key, T value, Lifecycle lifecycle)
     {
-        if (locked)
+        if (locked && (!net.fabricmc.loader.impl.game.minecraft.Hooks.isFabricLoadingRegistries.get())) // CatServer
             throw new IllegalStateException("Can not register to a locked registry. Modder should use Forge Register methods.");
 
         Validate.notNull(value);
@@ -267,13 +267,13 @@ class NamespacedWrapper<T> extends MappedRegistry<T> implements ILockableRegistr
 
     void validateWrite()
     {
-        if (this.frozen)
+        if (this.frozen && (!net.fabricmc.loader.impl.game.minecraft.Hooks.isFabricLoadingRegistries.get())) // CatServer
             throw new IllegalStateException("Registry is already frozen");
     }
 
     void validateWrite(ResourceKey<T> key)
     {
-        if (this.frozen)
+        if (this.frozen && (!net.fabricmc.loader.impl.game.minecraft.Hooks.isFabricLoadingRegistries.get())) // CatServer
             throw new IllegalStateException("Registry is already frozen (trying to add key " + key + ")");
     }
 

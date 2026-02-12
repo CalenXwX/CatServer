@@ -1,13 +1,23 @@
 --- a/net/minecraft/server/packs/resources/ReloadableResourceManager.java
 +++ b/net/minecraft/server/packs/resources/ReloadableResourceManager.java
-@@ -68,4 +_,10 @@
+@@ -38,7 +_,7 @@
+ 
+    public ReloadInstance m_142463_(Executor p_143930_, Executor p_143931_, CompletableFuture<Unit> p_143932_, List<PackResources> p_143933_) {
+       f_203814_.info("Reloading ResourceManager: {}", LogUtils.defer(() -> {
+-         return p_143933_.stream().map(PackResources::m_5542_).collect(Collectors.joining(", "));
++         return p_143933_.stream().map(pack -> pack instanceof net.fabricmc.fabric.impl.resource.loader.GroupResourcePack ? ((net.fabricmc.fabric.impl.resource.loader.GroupResourcePack) pack).getFullName() : pack.m_5542_()).collect(Collectors.joining(", ")); // Fabric - ReloadableResourceManagerImplMixin
+       }));
+       this.f_203815_.close();
+       this.f_203815_ = new MultiPackResourceManager(this.f_203817_, p_143933_);
+@@ -67,5 +_,11 @@
+ 
     public Stream<PackResources> m_7536_() {
        return this.f_203815_.m_7536_();
-    }
++   }
 +
 +   public void registerReloadListenerIfNotPresent(PreparableReloadListener listener) {
 +      if (!this.f_203816_.contains(listener)) {
 +         this.m_7217_(listener);
 +      }
-+   }
+    }
  }

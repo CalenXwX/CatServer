@@ -36,6 +36,22 @@
           if (flag1 && !flag) {
              BlockState blockstate = p_52435_.m_61124_(f_52428_, Boolean.valueOf(true));
              p_52433_.m_7731_(p_52434_, blockstate, 3);
+@@ -127,6 +_,15 @@
+    }
+ 
+    public int m_6782_(BlockState p_52454_, Level p_52455_, BlockPos p_52456_) {
++      // Fabric start - DetectorRailBlockMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Integer> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Integer>("fabric$getCustomComparatorOutput", true);
++         this.fabric$getCustomComparatorOutput(p_52454_, p_52455_, p_52456_, cir);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++      }
++      // Fabric end
+       if (p_52454_.m_61143_(f_52428_)) {
+          List<MinecartCommandBlock> list = this.m_52436_(p_52455_, p_52456_, MinecartCommandBlock.class, (p_153123_) -> {
+             return true;
 @@ -135,7 +_,9 @@
              return list.get(0).m_38534_().m_45436_();
           }
@@ -47,11 +63,29 @@
           if (!list1.isEmpty()) {
              return AbstractContainerMenu.m_38938_((Container)list1.get(0));
           }
-@@ -270,6 +_,6 @@
+@@ -270,6 +_,23 @@
     }
  
     protected void m_7926_(StateDefinition.Builder<Block, BlockState> p_52469_) {
 -      p_52469_.m_61104_(f_52427_, f_52428_, f_152149_);
+-   }
 +      p_52469_.m_61104_(m_7978_(), f_52428_, f_152149_);
-    }
++   }
++
++   // Fabric start - DetectorRailBlockMixin
++   private void fabric$getCustomComparatorOutput(BlockState p_52454_, Level p_52455_, BlockPos p_52456_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Integer> cir) {
++      if (p_52454_.m_61143_(DetectorRailBlock.f_52428_)) {
++         List<AbstractMinecart> carts = m_52436_(p_52455_, p_52456_, AbstractMinecart.class,
++                 cart -> net.fabricmc.fabric.api.object.builder.v1.entity.MinecartComparatorLogicRegistry.getCustomComparatorLogic(cart.m_6095_()) != null);
++         for (AbstractMinecart cart : carts) {
++            int comparatorValue = net.fabricmc.fabric.api.object.builder.v1.entity.MinecartComparatorLogicRegistry.getCustomComparatorLogic(cart.m_6095_())
++                    .getComparatorValue(cart, p_52454_, p_52456_);
++            if (comparatorValue >= 0) {
++               cir.setReturnValue(comparatorValue);
++               break;
++            }
++         }
++      }
++   }
++   // Fabric end
  }

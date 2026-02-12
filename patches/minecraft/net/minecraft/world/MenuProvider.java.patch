@@ -1,8 +1,11 @@
 --- a/net/minecraft/world/MenuProvider.java
 +++ b/net/minecraft/world/MenuProvider.java
-@@ -5,4 +_,12 @@
+@@ -3,6 +_,14 @@
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.world.inventory.MenuConstructor;
  
- public interface MenuProvider extends MenuConstructor {
+-public interface MenuProvider extends MenuConstructor {
++public interface MenuProvider extends MenuConstructor, net.fabricmc.fabric.api.screenhandler.v1.FabricScreenHandlerFactory { // Fabric - NamedScreenHandlerFactoryMixin
     Component m_5446_();
 +
 +   // CatServer start

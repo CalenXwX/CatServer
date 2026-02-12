@@ -2,6 +2,7 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.fabricmc.net/' }
         mavenCentral()
     }
     dependencies {
@@ -142,6 +143,7 @@ subprojects {
             url = 'https://maven.minecraftforge.net/'
         }
         maven { url 'https://hub.spigotmc.org/nexus/content/groups/public/' }
+        maven { url 'https://maven.fabricmc.net/' }
     }
 
     java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -242,7 +244,7 @@ def sharedDeps = {
     installer "org.jline:jline-reader:${JLINE_VERSION}"   // Dep of TerminaalConsoleeAppender
     installer "org.jline:jline-terminal:${JLINE_VERSION}" // Dep of TerminaalConsoleeAppender
     installer 'org.jline:jline-terminal-jansi:3.12.1'
-    installer "org.spongepowered:mixin:${MIXIN_VERSION}"
+    // installer "org.spongepowered:mixin:${MIXIN_VERSION}" // we use net.fabricmc:sponge-mixin below
     installer 'org.openjdk.nashorn:nashorn-core:15.3'
     installer "net.minecraftforge:JarJarSelector:${JARJAR_VERSION}"
     installer "net.minecraftforge:JarJarMetadata:${JARJAR_VERSION}"
@@ -274,6 +276,17 @@ def sharedDeps = {
     installer "net.kyori:adventure-text-serializer-legacy:${adventureVersion}"
     installer "net.kyori:adventure-text-serializer-plain:${adventureVersion}"
     installer "net.kyori:adventure-text-logger-slf4j:${adventureVersion}"
+    */
+
+    // fabric
+    compileOnly 'io.github.llamalad7:mixinextras-fabric:0.5.0'
+    installer "net.fabricmc:sponge-mixin:0.17.0+mixin.0.8.7"
+    /*
+    installer 'org.ow2.sat4j:org.ow2.sat4j.core:2.3.6'
+    installer 'org.ow2.sat4j:org.ow2.sat4j.pb:2.3.6'
+    installer "net.fabricmc:tiny-remapper:0.11.2"
+    installer "net.fabricmc:class-tweaker:0.2"
+    installer "net.fabricmc:mapping-io:0.7.1"
     */
 
     /*
@@ -537,7 +550,8 @@ def sharedFmlonlyForge = { Project prj ->
                                     "libraries/org/eclipse/sisu/org.eclipse.sisu.inject/0.3.5/org.eclipse.sisu.inject-0.3.5.jar", // 1.20.1
                                     "libraries/org/codehaus/plexus/interpolation/plexus-interpolation/1.26/plexus-interpolation-1.26.jar", // 1.20.1
                                     "libraries/org/codehaus/plexus/util/plexus-utils/3.5.1/plexus-utils-3.5.1.jar", // 1.20.1
-                                    "libraries/com/google/protobuf/protobuf-java/3.21.9/protobuf-java-3.21.9.jar" // 1.20.1
+                                    "libraries/com/google/protobuf/protobuf-java/3.21.9/protobuf-java-3.21.9.jar", // 1.20.1
+                                    "mods-fabric/mixinextras-fabric-0.5.0.jar" // 1.20.1
                             ].findAll { it.startsWith('libraries/') && !claimed.contains(it.rsplit('/', 2)[0]) }
                     )
 
@@ -1096,7 +1110,8 @@ project(':forge') {
                 'Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 'GitCommit': gradleutils.gitInfo.abbreviatedId,
                 'Git-Branch': gradleutils.gitInfo.branch,
-                'FML-System-Mods': 'forge'
+                'FML-System-Mods': 'forge',
+                "MixinConfigs": "mixins.catserver.json"
             ] as LinkedHashMap,
             'net/minecraftforge/versions/forge/': [
                 'Specification-Title':      'Forge',
@@ -1441,7 +1456,8 @@ project(':forge') {
                                 "libraries/org/eclipse/sisu/org.eclipse.sisu.inject/0.3.5/org.eclipse.sisu.inject-0.3.5.jar", // 1.20.1
                                 "libraries/org/codehaus/plexus/interpolation/plexus-interpolation/1.26/plexus-interpolation-1.26.jar", // 1.20.1
                                 "libraries/org/codehaus/plexus/util/plexus-utils/3.5.1/plexus-utils-3.5.1.jar", // 1.20.1
-                                "libraries/com/google/protobuf/protobuf-java/3.21.9/protobuf-java-3.21.9.jar" // 1.20.1
+                                "libraries/com/google/protobuf/protobuf-java/3.21.9/protobuf-java-3.21.9.jar", // 1.20.1
+                                "mods-fabric/mixinextras-fabric-0.5.0.jar" // 1.20.1
                         ].findAll { it.startsWith('libraries/') && !claimed.contains(it.rsplit('/', 2)[0]) }
                 )
         def MODULE_PATH = Util.getArtifactsOffline(project, project.configurations.moduleonly, false).values().collect { "libraries/${it.downloads.artifact.path}" }
@@ -1532,6 +1548,11 @@ project(':forge') {
 
         from(rootProject.file('server_libs/fastcsv-2.0.0.jar')) {
             rename { 'data/fastcsv-2.0.0.jar' }
+        }
+
+        // fabric api jar with no java classes. it is just used to tell fabric loader that fabric api exists
+        from(rootProject.file('fake_fabric_api/catserver-fake-fabric-api-0.92.6+1.20.1.jar')) {
+            rename { 'data/catserver-fake-fabric-api-0.92.6+1.20.1.jar'}
         }
     }
 

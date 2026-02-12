@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/level/storage/loot/LootPool.java
 +++ b/net/minecraft/world/level/storage/loot/LootPool.java
+@@ -30,7 +_,7 @@
+ import org.apache.commons.lang3.ArrayUtils;
+ import org.apache.commons.lang3.mutable.MutableInt;
+ 
+-public class LootPool {
++public class LootPool implements net.fabricmc.fabric.api.loot.v1.FabricLootPool, net.fabricmc.fabric.mixin.loot.LootPoolAccessor { // Fabric - LootPoolMixin LootPoolAccessor
+    final LootPoolEntryContainer[] f_79023_;
+    final LootItemCondition[] f_79024_;
+    private final Predicate<LootContext> f_79025_;
 @@ -39,7 +_,8 @@
     NumberProvider f_79028_;
     NumberProvider f_79029_;
@@ -10,7 +19,7 @@
        this.f_79023_ = p_165128_;
        this.f_79024_ = p_165129_;
        this.f_79025_ = LootItemConditions.m_81834_(p_165129_);
-@@ -112,6 +_,23 @@
+@@ -112,17 +_,35 @@
        this.f_79028_.m_6169_(p_79052_.m_79365_(".rolls"));
        this.f_79029_.m_6169_(p_79052_.m_79365_(".bonusRolls"));
     }
@@ -26,7 +35,7 @@
 +   private final String name;
 +   @org.jetbrains.annotations.Nullable
 +   public String getName() { return this.name; }
-+   public NumberProvider getRolls()      { return this.f_79028_; }
++   @Override public NumberProvider getRolls()      { return this.f_79028_; } // CatServer - Fabric @Override
 +   public NumberProvider getBonusRolls() { return this.f_79029_; }
 +   public void setRolls     (NumberProvider v){ checkFrozen(); this.f_79028_ = v; }
 +   public void setBonusRolls(NumberProvider v){ checkFrozen(); this.f_79029_ = v; }
@@ -34,7 +43,12 @@
  
     public static LootPool.Builder m_79043_() {
        return new LootPool.Builder();
-@@ -123,6 +_,7 @@
+    }
+ 
+-   public static class Builder implements FunctionUserBuilder<LootPool.Builder>, ConditionUserBuilder<LootPool.Builder> {
++   public static class Builder implements FunctionUserBuilder<LootPool.Builder>, ConditionUserBuilder<LootPool.Builder>, net.fabricmc.fabric.api.loot.v2.FabricLootPoolBuilder { // Fabric - LootPoolBuilderMixin
+       private final List<LootPoolEntryContainer> f_79067_ = Lists.newArrayList();
+       private final List<LootItemCondition> f_79068_ = Lists.newArrayList();
        private final List<LootItemFunction> f_79069_ = Lists.newArrayList();
        private NumberProvider f_79070_ = ConstantValue.m_165692_(1.0F);
        private NumberProvider f_79071_ = ConstantValue.m_165692_(0.0F);
@@ -42,7 +56,7 @@
  
        public LootPool.Builder m_165133_(NumberProvider p_165134_) {
           this.f_79070_ = p_165134_;
-@@ -153,11 +_,16 @@
+@@ -153,13 +_,61 @@
           return this;
        }
  
@@ -59,7 +73,52 @@
 +            return new LootPool(this.f_79067_.toArray(new LootPoolEntryContainer[0]), this.f_79068_.toArray(new LootItemCondition[0]), this.f_79069_.toArray(new LootItemFunction[0]), this.f_79070_, this.f_79071_, name);
           }
        }
++
++      // Fabric start -
++      private LootPool.Builder self() {
++         // noinspection ConstantConditions
++         return this;
++      }
++
++      @Override
++      public LootPool.Builder with(LootPoolEntryContainer entry) {
++         this.f_79067_.add(entry);
++         return self();
++      }
++
++      @Override
++      public LootPool.Builder with(java.util.Collection<? extends LootPoolEntryContainer> entries) {
++         this.f_79067_.addAll(entries);
++         return self();
++      }
++
++      @Override
++      public LootPool.Builder conditionally(LootItemCondition condition) {
++         this.f_79068_.add(condition);
++         return self();
++      }
++
++      @Override
++      public LootPool.Builder conditionally(java.util.Collection<? extends LootItemCondition> conditions) {
++         this.f_79068_.addAll(conditions);
++         return self();
++      }
++
++      @Override
++      public LootPool.Builder apply(LootItemFunction function) {
++         this.f_79069_.add(function);
++         return self();
++      }
++
++      @Override
++      public LootPool.Builder apply(java.util.Collection<? extends LootItemFunction> functions) {
++         this.f_79069_.addAll(functions);
++         return self();
++      }
++      // Fabric end
     }
+ 
+    public static class Serializer implements JsonDeserializer<LootPool>, JsonSerializer<LootPool> {
 @@ -170,11 +_,13 @@
           LootItemFunction[] alootitemfunction = GsonHelper.m_13845_(jsonobject, "functions", new LootItemFunction[0], p_79092_, LootItemFunction[].class);
           NumberProvider numberprovider = GsonHelper.m_13836_(jsonobject, "rolls", p_79092_, NumberProvider.class);
@@ -75,3 +134,59 @@
           jsonobject.add("rolls", p_79096_.serialize(p_79094_.f_79028_));
           jsonobject.add("bonus_rolls", p_79096_.serialize(p_79094_.f_79029_));
           jsonobject.add("entries", p_79096_.serialize(p_79094_.f_79023_));
+@@ -189,4 +_,55 @@
+          return jsonobject;
+       }
+    }
++
++   // Fabric start - LootPoolMixin
++   @Override
++   public List<LootPoolEntryContainer> getEntries() {
++      return com.google.common.collect.ImmutableList.copyOf(f_79023_);
++   }
++
++   @Override
++   public List<LootItemCondition> getConditions() {
++      return com.google.common.collect.ImmutableList.copyOf(f_79024_);
++   }
++
++   @Override
++   public List<LootItemFunction> getFunctions() {
++      return com.google.common.collect.ImmutableList.copyOf(f_79026_);
++   }
++
++   /* // CatServer - Forge added this method
++   @Override
++   public NumberProvider getRolls() {
++      return rolls;
++   }
++   */
++   // Fabric end
++
++   // Fabric start - LootPoolAccessor
++   @Override
++   public NumberProvider fabric_getRolls() {
++      return this.f_79028_;
++   }
++
++   @Override
++   public NumberProvider fabric_getBonusRolls() {
++      return this.f_79029_;
++   }
++
++   @Override
++   public LootPoolEntryContainer[] fabric_getEntries() {
++      return this.f_79023_;
++   }
++
++   @Override
++   public LootItemCondition[] fabric_getConditions() {
++      return this.f_79024_;
++   }
++
++   @Override
++   public LootItemFunction[] fabric_getFunctions() {
++      return this.f_79026_;
++   }
++   // Fabric end
+ }

@@ -44,7 +44,7 @@
           if (livingentity instanceof Mob) {
              ((Mob)livingentity).m_21409_(equipmentslot, 2.0F);
              ((Mob)livingentity).m_21530_();
-@@ -75,7 +_,7 @@
+@@ -75,11 +_,11 @@
        UUID uuid = f_265987_.get(p_266831_);
        builder.put(Attributes.f_22284_, new AttributeModifier(uuid, "Armor modifier", (double)this.f_40381_, AttributeModifier.Operation.ADDITION));
        builder.put(Attributes.f_22285_, new AttributeModifier(uuid, "Armor toughness", (double)this.f_40382_, AttributeModifier.Operation.ADDITION));
@@ -53,3 +53,31 @@
           builder.put(Attributes.f_22278_, new AttributeModifier(uuid, "Armor knockback resistance", (double)this.f_40378_, AttributeModifier.Operation.ADDITION));
        }
  
+-      this.f_40383_ = builder.build();
++      this.f_40383_ = builder.build(); // Fabric - ArmorItemMixin // CatServer - forge has done this
+    }
+ 
+    public ArmorItem.Type m_266204_() {
+@@ -144,4 +_,22 @@
+          return this.f_266116_;
+       }
+    }
++
++   // Fabric start - ArmorItemMixin
++   /* Vanilla only adds a knockback resistance modifier to ArmorItems made of ArmorMaterials.NETHERITE. This mixin
++    * adds a knockback resistance modifier to any ArmorItem if knockbackResistance is > 0.0F.
++    */
++   /* // CatServer - forge has done this
++   private ImmutableMultimap.Builder<Attribute, AttributeModifier> fabric_knockbackResistance(ImmutableMultimap.Builder<Attribute, AttributeModifier> builder, ArmorMaterial material, ArmorItem.Type type) {
++      // Vanilla handles netherite
++      if (material != ArmorMaterials.NETHERITE && knockbackResistance > 0.0F) {
++         builder.put(Attributes.KNOCKBACK_RESISTANCE, new AttributeModifier(
++                 ARMOR_MODIFIER_UUID_PER_TYPE.get(type), "Armor knockback resistance",
++                 knockbackResistance, AttributeModifier.Operation.ADDITION));
++      }
++
++      return builder;
++   }
++    */
++   // Fabric end
+ }

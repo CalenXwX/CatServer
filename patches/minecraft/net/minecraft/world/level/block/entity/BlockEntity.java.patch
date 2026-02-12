@@ -13,7 +13,7 @@
 +
 +import org.spigotmc.CustomTimingsHandler; // Spigot
 +
-+public abstract class BlockEntity extends net.minecraftforge.common.capabilities.CapabilityProvider<BlockEntity> implements net.minecraftforge.common.extensions.IForgeBlockEntity {
++public abstract class BlockEntity extends net.minecraftforge.common.capabilities.CapabilityProvider<BlockEntity> implements net.minecraftforge.common.extensions.IForgeBlockEntity, net.fabricmc.fabric.api.blockview.v2.RenderDataBlockEntity, net.fabricmc.fabric.api.rendering.data.v1.RenderAttachmentBlockEntity, net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl { // Fabric - BlockEntityMixin AttachmentTargetsMixin
 +   public CustomTimingsHandler tickTimer = org.bukkit.craftbukkit.v1_20_R1.SpigotTimings.getTileEntityTimings(this); // Spigot
 +   // CraftBukkit start - data containers
 +   private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
@@ -61,7 +61,7 @@
     }
  
     public final CompoundTag m_187480_() {
-@@ -68,6 +_,11 @@
+@@ -68,6 +_,14 @@
     public final CompoundTag m_187482_() {
        CompoundTag compoundtag = new CompoundTag();
        this.m_183515_(compoundtag);
@@ -70,9 +70,22 @@
 +         compoundtag.m_128365_("PublicBukkitValues", this.persistentDataContainer.toTagCompound());
 +      }
 +      // CraftBukkit end
++      {
++         this.fabric_writeAttachmentsToNbt(compoundtag); // Fabric - BlockEntityMixin
++      }
        return compoundtag;
     }
  
+@@ -112,6 +_,9 @@
+             }
+          }).map((p_155249_) -> {
+             try {
++               {
++                  p_155249_.fabric_readAttachmentsFromNbt(p_155244_); // Fabric - BlockEntityMixin
++               }
+                p_155249_.m_142466_(p_155244_);
+                return p_155249_;
+             } catch (Throwable throwable) {
 @@ -163,6 +_,13 @@
  
     public void m_7651_() {
@@ -87,7 +100,7 @@
     }
  
     public void m_6339_() {
-@@ -191,9 +_,28 @@
+@@ -191,9 +_,121 @@
        return this.f_58855_;
     }
  
@@ -115,4 +128,97 @@
 +      return catserver.server.inventory.CatInventoryUtils.getOwner(f_58857_, f_58858_, useSnapshot); // Paper - add useSnapshot
 +   }
 +   // CatServer end
++
++   // Fabric start - BlockEntityMixin
++   @Override
++   @Nullable
++   public Object getRenderAttachmentData() {
++      return null;
++   }
++
++   /**
++    * Instead of returning null by default in v2, proxy to v1 method instead.
++    */
++   @Override
++   @Nullable
++   public Object getRenderData() {
++      return getRenderAttachmentData();
++   }
++   // Fabric end
++
++   // Fabric start - AttachmentTargetsMixin
++   @Nullable
++   private java.util.IdentityHashMap<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, Object> fabric_dataAttachments = null;
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T getAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type) {
++      return fabric_dataAttachments == null ? null : (T) fabric_dataAttachments.get(type);
++   }
++
++   @SuppressWarnings("unchecked")
++   @Override
++   @Nullable
++   public <T> T setAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<T> type, @Nullable T value) {
++      // Extremely inelegant, but the only alternative is separating out these two mixins and duplicating code
++      Object thisObject = this;
++
++      /* if (thisObject instanceof BlockEntity) */{ // CatServer - always instanceof BlockEntity
++         ((BlockEntity) thisObject).m_6596_();
++      }/* else if (thisObject instanceof net.minecraft.world.level.chunk.ChunkAccess) {
++         ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).setUnsaved(true);
++
++         if (type.isPersistent() && ((net.minecraft.world.level.chunk.ChunkAccess) thisObject).getStatus().equals(net.minecraft.world.level.chunk.ChunkStatus.EMPTY)) {
++            net.fabricmc.fabric.impl.attachment.AttachmentEntrypoint.LOGGER.warn("Attaching persistent attachment {} to chunk with chunk status EMPTY. Attachment might be discarded.", type.identifier());
++         }
++      }
++      */
++
++      if (value == null) {
++         if (fabric_dataAttachments == null) {
++            return null;
++         }
++
++         T removed = (T) fabric_dataAttachments.remove(type);
++
++         if (fabric_dataAttachments.isEmpty()) {
++            fabric_dataAttachments = null;
++         }
++
++         return removed;
++      } else {
++         if (fabric_dataAttachments == null) {
++            fabric_dataAttachments = new java.util.IdentityHashMap<>();
++         }
++
++         return (T) fabric_dataAttachments.put(type, value);
++      }
++   }
++
++   @Override
++   public boolean hasAttached(net.fabricmc.fabric.api.attachment.v1.AttachmentType<?> type) {
++      return fabric_dataAttachments != null && fabric_dataAttachments.containsKey(type);
++   }
++
++   @Override
++   public void fabric_writeAttachmentsToNbt(CompoundTag nbt) {
++      net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.serializeAttachmentData(nbt, fabric_dataAttachments);
++   }
++
++   @Override
++   public void fabric_readAttachmentsFromNbt(CompoundTag nbt) {
++      fabric_dataAttachments = net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.deserializeAttachmentData(nbt);
++   }
++
++   @Override
++   public boolean fabric_hasPersistentAttachments() {
++      return net.fabricmc.fabric.impl.attachment.AttachmentSerializingImpl.hasPersistentAttachments(fabric_dataAttachments);
++   }
++
++   @Override
++   public java.util.Map<net.fabricmc.fabric.api.attachment.v1.AttachmentType<?>, ?> fabric_getAttachments() {
++      return fabric_dataAttachments;
++   }
++   // Fabric end
  }

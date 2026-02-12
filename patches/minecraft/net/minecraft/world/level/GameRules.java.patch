@@ -1,5 +1,27 @@
 --- a/net/minecraft/world/level/GameRules.java
 +++ b/net/minecraft/world/level/GameRules.java
+@@ -24,10 +_,10 @@
+ import net.minecraft.server.level.ServerPlayer;
+ import org.slf4j.Logger;
+ 
+-public class GameRules {
++public class GameRules implements net.fabricmc.fabric.mixin.gamerule.GameRulesAccessor {
+    public static final int f_151487_ = 3;
+    static final Logger f_46128_ = LogUtils.getLogger();
+-   private static final Map<GameRules.Key<?>, GameRules.Type<?>> f_46129_ = Maps.newTreeMap(Comparator.comparing((p_46218_) -> {
++   public static final Map<GameRules.Key<?>, GameRules.Type<?>> f_46129_ = Maps.newTreeMap(Comparator.comparing((p_46218_) -> { // CatServer - private -> public for Fabric GameRulesAccessor
+       return p_46218_.f_46323_;
+    }));
+    public static final GameRules.Key<GameRules.BooleanValue> f_46131_ = m_46189_("doFireTick", GameRules.Category.UPDATES, GameRules.BooleanValue.m_46250_(true));
+@@ -168,7 +_,7 @@
+       return this.m_46170_(p_46216_).m_46288_();
+    }
+ 
+-   public static class BooleanValue extends GameRules.Value<GameRules.BooleanValue> {
++   public static class BooleanValue extends GameRules.Value<GameRules.BooleanValue> implements net.fabricmc.fabric.mixin.gamerule.GameRulesBooleanRuleAccessor { // Fabric - GameRulesBooleanRuleAccessor
+       private boolean f_46219_;
+ 
+       public static GameRules.Type<GameRules.BooleanValue> m_46252_(boolean p_46253_, BiConsumer<MinecraftServer, GameRules.BooleanValue> p_46254_) {
 @@ -204,7 +_,7 @@
           return Boolean.toString(this.f_46219_);
        }
@@ -9,6 +31,15 @@
           this.f_46219_ = Boolean.parseBoolean(p_46234_);
        }
  
+@@ -257,7 +_,7 @@
+       }
+    }
+ 
+-   public static class IntegerValue extends GameRules.Value<GameRules.IntegerValue> {
++   public static class IntegerValue extends GameRules.Value<GameRules.IntegerValue> implements net.fabricmc.fabric.mixin.gamerule.GameRulesIntRuleAccessor { // Fabric - GameRulesIntRuleAccessor
+       private int f_46284_;
+ 
+       public static GameRules.Type<GameRules.IntegerValue> m_46294_(int p_46295_, BiConsumer<MinecraftServer, GameRules.IntegerValue> p_46296_) {
 @@ -293,7 +_,7 @@
           return Integer.toString(this.f_46284_);
        }
@@ -18,6 +49,58 @@
           this.f_46284_ = m_46317_(p_46307_);
        }
  
+@@ -334,9 +_,19 @@
+          this.f_46284_ = p_46298_.f_46284_;
+          this.m_46368_(p_46299_);
+       }
++
++      // Fabric start - GameRulesIntRuleAccessor
++      public int getValue() {
++         return f_46284_;
++      }
++
++      public void setValue(int value) {
++         this.f_46284_ = value;
++      }
++      // Fabric end
+    }
+ 
+-   public static final class Key<T extends GameRules.Value<T>> {
++   public static final class Key<T extends GameRules.Value<T>> implements net.fabricmc.fabric.impl.gamerule.RuleKeyExtensions { // Fabric - GameRulesKeyMixin
+       final String f_46323_;
+       private final GameRules.Category f_46324_;
+ 
+@@ -372,6 +_,21 @@
+       public GameRules.Category m_46332_() {
+          return this.f_46324_;
+       }
++
++      // Fabric start - GameRulesKeyMixin
++      @Nullable
++      private net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory customCategory;
++
++      @Override
++      public net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory fabric_getCustomCategory() {
++         return this.customCategory;
++      }
++
++      @Override
++      public void fabric_setCustomCategory(net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory customCategory) {
++         this.customCategory = customCategory;
++      }
++      // Fabric end
+    }
+ 
+    public static class Type<T extends GameRules.Value<T>> {
+@@ -380,7 +_,7 @@
+       final BiConsumer<MinecraftServer, T> f_46339_;
+       private final GameRules.VisitorCaller<T> f_46340_;
+ 
+-      Type(Supplier<ArgumentType<?>> p_46342_, Function<GameRules.Type<T>, T> p_46343_, BiConsumer<MinecraftServer, T> p_46344_, GameRules.VisitorCaller<T> p_46345_) {
++      public Type(Supplier<ArgumentType<?>> p_46342_, Function<GameRules.Type<T>, T> p_46343_, BiConsumer<MinecraftServer, T> p_46344_, GameRules.VisitorCaller<T> p_46345_) { // CatServer - public for Fabric EnumRuleType GameRuleFactory
+          this.f_46337_ = p_46342_;
+          this.f_46338_ = p_46343_;
+          this.f_46339_ = p_46344_;
 @@ -414,14 +_,14 @@
           this.m_46368_(p_46371_.getSource().m_81377_());
        }
@@ -35,3 +118,12 @@
  
        public abstract String m_5831_();
  
+@@ -438,7 +_,7 @@
+       public abstract void m_5614_(T p_46363_, @Nullable MinecraftServer p_46364_);
+    }
+ 
+-   interface VisitorCaller<T extends GameRules.Value<T>> {
++   public interface VisitorCaller<T extends GameRules.Value<T>> { // CatServer - for Fabric EnumRuleType
+       void m_46374_(GameRules.GameRuleTypeVisitor p_46375_, GameRules.Key<T> p_46376_, GameRules.Type<T> p_46377_);
+    }
+ }

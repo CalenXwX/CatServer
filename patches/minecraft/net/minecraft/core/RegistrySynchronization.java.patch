@@ -1,5 +1,14 @@
 --- a/net/minecraft/core/RegistrySynchronization.java
 +++ b/net/minecraft/core/RegistrySynchronization.java
+@@ -21,7 +_,7 @@
+ import net.minecraft.world.level.dimension.DimensionType;
+ 
+ public class RegistrySynchronization {
+-   private static final Map<ResourceKey<? extends Registry<?>>, RegistrySynchronization.NetworkedRegistryData<?>> f_244438_ = Util.m_137537_(() -> {
++   public static Map<ResourceKey<? extends Registry<?>>, RegistrySynchronization.NetworkedRegistryData<?>> f_244438_ = Util.m_137537_(() -> { // CatServer - private -> public  remove final  for Fabric DynamicRegistriesImpl
+       ImmutableMap.Builder<ResourceKey<? extends Registry<?>>, RegistrySynchronization.NetworkedRegistryData<?>> builder = ImmutableMap.builder();
+       m_245912_(builder, Registries.f_256952_, Biome.f_47430_);
+       m_245912_(builder, Registries.f_256873_, ChatType.f_237005_);
 @@ -29,7 +_,7 @@
        m_245912_(builder, Registries.f_266076_, TrimMaterial.f_266095_);
        m_245912_(builder, Registries.f_256787_, DimensionType.f_63843_);
@@ -9,3 +18,26 @@
     });
     public static final Codec<RegistryAccess> f_244380_ = m_247146_();
  
+@@ -68,7 +_,7 @@
+ 
+    private static <K extends ResourceKey<? extends Registry<?>>, V extends Registry<?>> Codec<RegistryAccess> m_245940_(UnboundedMapCodec<K, V> p_249934_) {
+       return p_249934_.xmap(RegistryAccess.ImmutableRegistryAccess::new, (p_251578_) -> {
+-         return m_247199_(p_251578_).collect(ImmutableMap.toImmutableMap((p_250395_) -> {
++         return fabric$filterNonSyncedEntries(m_247199_(p_251578_)).collect(ImmutableMap.toImmutableMap((p_250395_) -> {
+             return (K)p_250395_.f_206233_();
+          }, (p_248951_) -> {
+             return (V)p_248951_.f_206234_();
+@@ -88,4 +_,13 @@
+ 
+    public static record NetworkedRegistryData<E>(ResourceKey<? extends Registry<E>> f_244545_, Codec<E> f_244392_) {
+    }
++
++   // Fabric start - SerializableRegistriesMixin
++   private static Stream<RegistryAccess.RegistryEntry<?>> fabric$filterNonSyncedEntries(Stream<RegistryAccess.RegistryEntry<?>> oldValue) {
++      return oldValue.filter(entry -> {
++         boolean canSkip = net.fabricmc.fabric.impl.registry.sync.DynamicRegistriesImpl.SKIP_EMPTY_SYNC_REGISTRIES.contains(entry.f_206233_());
++         return !canSkip || entry.f_206234_().m_13562_() > 0;
++      });
++   }
++   // Fabric end
+ }

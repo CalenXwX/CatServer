@@ -1,0 +1,13 @@
+--- a/net/minecraft/world/level/levelgen/RandomState.java
++++ b/net/minecraft/world/level/levelgen/RandomState.java
+@@ -105,6 +_,10 @@
+          }
+       };
+       this.f_224549_ = new Climate.Sampler(this.f_224548_.f_209384_().m_207456_(densityfunction$visitor), this.f_224548_.f_224392_().m_207456_(densityfunction$visitor), this.f_224548_.f_209386_().m_207456_(densityfunction$visitor), this.f_224548_.f_209387_().m_207456_(densityfunction$visitor), this.f_224548_.f_209388_().m_207456_(densityfunction$visitor), this.f_224548_.f_209389_().m_207456_(densityfunction$visitor), p_255668_.f_224370_());
++
++      {
++         ((net.fabricmc.fabric.impl.biome.MultiNoiseSamplerHooks)(Object)f_224549_).fabric_setSeed(p_255691_); // Fabric - NoiseConfigMixin
++      }
+    }
+ 
+    public NormalNoise m_224560_(ResourceKey<NormalNoise.NoiseParameters> p_224561_) {

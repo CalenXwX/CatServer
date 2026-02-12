@@ -1,0 +1,132 @@
+--- a/net/minecraft/world/level/biome/TheEndBiomeSource.java
++++ b/net/minecraft/world/level/biome/TheEndBiomeSource.java
+@@ -11,9 +_,16 @@
+ import net.minecraft.world.level.levelgen.DensityFunction;
+ 
+ public class TheEndBiomeSource extends BiomeSource {
+-   public static final Codec<TheEndBiomeSource> f_48617_ = RecordCodecBuilder.create((p_255555_) -> {
++   public static Codec<TheEndBiomeSource> f_48617_ = RecordCodecBuilder.create((p_255555_) -> { // Fabric - TheEndBiomeSourceMixin remove final
+       return p_255555_.group(RegistryOps.m_254866_(Biomes.f_48210_), RegistryOps.m_254866_(Biomes.f_48164_), RegistryOps.m_254866_(Biomes.f_48163_), RegistryOps.m_254866_(Biomes.f_48162_), RegistryOps.m_254866_(Biomes.f_48165_)).apply(p_255555_, p_255555_.stable(TheEndBiomeSource::new));
+    });
++
++   // Fabric start - TheEndBiomeSourceMixin
++   static {
++      fabric$modifyCodec();
++   }
++   // Fabric end
++
+    private final Holder<Biome> f_48621_;
+    private final Holder<Biome> f_48622_;
+    private final Holder<Biome> f_48623_;
+@@ -21,7 +_,23 @@
+    private final Holder<Biome> f_48625_;
+ 
+    public static TheEndBiomeSource m_254978_(HolderGetter<Biome> p_256561_) {
+-      return new TheEndBiomeSource(p_256561_.m_255043_(Biomes.f_48210_), p_256561_.m_255043_(Biomes.f_48164_), p_256561_.m_255043_(Biomes.f_48163_), p_256561_.m_255043_(Biomes.f_48162_), p_256561_.m_255043_(Biomes.f_48165_));
++      // Fabric start - TheEndBiomeSourceMixin
++      {
++         /**
++          * Captures the biome registry at the beginning of the static factory method to allow access to it in the
++          * constructor.
++          */
++         net.fabricmc.fabric.impl.biome.TheEndBiomeData.biomeRegistry.set(p_256561_);
++      }
++      TheEndBiomeSource ret = new TheEndBiomeSource(p_256561_.m_255043_(Biomes.f_48210_), p_256561_.m_255043_(Biomes.f_48164_), p_256561_.m_255043_(Biomes.f_48163_), p_256561_.m_255043_(Biomes.f_48162_), p_256561_.m_255043_(Biomes.f_48165_));
++      {
++         /**
++          * Frees up the captured biome registry.
++          */
++         net.fabricmc.fabric.impl.biome.TheEndBiomeData.biomeRegistry.remove();
++      }
++      return ret;
++      // Fabric end
+    }
+ 
+    private TheEndBiomeSource(Holder<Biome> p_220678_, Holder<Biome> p_220679_, Holder<Biome> p_220680_, Holder<Biome> p_220681_, Holder<Biome> p_220682_) {
+@@ -30,6 +_,9 @@
+       this.f_48623_ = p_220680_;
+       this.f_48624_ = p_220681_;
+       this.f_48625_ = p_220682_;
++      {
++         this.fabric$init(); // Fabric - TheEndBiomeSourceMixin
++      }
+    }
+ 
+    protected Stream<Holder<Biome>> m_274359_() {
+@@ -47,18 +_,72 @@
+       int l = SectionPos.m_123171_(i);
+       int i1 = SectionPos.m_123171_(k);
+       if ((long)l * (long)l + (long)i1 * (long)i1 <= 4096L) {
+-         return this.f_48621_;
++         return overrides.get().pick(p_204292_, p_204293_, p_204294_, p_204295_, this.f_48621_);
+       } else {
+          int j1 = (SectionPos.m_123171_(i) * 2 + 1) * 8;
+          int k1 = (SectionPos.m_123171_(k) * 2 + 1) * 8;
+          double d0 = p_204295_.f_207848_().m_207386_(new DensityFunction.SinglePointContext(j1, j, k1));
+          if (d0 > 0.25D) {
+-            return this.f_48622_;
++            return overrides.get().pick(p_204292_, p_204293_, p_204294_, p_204295_, this.f_48622_);
+          } else if (d0 >= -0.0625D) {
+-            return this.f_48623_;
++            return overrides.get().pick(p_204292_, p_204293_, p_204294_, p_204295_, this.f_48623_);
+          } else {
+-            return d0 < -0.21875D ? this.f_48624_ : this.f_48625_;
++            return overrides.get().pick(p_204292_, p_204293_, p_204294_, p_204295_, d0 < -0.21875D ? this.f_48624_ : this.f_48625_);
+          }
+       }
+    }
++
++   // Fabric start - TheEndBiomeSourceMixin
++   private java.util.function.Supplier<net.fabricmc.fabric.impl.biome.TheEndBiomeData.Overrides> overrides;
++
++   private boolean biomeSetModified = false;
++
++   private boolean hasCheckedForModifiedSet = false;
++
++   /**
++    * Modifies the codec, so it calls the static factory method that gives us access to the
++    * full biome registry instead of just the pre-defined biomes that vanilla uses.
++    */
++   private static void fabric$modifyCodec() {
++      f_48617_ = RecordCodecBuilder.create((instance) -> {
++         return instance.group(RegistryOps.m_255175_(net.minecraft.core.registries.Registries.f_256952_)).apply(instance, instance.stable(TheEndBiomeSource::m_254978_));
++      });
++   }
++
++   /**
++    * Uses the captured biome registry to set up the modded end biomes.
++    */
++   private void fabric$init() {
++      HolderGetter<Biome> biomes = net.fabricmc.fabric.impl.biome.TheEndBiomeData.biomeRegistry.get();
++
++      if (biomes == null) {
++         throw new IllegalStateException("Biome registry not set by Mixin");
++      }
++
++      overrides = com.google.common.base.Suppliers.memoize(() -> {
++         return net.fabricmc.fabric.impl.biome.TheEndBiomeData.createOverrides(biomes);
++      });
++   }
++
++   private Holder<Biome> fabric$getWeightedEndBiome(int biomeX, int biomeY, int biomeZ, Climate.Sampler noise, Holder<Biome> ret) {
++      ret = overrides.get().pick(biomeX, biomeY, biomeZ, noise, ret);
++      return ret;
++   }
++
++   @Override
++   protected java.util.Set<Holder<Biome>> fabric_modifyBiomeSet(java.util.Set<Holder<Biome>> biomes) {
++      if (!hasCheckedForModifiedSet) {
++         hasCheckedForModifiedSet = true;
++         biomeSetModified = !overrides.get().customBiomes.isEmpty();
++      }
++
++      if (biomeSetModified) {
++         var modifiedBiomes = new java.util.LinkedHashSet<>(biomes);
++         modifiedBiomes.addAll(overrides.get().customBiomes);
++         return java.util.Collections.unmodifiableSet(modifiedBiomes);
++      }
++
++      return biomes;
++   }
++   // Fabric end
+ }

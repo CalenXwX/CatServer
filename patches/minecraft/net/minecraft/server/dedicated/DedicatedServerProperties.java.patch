@@ -8,6 +8,15 @@
     static final Logger f_214805_ = LogUtils.getLogger();
     private static final Pattern f_214806_ = Pattern.compile("^[a-fA-F0-9]{40}$");
     private static final Splitter f_243988_ = Splitter.on(',').trimResults();
+@@ -115,7 +_,7 @@
+          return p_211541_.toLowerCase(Locale.ROOT);
+       }, WorldPresets.f_226437_.m_135782_().toString()));
+       this.f_214802_ = m_214808_(this.m_139811_("resource-pack", ""), this.m_139811_("resource-pack-sha1", ""), this.m_139803_("resource-pack-hash"), this.m_139836_("require-resource-pack", false), this.m_139811_("resource-pack-prompt", ""));
+-      this.f_243997_ = m_247013_(this.m_139811_("initial-enabled-packs", String.join(",", WorldDataConfiguration.f_244649_.f_244096_().m_45850_())), this.m_139811_("initial-disabled-packs", String.join(",", WorldDataConfiguration.f_244649_.f_244096_().m_45855_())));
++      this.f_243997_ = m_247013_(this.m_139811_("initial-enabled-packs", String.join(",", net.fabricmc.fabric.impl.resource.loader.ModResourcePackUtil.createDefaultDataConfiguration().f_244096_().m_45850_())), this.m_139811_("initial-disabled-packs", String.join(",", WorldDataConfiguration.f_244649_.f_244096_().m_45855_()))); // Fabric - ServerPropertiesHandlerMixin
+    }
+ 
+    public static DedicatedServerProperties m_180929_(Path p_180930_) {
 @@ -189,7 +_,7 @@
        return this.f_244504_.m_247373_(p_250466_);
     }

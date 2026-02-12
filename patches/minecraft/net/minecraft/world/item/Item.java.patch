@@ -5,20 +5,23 @@
  import org.slf4j.Logger;
  
 -public class Item implements FeatureElement, ItemLike {
-+public class Item implements FeatureElement, ItemLike, net.minecraftforge.common.extensions.IForgeItem {
++public class Item implements FeatureElement, ItemLike, net.minecraftforge.common.extensions.IForgeItem, net.fabricmc.fabric.impl.transfer.item.ItemVariantCache, net.fabricmc.fabric.impl.item.ItemExtensions, net.fabricmc.fabric.api.item.v1.FabricItem { // Fabric - ItemMixin
     private static final Logger f_150883_ = LogUtils.getLogger();
 -   public static final Map<Block, Item> f_41373_ = Maps.newHashMap();
 +   public static final Map<Block, Item> f_41373_ = net.minecraftforge.registries.GameData.getBlockItemMap();
     protected static final UUID f_41374_ = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
     protected static final UUID f_41375_ = UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3");
     public static final int f_150884_ = 64;
-@@ -99,7 +_,8 @@
+@@ -99,7 +_,11 @@
              f_150883_.error("Item classes should end with Item and {} doesn't.", (Object)s);
           }
        }
 -
 +      this.canRepair = p_41383_.canRepair;
 +      initClient();
++      {
++         net.fabricmc.fabric.impl.item.FabricItemInternals.onBuild(p_41383_, this); // Fabric - ItemMixin
++      }
     }
  
     /** @deprecated */
@@ -109,7 +112,7 @@
        float f7 = f2 * f4;
 -      double d0 = 5.0D;
 -      Vec3 vec31 = vec3.m_82520_((double)f6 * 5.0D, (double)f5 * 5.0D, (double)f7 * 5.0D);
-+      double d0 = p_41437_.m_21133_(net.minecraftforge.common.ForgeMod.BLOCK_REACH.get()) + 0.5; // Block reach is 4.5, vanilla uses 5.0 here, so add 0.5 padding
++      double d0 = catserver$Item$getPlayerPOVHitResult$MixinTarget(p_41437_.m_21133_(net.minecraftforge.common.ForgeMod.BLOCK_REACH.get()) + 0.5); // Block reach is 4.5, vanilla uses 5.0 here, so add 0.5 padding // CatServer - compat:fabric-mod:reach-entity-attributes-2.4.0:com.jamieswhiteshirt.reachentityattributes.mixin.ItemMixin#getActualReachDistance
 +      Vec3 vec31 = vec3.m_82520_((double)f6 * d0, (double)f5 * d0, (double)f7 * d0);
        return p_41436_.m_45547_(new ClipContext(vec3, vec31, ClipContext.Block.OUTLINE, p_41438_, p_41437_));
     }
@@ -191,15 +194,62 @@
  
        public Item.Properties m_41489_(FoodProperties p_41490_) {
           this.f_41483_ = p_41490_;
-@@ -413,6 +_,11 @@
- 
-       public Item.Properties m_41486_() {
-          this.f_41484_ = true;
-+         return this;
-+      }
-+
-+      public Item.Properties setNoRepair() {
-+         canRepair = false;
+@@ -416,9 +_,58 @@
           return this;
        }
  
++      public Item.Properties setNoRepair() {
++         canRepair = false;
++         return this;
++      }
++
+       public Item.Properties m_246768_(FeatureFlag... p_250948_) {
+          this.f_244559_ = FeatureFlags.f_244280_.m_245769_(p_250948_);
+          return this;
+       }
+    }
++
++   // Fabric start - ItemMixin
++   @SuppressWarnings("ConstantConditions")
++   private final net.fabricmc.fabric.api.transfer.v1.item.ItemVariant fabric_cachedItemVariant = new net.fabricmc.fabric.impl.transfer.item.ItemVariantImpl(this, null);
++
++   @Override
++   public net.fabricmc.fabric.api.transfer.v1.item.ItemVariant fabric_getCachedItemVariant() {
++      return fabric_cachedItemVariant;
++   }
++
++   @Nullable
++   private net.fabricmc.fabric.api.item.v1.EquipmentSlotProvider equipmentSlotProvider;
++
++   @Nullable
++   private net.fabricmc.fabric.api.item.v1.CustomDamageHandler customDamageHandler;
++
++   @Override
++   @Nullable
++   public net.fabricmc.fabric.api.item.v1.EquipmentSlotProvider fabric_getEquipmentSlotProvider() {
++      return equipmentSlotProvider;
++   }
++
++   @Override
++   public void fabric_setEquipmentSlotProvider(@Nullable net.fabricmc.fabric.api.item.v1.EquipmentSlotProvider equipmentSlotProvider) {
++      this.equipmentSlotProvider = equipmentSlotProvider;
++   }
++
++   @Override
++   @Nullable
++   public net.fabricmc.fabric.api.item.v1.CustomDamageHandler fabric_getCustomDamageHandler() {
++      return customDamageHandler;
++   }
++
++   @Override
++   public void fabric_setCustomDamageHandler(@Nullable net.fabricmc.fabric.api.item.v1.CustomDamageHandler handler) {
++      this.customDamageHandler = handler;
++   }
++   // Fabric end
++
++   // CatServer start - compat:fabric-mod:reach-entity-attributes-2.4.0:com.jamieswhiteshirt.reachentityattributes.mixin.ItemMixin#getActualReachDistance
++   private static double catserver$Item$getPlayerPOVHitResult$MixinTarget(double value) {
++      return value;
++   }
++   // CatServer end
+ }

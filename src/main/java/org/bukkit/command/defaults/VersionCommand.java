@@ -40,7 +40,25 @@ public class VersionCommand extends BukkitCommand {
         if (!testPermission(sender)) return true;
 
         if (args.length == 0) {
-            sender.sendMessage("This server is running " + Bukkit.getName() + " version " + Bukkit.getVersion() + " (Implementing API version " + Bukkit.getBukkitVersion() + ", Forge version " + net.minecraftforge.versions.forge.ForgeVersion.getVersion() + ")"); // CatServer - add Forge version
+            // CatServer start - add Forge version and Fabric version
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.append("This server is running ");
+            messageBuilder.append(Bukkit.getName());
+            messageBuilder.append(" version ");
+            messageBuilder.append(Bukkit.getVersion());
+            messageBuilder.append(" (Implementing Bukkit API version ");
+            messageBuilder.append(Bukkit.getBukkitVersion());
+            messageBuilder.append(", Forge version ");
+            messageBuilder.append(net.minecraftforge.versions.forge.ForgeVersion.getVersion());
+            messageBuilder.append(", Fabric Loader version ");
+            messageBuilder.append(net.fabricmc.loader.impl.FabricLoaderImpl.VERSION);
+            if (net.fabricmc.loader.impl.FabricLoaderImpl.modMap.containsKey("fabric-api")) {
+                messageBuilder.append(", Fabric API version ");
+                messageBuilder.append(net.fabricmc.loader.impl.FabricLoaderImpl.modMap.get("fabric-api").getMetadata().getVersion());
+            }
+            messageBuilder.append(")");
+            sender.sendMessage(messageBuilder.toString());
+            // CatServer end
             // sendVersion(sender); // CatServer - remove
         } else {
             StringBuilder name = new StringBuilder();

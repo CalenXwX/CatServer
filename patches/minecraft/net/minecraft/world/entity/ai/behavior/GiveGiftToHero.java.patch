@@ -1,0 +1,17 @@
+--- a/net/minecraft/world/entity/ai/behavior/GiveGiftToHero.java
++++ b/net/minecraft/world/entity/ai/behavior/GiveGiftToHero.java
+@@ -25,12 +_,12 @@
+ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+ 
+-public class GiveGiftToHero extends Behavior<Villager> {
++public class GiveGiftToHero extends Behavior<Villager> implements net.fabricmc.fabric.mixin.content.registry.GiveGiftsToHeroTaskAccessor { // Fabric - GiveGiftsToHeroTaskAccessor
+    private static final int f_147546_ = 5;
+    private static final int f_147547_ = 600;
+    private static final int f_147548_ = 6600;
+    private static final int f_147549_ = 20;
+-   private static final Map<VillagerProfession, ResourceLocation> f_147550_ = Util.m_137469_(Maps.newHashMap(), (p_23020_) -> {
++   public static final Map<VillagerProfession, ResourceLocation> f_147550_ = Util.m_137469_(Maps.newHashMap(), (p_23020_) -> { // CatServer - private -> public for Fabric GiveGiftsToHeroTaskAccessor
+       p_23020_.put(VillagerProfession.f_35586_, BuiltInLootTables.f_78725_);
+       p_23020_.put(VillagerProfession.f_35587_, BuiltInLootTables.f_78726_);
+       p_23020_.put(VillagerProfession.f_35588_, BuiltInLootTables.f_78727_);

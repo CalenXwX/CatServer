@@ -4,9 +4,10 @@
  import net.minecraft.world.level.Level;
  import org.slf4j.Logger;
  
+-public class RecipeManager extends SimpleJsonResourceReloadListener {
 +import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap; // CraftBukkit
 +
- public class RecipeManager extends SimpleJsonResourceReloadListener {
++public class RecipeManager extends SimpleJsonResourceReloadListener implements net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener { // Fabric - KeyedResourceReloadListenerMixin
     private static final Gson f_44005_ = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
     private static final Logger f_44006_ = LogUtils.getLogger();
 -   private Map<RecipeType<?>, Map<ResourceLocation, Recipe<?>>> f_44007_ = ImmutableMap.of();
@@ -188,3 +189,53 @@
  
     public static <C extends Container, T extends Recipe<C>> RecipeManager.CachedCheck<C, T> m_220267_(final RecipeType<T> p_220268_) {
        return new RecipeManager.CachedCheck<C, T>() {
+@@ -189,4 +_,49 @@
+    public interface CachedCheck<C extends Container, T extends Recipe<C>> {
+       Optional<T> m_213657_(C p_220280_, Level p_220281_);
+    }
++
++   // Fabric start - KeyedResourceReloadListenerMixin
++   private ResourceLocation fabric$id;
++   private Collection<ResourceLocation> fabric$dependencies;
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public ResourceLocation getFabricId() {
++      if (this.fabric$id == null) {
++         /*Object self = this;
++
++         if (self instanceof RecipeManager) */{
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.RECIPES;
++         }/* else if (self instanceof ServerAdvancementManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.ADVANCEMENTS;
++         } else if (self instanceof ServerFunctionLibrary) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.FUNCTIONS;
++         } else if (self instanceof LootDataManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.LOOT_TABLES;
++         } else if (self instanceof TagManager) {
++            this.fabric$id = net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS;
++         } else {
++            this.fabric$id = new ResourceLocation("minecraft", "private/" + self.getClass().getSimpleName().toLowerCase(Locale.ROOT));
++         }*/ // CatServer - only this class
++      }
++
++      return this.fabric$id;
++   }
++
++   @Override
++   @SuppressWarnings({"ConstantConditions", "RedundantCast"})
++   public Collection<ResourceLocation> getFabricDependencies() {
++      if (this.fabric$dependencies == null) {
++         /*Object self = this;
++
++         if (self instanceof TagManager) {
++            this.fabric$dependencies = Collections.emptyList();
++         } else */{
++            this.fabric$dependencies = Collections.singletonList(net.fabricmc.fabric.api.resource.ResourceReloadListenerKeys.TAGS);
++         } // CatServer - only this class
++      }
++
++      return this.fabric$dependencies;
++   }
++   // Fabric end
+ }

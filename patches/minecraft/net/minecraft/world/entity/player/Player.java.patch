@@ -1,5 +1,14 @@
 --- a/net/minecraft/world/entity/player/Player.java
 +++ b/net/minecraft/world/entity/player/Player.java
+@@ -13,6 +_,8 @@
+ import java.util.OptionalInt;
+ import java.util.function.Predicate;
+ import javax.annotation.Nullable;
++
++import net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents;
+ import net.minecraft.Util;
+ import net.minecraft.advancements.CriteriaTriggers;
+ import net.minecraft.core.BlockPos;
 @@ -115,7 +_,20 @@
  import net.minecraft.world.scores.Team;
  import org.slf4j.Logger;
@@ -94,7 +103,7 @@
           }
  
 -         if (!this.m_9236_().f_46443_ && this.m_9236_().m_46461_()) {
-+         if (!this.m_9236_().f_46443_ && !net.minecraftforge.event.ForgeEventFactory.fireSleepingTimeCheck(this, m_21257_())) {
++         if (!this.m_9236_().f_46443_ && this.fabric$redirectDaySleepCheck(!net.minecraftforge.event.ForgeEventFactory.fireSleepingTimeCheck(this, m_21257_()))) { // Fabric - PlayerEntityMixin
              this.m_6145_(false, true);
           }
        } else if (this.f_36110_ > 0) {
@@ -662,7 +671,20 @@
           this.m_5810_();
           this.m_9236_().m_7605_(this, (byte)30);
        }
-@@ -1273,8 +_,14 @@
+@@ -1269,12 +_,27 @@
+    }
+ 
+    public Either<Player.BedSleepingProblem, Unit> m_7720_(BlockPos p_36203_) {
++      {
++         // Fabric start - PlayerEntityMixin
++         Player.BedSleepingProblem failureReason = net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.ALLOW_SLEEPING.invoker().allowSleep(this, p_36203_);
++
++         if (failureReason != null) {
++            return Either.left(failureReason);
++         }
++         // Fabric end
++      }
+       this.m_5802_(p_36203_);
        this.f_36110_ = 0;
        return Either.right(Unit.INSTANCE);
     }
@@ -686,6 +708,15 @@
        } else {
           boolean flag = block.m_48673_(blockstate);
           BlockState blockstate1 = p_36131_.m_8055_(p_36132_.m_7494_());
+@@ -1310,7 +_,7 @@
+    }
+ 
+    public boolean m_36317_() {
+-      return this.m_5803_() && this.f_36110_ >= 100;
++      return this.fabric$onIsSleepingLongEnough(this.m_5803_() && this.f_36110_ >= 100); // Fabric - PlayerEntityMixin
+    }
+ 
+    public int m_36318_() {
 @@ -1356,9 +_,9 @@
        super.m_6135_();
        this.m_36220_(Stats.f_12926_);
@@ -759,9 +790,19 @@
           return false;
        } else {
           if (p_150093_ >= 2.0F) {
-@@ -1494,7 +_,7 @@
+@@ -1493,8 +_,17 @@
+ 
     public boolean m_36319_() {
        if (!this.m_20096_() && !this.m_21255_() && !this.m_20069_() && !this.m_21023_(MobEffects.f_19620_)) {
++         // Fabric start - PlayerEntityMixin
++         {
++            org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("fabric$injectElytraCheck", true);
++            this.fabric$injectElytraCheck(cir);
++            if (cir.isCancelled()) {
++               return cir.getReturnValueZ();
++            }
++         }
++         // Fabric end
           ItemStack itemstack = this.m_6844_(EquipmentSlot.CHEST);
 -         if (itemstack.m_150930_(Items.f_42741_) && ElytraItem.m_41140_(itemstack)) {
 +         if (itemstack.canElytraFly(this)) {
@@ -1014,11 +1055,10 @@
        this.m_36246_(Stats.f_12982_.m_12902_(p_36186_.m_41720_()));
        p_36185_.m_6263_((Player)null, this.m_20185_(), this.m_20186_(), this.m_20189_(), SoundEvents.f_12321_, SoundSource.PLAYERS, 0.5F, p_36185_.f_46441_.m_188501_() * 0.1F + 0.9F);
        if (this instanceof ServerPlayer) {
-@@ -2052,5 +_,63 @@
-       public Component m_36423_() {
+@@ -2053,4 +_,110 @@
           return this.f_36413_;
        }
-+   }
+    }
 +
 +   // =========== FORGE START ==============//
 +   public Collection<MutableComponent> getPrefixes() {
@@ -1076,5 +1116,53 @@
 +   @Nullable
 +   public Pose getForcedPose() {
 +      return this.forcedPose;
-    }
++   }
++
++   // Fabric start - PlayerEntityMixin
++   /**
++    * Allow the server-side and client-side elytra checks to fail when {@link EntityElytraEvents#ALLOW} blocks flight,
++    * and otherwise to succeed for elytra flight through {@link EntityElytraEvents#CUSTOM}.
++    */
++   void fabric$injectElytraCheck(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
++      Player self = this;
++
++      if (!net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents.ALLOW.invoker().allowElytraFlight(self)) {
++         cir.setReturnValue(false);
++         return; // Return to prevent the rest of this injector from running.
++      }
++
++      if (net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents.CUSTOM.invoker().useCustomElytra(self, false)) {
++         m_36320_();
++         cir.setReturnValue(true);
++      }
++   }
++
++   private boolean fabric$redirectDaySleepCheck(boolean day) {
++      if (this.m_21257_().isPresent()) {
++         BlockPos pos = this.m_21257_().get();
++         InteractionResult result = net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.ALLOW_SLEEP_TIME.invoker().allowSleepTime(this, pos, !day);
++
++         if (result != InteractionResult.PASS) {
++            return !result.m_19077_(); // true from the event = night-like conditions, so we have to invert
++         }
++      }
++
++      return day;
++   }
++
++   private boolean fabric$onIsSleepingLongEnough(boolean ret) {
++      if (ret) {
++         ret = net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.ALLOW_RESETTING_TIME.invoker().allowResettingTime(this);
++      }
++      return ret;
++   }
++   // Fabric end
++
++   // CatServer start - compat:fabric-mod:pehkui-3.8.3+1.14.4-1.21:virtuoel.pehkui.mixin.PlayerEntityMixin#pehkui$attack$expand
++   // we remain the Operation arg so that we don't need to fix the LVT and LOAD insns
++   // we remove the original.call() and (AABB) in the fabric mixin method
++   public @Nullable Object catserver$fabricModRedirectTarget_IForgeItem$getSweepHitBox_AABB$inflate(AABB obj, double x, double y, double z, @Nullable com.llamalad7.mixinextras.injector.wrapoperation.Operation original, Entity target) {
++      return null;
++   }
++   // CatServer end
  }

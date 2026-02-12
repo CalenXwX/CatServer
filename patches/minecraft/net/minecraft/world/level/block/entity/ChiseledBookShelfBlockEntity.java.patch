@@ -4,6 +4,7 @@
  import net.minecraft.world.level.block.state.properties.BooleanProperty;
  import org.slf4j.Logger;
  
+-public class ChiseledBookShelfBlockEntity extends BlockEntity implements Container {
 +// CraftBukkit start
 +import java.util.List;
 +import org.bukkit.Location;
@@ -11,7 +12,7 @@
 +import org.bukkit.entity.HumanEntity;
 +// CraftBukkit end
 +
- public class ChiseledBookShelfBlockEntity extends BlockEntity implements Container {
++public class ChiseledBookShelfBlockEntity extends BlockEntity implements Container, net.fabricmc.fabric.impl.transfer.item.SpecialLogicInventory { // Fabric - ChiseledBookshelfBlockEntityMixin
     public static final int f_244647_ = 6;
     private static final Logger f_254661_ = LogUtils.getLogger();
     private final NonNullList<ItemStack> f_260576_ = NonNullList.m_122780_(6, ItemStack.f_41583_);
@@ -72,8 +73,18 @@
        }
  
        return itemstack;
-@@ -91,7 +_,7 @@
+@@ -89,9 +_,17 @@
+    }
+ 
     public void m_6836_(int p_256610_, ItemStack p_255789_) {
++      // Fabric start - ChiseledBookshelfBlockEntityMixin
++      {
++         if (fabric_suppressSpecialLogic) {
++            f_260576_.set(p_256610_, p_255789_);
++            return;
++         }
++      }
++      // Fabric end
        if (p_255789_.m_204117_(ItemTags.f_244646_)) {
           this.f_260576_.set(p_256610_, p_255789_);
 -         this.m_261204_(p_256610_);
@@ -90,11 +101,10 @@
     }
  
     public boolean m_6542_(Player p_256481_) {
-@@ -120,5 +_,29 @@
- 
+@@ -121,4 +_,64 @@
     public int m_262444_() {
        return this.f_262317_;
-+   }
+    }
 +
 +   private net.minecraftforge.common.util.LazyOptional<?> itemHandler = net.minecraftforge.common.util.LazyOptional.of(this::createUnSidedHandler);
 +   protected net.minecraftforge.items.IItemHandler createUnSidedHandler() {
@@ -118,5 +128,41 @@
 +   public void reviveCaps() {
 +      super.reviveCaps();
 +      itemHandler = net.minecraftforge.common.util.LazyOptional.of(this::createUnSidedHandler);
-    }
++   }
++
++   // Fabric start - ChiseledBookshelfBlockEntityMixin
++   private boolean fabric_suppressSpecialLogic = false;
++
++   @Override
++   public void fabric_setSuppress(boolean suppress) {
++      fabric_suppressSpecialLogic = suppress;
++   }
++
++   private final net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant<Integer> fabric_lastInteractedParticipant = new net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant<>() {
++      @Override
++      protected Integer createSnapshot() {
++         return f_262317_;
++      }
++
++      @Override
++      protected void readSnapshot(Integer snapshot) {
++         f_262317_ = snapshot;
++      }
++
++      @Override
++      protected void onFinalCommit() {
++         m_261204_(f_262317_);
++      }
++   };
++
++   @Override
++   public void fabric_onTransfer(int slot, net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext transaction) {
++      fabric_lastInteractedParticipant.updateSnapshots(transaction);
++      f_262317_ = slot;
++   }
++
++   @Override
++   public void fabric_onFinalCommit(int slot, ItemStack oldStack, ItemStack newStack) {
++   }
++   // Fabric end
  }

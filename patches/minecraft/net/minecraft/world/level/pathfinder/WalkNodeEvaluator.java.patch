@@ -18,10 +18,19 @@
     }
  
     private Node m_230619_(int p_230620_, int p_230621_, int p_230622_, BlockPathTypes p_230623_, float p_230624_) {
-@@ -453,6 +_,11 @@
+@@ -453,6 +_,20 @@
                 if (l != 0 || j1 != 0) {
                    p_77609_.m_122178_(i + l, j + i1, k + j1);
                    BlockState blockstate = p_77608_.m_8055_(p_77609_);
++                  // Fabric start - LandPathNodeMakerMixin
++                  {
++                     org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<BlockPathTypes> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<BlockPathTypes>("fabric$getNodeTypeFromNeighbors", true);
++                     fabric$getNodeTypeFromNeighbors(p_77608_, p_77609_, p_77610_, cir, blockstate);
++                     if (cir.isCancelled()) {
++                        return cir.getReturnValue();
++                     }
++                  }
++                  // Fabric end
 +                  BlockPathTypes blockPathType = blockstate.getAdjacentBlockPathType(p_77608_, p_77609_, null, p_77610_);
 +                  if (blockPathType != null) return blockPathType;
 +                  FluidState fluidState = blockstate.m_60819_();
@@ -30,10 +39,19 @@
                    if (blockstate.m_60713_(Blocks.f_50128_) || blockstate.m_60713_(Blocks.f_50685_)) {
                       return BlockPathTypes.DANGER_OTHER;
                    }
-@@ -478,6 +_,8 @@
+@@ -478,6 +_,17 @@
  
     protected static BlockPathTypes m_77643_(BlockGetter p_77644_, BlockPos p_77645_) {
        BlockState blockstate = p_77644_.m_8055_(p_77645_);
++      // Fabric start - LandPathNodeMakerMixin
++      {
++         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<BlockPathTypes> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<BlockPathTypes>("fabric$getCommonNodeType", true);
++         fabric$getCommonNodeType(p_77644_, p_77645_, cir, blockstate);
++         if (cir.isCancelled()) {
++            return cir.getReturnValue();
++         }
++      }
++      // Fabric end
 +      BlockPathTypes type = blockstate.getBlockPathType(p_77644_, p_77645_, null);
 +      if (type != null) return type;
        Block block = blockstate.m_60734_();
@@ -57,3 +75,32 @@
                       return fluidstate.m_205070_(FluidTags.f_13131_) ? BlockPathTypes.WATER : BlockPathTypes.OPEN;
                    }
                 } else {
+@@ -529,4 +_,28 @@
+    public static boolean m_77622_(BlockState p_77623_) {
+       return p_77623_.m_204336_(BlockTags.f_13076_) || p_77623_.m_60713_(Blocks.f_49991_) || p_77623_.m_60713_(Blocks.f_50450_) || CampfireBlock.m_51319_(p_77623_) || p_77623_.m_60713_(Blocks.f_152477_);
+    }
++
++   // Fabric start - LandPathNodeMakerMixin
++   /**
++    * Overrides the node type for the specified position, if the position is a direct target in a path.
++    */
++   private static void fabric$getCommonNodeType(BlockGetter p_77644_, BlockPos p_77645_, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<BlockPathTypes> cir, BlockState blockstate) {
++      BlockPathTypes nodeType = net.fabricmc.fabric.api.registry.LandPathNodeTypesRegistry.getPathNodeType(blockstate, p_77644_, p_77645_, false);
++
++      if (nodeType != null) {
++         cir.setReturnValue(nodeType);
++      }
++   }
++
++   /**
++    * Overrides the node type for the specified position, if the position is found as neighbor block in a path.
++    */
++   private static void fabric$getNodeTypeFromNeighbors(BlockGetter p_77608_, BlockPos.MutableBlockPos p_77609_, BlockPathTypes nodeType, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<BlockPathTypes> cir, BlockState blockstate) {
++      BlockPathTypes neighborNodeType = net.fabricmc.fabric.api.registry.LandPathNodeTypesRegistry.getPathNodeType(blockstate, p_77608_, p_77609_, true);
++
++      if (neighborNodeType != null) {
++         cir.setReturnValue(neighborNodeType);
++      }
++   }
++   // Fabric end
+ }

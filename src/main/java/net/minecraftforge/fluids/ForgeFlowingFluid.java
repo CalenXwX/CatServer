@@ -148,6 +148,15 @@ public abstract class ForgeFlowingFluid extends FlowingFluid
     @Override
     public Optional<SoundEvent> getPickupSound()
     {
+        // Fabric start - FluidMixin
+        {
+            org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Optional<SoundEvent>> cir = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Optional<SoundEvent>>("fabric$hookGetBucketFillSound", true);
+            this.fabric$hookGetBucketFillSound(cir);
+            if (cir.isCancelled()) {
+                return cir.getReturnValue();
+            }
+        }
+        // Fabric end
         return Optional.ofNullable(getFluidType().getSound(SoundActions.BUCKET_FILL));
     }
 

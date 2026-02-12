@@ -26,9 +26,13 @@
     }
  
     public ServerFunctionLibrary m_206860_() {
-@@ -69,7 +_,9 @@
+@@ -68,8 +_,13 @@
+    }
  
     public static CompletableFuture<ReloadableServerResources> m_247740_(ResourceManager p_248588_, RegistryAccess.Frozen p_251163_, FeatureFlagSet p_250212_, Commands.CommandSelection p_249301_, int p_251126_, Executor p_249136_, Executor p_249601_) {
++      {
++         fabric$hookReload(p_251163_, p_250212_);
++      }
        ReloadableServerResources reloadableserverresources = new ReloadableServerResources(p_251163_, p_250212_, p_249301_, p_251126_);
 -      return SimpleReloadInstance.m_203834_(p_248588_, reloadableserverresources.m_206890_(), p_249136_, p_249601_, f_206846_, f_206845_.isDebugEnabled()).m_7237_().whenComplete((p_255534_, p_255535_) -> {
 +      List<PreparableReloadListener> listeners = new java.util.ArrayList<>(reloadableserverresources.m_206890_());
@@ -37,19 +41,28 @@
           reloadableserverresources.f_214300_.m_254905_(CommandBuildContext.MissingTagAccessPolicy.FAIL);
        }).thenApply((p_214306_) -> {
           return reloadableserverresources;
-@@ -81,6 +_,7 @@
+@@ -77,10 +_,17 @@
+    }
+ 
+    public void m_206868_(RegistryAccess p_206869_) {
++      {
++         this.fabric$hookRefresh(); // Fabric - DataPackContentsMixin
++      }
+       this.f_206849_.m_203904_().forEach((p_214315_) -> {
           m_206870_(p_206869_, p_214315_);
        });
        Blocks.m_50758_();
 +      net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.TagsUpdatedEvent(p_206869_, false, false));
++      {
++         net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents.TAGS_LOADED.invoker().onTagsLoaded(p_206869_, false); // Fabric - DataPackContentsMixin
++      }
     }
  
     private static <T> void m_206870_(RegistryAccess p_206871_, TagManager.LoadResult<T> p_206872_) {
-@@ -91,5 +_,16 @@
-          return List.copyOf(p_214312_.getValue());
+@@ -92,4 +_,27 @@
        }));
        p_206871_.m_175515_(resourcekey).m_203652_(map);
-+   }
+    }
 +
 +   private final net.minecraftforge.common.crafting.conditions.ICondition.IContext context;
 +
@@ -60,5 +73,17 @@
 +    */
 +   public net.minecraftforge.common.crafting.conditions.ICondition.IContext getConditionContext() {
 +      return this.context;
-    }
++   }
++
++   // Fabric start - DataPackContentsMixin
++   public void fabric$hookRefresh() {
++      net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.LOADED_TAGS.remove();
++      net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.remove();
++   }
++
++   private static void fabric$hookReload(RegistryAccess.Frozen dynamicRegistryManager, FeatureFlagSet enabledFeatures) {
++      net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_FEATURES.set(enabledFeatures);
++      net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl.CURRENT_REGISTRIES.set(dynamicRegistryManager);
++   }
++   // Fabric end
  }

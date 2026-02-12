@@ -39,12 +39,16 @@
     }
  
     public LevelChunk(ServerLevel p_196850_, ProtoChunk p_196851_, @Nullable LevelChunk.PostLoadProcessor p_196852_) {
-@@ -121,6 +_,8 @@
+@@ -121,6 +_,12 @@
        this.f_283754_ = p_196851_.f_283754_;
        this.m_8094_(p_196851_.m_6332_());
        this.f_187603_ = true;
 +      this.needsDecoration = true; // CraftBukkit
 +      this.persistentDataContainer = p_196851_.persistentDataContainer; // CraftBukkit -  SPIGOT-6814: copy PDC to account for 1.17 to 1.18 chunk upgrading.
++
++      {
++         net.fabricmc.fabric.impl.attachment.AttachmentTargetImpl.transfer(p_196851_, this, false); // Fabric - WorldChunkMixin
++      }
     }
  
     public TickContainerAccess<Block> m_183531_() {
@@ -99,7 +103,7 @@
 +      }
 +      // CraftBukkit end
 +      if (blockentity != null && blockentity.m_58901_()) {
-+         f_187610_.remove(p_62868_);
++         this.fabric$getBlockEntity$onRemoveBlockEntity(f_187610_.remove(p_62868_)); // Fabric - WorldChunkMixin
 +         blockentity = null;
 +      }
        if (blockentity == null) {
@@ -123,8 +127,18 @@
        }
  
     }
-@@ -362,6 +_,12 @@
+@@ -358,10 +_,22 @@
+          p_156374_.m_142339_(this.f_62776_);
+          p_156374_.m_6339_();
+          BlockEntity blockentity = this.f_187610_.put(blockpos.m_7949_(), p_156374_);
++         {
++            this.fabric$onLoadBlockEntity(p_156374_, blockentity); // Fabric - WorldChunkMixin
++         }
+          if (blockentity != null && blockentity != p_156374_) {
              blockentity.m_7651_();
++            {
++               this.fabric$setBlockEntity$onRemoveBlockEntity(blockentity);
++            }
           }
  
 +         // CraftBukkit start
@@ -163,6 +177,16 @@
           if (blockentity != null) {
              Level level = this.f_62776_;
              if (level instanceof ServerLevel) {
+@@ -393,6 +_,9 @@
+                this.m_223412_(blockentity, serverlevel);
+             }
+ 
++            {
++               this.fabric$removeBlockEntity$onRemoveBlockEntity(blockentity);
++            }
+             blockentity.m_7651_();
+          }
+       }
 @@ -425,6 +_,56 @@
  
     }
@@ -317,12 +341,10 @@
                 }
              }
           }
-@@ -680,6 +_,34 @@
-       IMMEDIATE,
-       QUEUED,
+@@ -682,6 +_,34 @@
        CHECK;
-+   }
-+
+    }
+ 
 +
 +   /**
 +    * <strong>FOR INTERNAL USE ONLY</strong>
@@ -349,6 +371,62 @@
 +   @Override
 +   public Level getWorldForge() {
 +      return m_62953_();
-    }
- 
++   }
++
     @FunctionalInterface
+    public interface PostLoadProcessor {
+       void m_196866_(LevelChunk p_196867_);
+@@ -718,4 +_,53 @@
+          return this.f_156444_.toString() + " <wrapped>";
+       }
+    }
++
++   // Fabric start - WorldChunkMixin
++   /*
++    * @Inject(method = "setBlockEntity", at = @At(value = "CONSTANT", args = "nullValue=true"), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
++    *
++    * i509VCB: Yes this is very brittle.
++    * Sadly mixin does not want to cooperate with the Inject annotation commented out above.
++    * Our goal is to place the inject JUST after the possibly removed block entity is stored onto the stack so we can use local capture:
++    *
++    *  INVOKEVIRTUAL net/minecraft/util/math/BlockPos.toImmutable ()Lnet/minecraft/util/math/BlockPos;
++    *  ALOAD 1
++    *  INVOKEINTERFACE java/util/Map.put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; (itf)
++    *  CHECKCAST net/minecraft/block/entity/BlockEntity
++    *  ASTORE 3
++    *  <======== HERE
++    * L6
++    */
++   private void fabric$onLoadBlockEntity(BlockEntity blockEntity, @Nullable BlockEntity removedBlockEntity) {
++      // Only fire the load event if the block entity has actually changed
++      if (blockEntity != null && blockEntity != removedBlockEntity) {
++         if (this.m_62953_() instanceof ServerLevel) {
++            net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents.BLOCK_ENTITY_LOAD.invoker().onLoad(blockEntity, (ServerLevel) this.m_62953_());
++         }
++      }
++   }
++
++   private void fabric$setBlockEntity$onRemoveBlockEntity(@Nullable BlockEntity removedBlockEntity) {
++      if (removedBlockEntity != null) {
++         if (this.m_62953_() instanceof ServerLevel) {
++            net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removedBlockEntity, (ServerLevel) this.m_62953_());
++         }
++      }
++   }
++
++   // Use the slice to not redirect codepath where block entity is loaded
++   private <K, V> Object fabric$getBlockEntity$onRemoveBlockEntity(@Nullable final V removed) {
++      if (removed != null && this.m_62953_() instanceof ServerLevel) {
++         net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ServerLevel) this.m_62953_());
++      }
++
++      return removed;
++   }
++
++   private void fabric$removeBlockEntity$onRemoveBlockEntity(@Nullable BlockEntity removed) {
++      if (removed != null && this.m_62953_() instanceof ServerLevel) {
++         net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ServerLevel) this.m_62953_());
++      }
++   }
++   // Fabric end
+ }

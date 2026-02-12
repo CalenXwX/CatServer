@@ -1,0 +1,11 @@
+--- a/net/minecraft/commands/arguments/selector/options/EntitySelectorOptions.java
++++ b/net/minecraft/commands/arguments/selector/options/EntitySelectorOptions.java
+@@ -48,7 +_,7 @@
+ import net.minecraft.world.scores.Scoreboard;
+ import net.minecraft.world.scores.Team;
+ 
+-public class EntitySelectorOptions {
++public class EntitySelectorOptions implements net.fabricmc.fabric.mixin.command.EntitySelectorOptionsAccessor { // Fabric - EntitySelectorOptionsAccessor
+    private static final Map<String, EntitySelectorOptions.Option> f_121392_ = Maps.newHashMap();
+    public static final DynamicCommandExceptionType f_121384_ = new DynamicCommandExceptionType((p_121520_) -> {
+       return Component.m_237110_("argument.entity.options.unknown", p_121520_);

@@ -1,9 +1,15 @@
 --- a/net/minecraft/world/level/biome/MobSpawnSettings.java
 +++ b/net/minecraft/world/level/biome/MobSpawnSettings.java
-@@ -40,20 +_,32 @@
-    private final float f_48328_;
-    private final Map<MobCategory, WeightedRandomList<MobSpawnSettings.SpawnerData>> f_48329_;
-    private final Map<EntityType<?>, MobSpawnSettings.MobSpawnCost> f_48330_;
+@@ -37,23 +_,35 @@
+          return p_187049_.f_48330_;
+       })).apply(p_187051_, MobSpawnSettings::new);
+    });
+-   private final float f_48328_;
+-   private final Map<MobCategory, WeightedRandomList<MobSpawnSettings.SpawnerData>> f_48329_;
+-   private final Map<EntityType<?>, MobSpawnSettings.MobSpawnCost> f_48330_;
++   public float f_48328_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Map<MobCategory, WeightedRandomList<MobSpawnSettings.SpawnerData>> f_48329_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
++   public Map<EntityType<?>, MobSpawnSettings.MobSpawnCost> f_48330_; // CatServer - private -> public  remove final  for Fabric BiomeModificationContextImpl
 +   private final java.util.Set<MobCategory> typesView;
 +   private final java.util.Set<EntityType<?>> costView;
  

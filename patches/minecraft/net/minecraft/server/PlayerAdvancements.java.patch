@@ -9,6 +9,21 @@
     private final Set<Advancement> f_135965_ = new HashSet<>();
     private final Set<Advancement> f_135967_ = new HashSet<>();
     private final Set<Advancement> f_263821_ = new HashSet<>();
+@@ -69,6 +_,14 @@
+    }
+ 
+    public void m_135979_(ServerPlayer p_135980_) {
++      {
++         // Fabric start - PlayerAdvancementTrackerMixin
++         if (p_135980_ instanceof net.fabricmc.fabric.api.entity.FakePlayer) {
++            // Prevent fake players with the same UUID as a real player from stealing the real player's advancement tracker.
++            return;
++         }
++         // Fabric end
++      }
+       this.f_135968_ = p_135980_;
+    }
+ 
 @@ -123,7 +_,11 @@
              map.entrySet().stream().sorted(Entry.comparingByValue()).forEach((p_265663_) -> {
                 Advancement advancement = p_136007_.m_136041_(p_265663_.getKey());
@@ -30,10 +45,18 @@
        Map<ResourceLocation, AdvancementProgress> map = new LinkedHashMap<>();
  
        for(Map.Entry<Advancement, AdvancementProgress> entry : this.f_263740_.entrySet()) {
-@@ -167,6 +_,8 @@
+@@ -167,6 +_,16 @@
     }
  
     public boolean m_135988_(Advancement p_135989_, String p_135990_) {
++      {
++         // Fabric start - PlayerAdvancementTrackerMixin
++         if (this.f_135968_ instanceof net.fabricmc.fabric.api.entity.FakePlayer) {
++            // Prevent granting advancements to fake players.
++            return false;
++         }
++         // Fabric end
++      }
 +      // Forge: don't grant advancements for fake players
 +      if (this.f_135968_ instanceof net.minecraftforge.common.util.FakePlayer) return false;
        boolean flag = false;

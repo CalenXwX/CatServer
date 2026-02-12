@@ -1,0 +1,33 @@
+--- a/net/minecraft/data/DataProvider.java
++++ b/net/minecraft/data/DataProvider.java
+@@ -20,9 +_,15 @@
+ 
+ public interface DataProvider {
+    ToIntFunction<String> f_236067_ = Util.m_137469_(new Object2IntOpenHashMap<>(), (p_236070_) -> {
++      {
++         p_236070_.put(net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions.CONDITIONS_KEY, -100); // Fabric - DataProviderMixin
++      }
+       p_236070_.put("type", 0);
+       p_236070_.put("parent", 1);
+       p_236070_.defaultReturnValue(2);
++      {
++         fabric$addFabricKeySortOrders(p_236070_); // Fabric - DataProviderMixin
++      }
+    });
+    Comparator<String> f_236068_ = Comparator.comparingInt(f_236067_).thenComparing((p_236077_) -> {
+       return p_236077_;
+@@ -57,4 +_,14 @@
+    public interface Factory<T extends DataProvider> {
+       T m_253034_(PackOutput p_253851_);
+    }
++
++   // Fabric start - DataProviderMixin
++   /**
++    * Adjust the default sort order of some keys provided by Fabric API.
++    */
++   private static void fabric$addFabricKeySortOrders(Object2IntOpenHashMap<String> p_236070_) {
++      p_236070_.put(net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions.CONDITIONS_KEY, -100); // always at the beginning
++      p_236070_.put(net.fabricmc.fabric.impl.recipe.ingredient.CustomIngredientImpl.TYPE_KEY, 0); // mimic vanilla "type"
++   }
++   // Fabric end
+ }

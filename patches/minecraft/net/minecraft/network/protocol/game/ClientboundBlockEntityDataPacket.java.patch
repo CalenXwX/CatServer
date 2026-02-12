@@ -1,0 +1,31 @@
+--- a/net/minecraft/network/protocol/game/ClientboundBlockEntityDataPacket.java
++++ b/net/minecraft/network/protocol/game/ClientboundBlockEntityDataPacket.java
+@@ -2,6 +_,8 @@
+ 
+ import java.util.function.Function;
+ import javax.annotation.Nullable;
++
++import net.fabricmc.fabric.api.attachment.v1.AttachmentTarget;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.registries.BuiltInRegistries;
+ import net.minecraft.nbt.CompoundTag;
+@@ -21,7 +_,18 @@
+    }
+ 
+    public static ClientboundBlockEntityDataPacket m_195640_(BlockEntity p_195641_) {
+-      return m_195642_(p_195641_, BlockEntity::m_5995_);
++      return m_195642_(p_195641_, blockEntity -> {
++         // Fabric start - BlockEntityUpdateS2CPacketMixin
++         /*
++          * Some BEs use their NBT data to sync with client. If nothing is done, that would always sync persistent attachments
++          * with client, which may be undesirable. To prevent this, we hook into create(BlockEntity) so it uses a getter that
++          * also removes attachments. Manual sync is still possible by using create(BlockEntity, Function).
++          */
++         CompoundTag nbt = blockEntity.m_5995_();
++         nbt.m_128473_(AttachmentTarget.NBT_ATTACHMENT_KEY);
++         return nbt;
++         // Fabric end
++      });
+    }
+ 
+    private ClientboundBlockEntityDataPacket(BlockPos p_195637_, BlockEntityType<?> p_195638_, CompoundTag p_195639_) {

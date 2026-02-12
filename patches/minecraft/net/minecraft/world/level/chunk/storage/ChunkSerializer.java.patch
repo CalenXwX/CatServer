@@ -28,14 +28,27 @@
              if (compoundtag.m_128425_("biomes", 10)) {
                 palettedcontainerro = codec.parse(NbtOps.f_128958_, compoundtag.m_128469_("biomes")).promotePartial((p_188274_) -> {
                    m_188239_(p_188233_, k, p_188274_);
-@@ -159,6 +_,7 @@
+@@ -159,6 +_,10 @@
              return BuiltInRegistries.f_257020_.m_6612_(ResourceLocation.m_135820_(p_258990_));
           }, p_188233_);
           chunkaccess = new LevelChunk(p_188231_.m_6018_(), p_188233_, upgradedata, levelchunkticks, levelchunkticks1, k1, alevelchunksection, m_196890_(p_188231_, p_188234_), blendingdata);
++         {
++            chunkaccess.fabric_readAttachmentsFromNbt(p_188234_); // Fabric - ChunkSerializerMixin
++         }
 +         if (p_188234_.m_128441_("ForgeCaps")) ((LevelChunk)chunkaccess).readCapsFromNBT(p_188234_.m_128469_("ForgeCaps"));
        } else {
           ProtoChunkTicks<Block> protochunkticks = ProtoChunkTicks.m_193302_(p_188234_.m_128437_("block_ticks", 10), (p_258992_) -> {
              return BuiltInRegistries.f_256975_.m_6612_(ResourceLocation.m_135820_(p_258992_));
+@@ -167,6 +_,9 @@
+             return BuiltInRegistries.f_257020_.m_6612_(ResourceLocation.m_135820_(p_258991_));
+          }, p_188233_);
+          ProtoChunk protochunk = new ProtoChunk(p_188233_, upgradedata, alevelchunksection, protochunkticks, protochunkticks1, p_188231_, registry, blendingdata);
++         {
++            protochunk.fabric_readAttachmentsFromNbt(p_188234_); // Fabric - ChunkSerializerMixin
++         }
+          chunkaccess = protochunk;
+          protochunk.m_6141_(k1);
+          if (p_188234_.m_128425_("below_zero_retrogen", 10)) {
 @@ -180,6 +_,13 @@
           }
        }
@@ -84,17 +97,17 @@
           compoundtag.m_128365_("CarvingMasks", compoundtag4);
        }
 +      else if (p_63456_ instanceof LevelChunk levelChunk){
-+          try {
-+              final CompoundTag capTag = levelChunk.writeCapsToNBT();
-+              if (capTag != null) compoundtag.m_128365_("ForgeCaps", capTag);
-+          } catch (Exception exception) {
-+              f_63449_.error("A capability provider has thrown an exception trying to write state. It will not persist. Report this to the mod author", exception);
-+          }
++         try {
++            final CompoundTag capTag = levelChunk.writeCapsToNBT();
++            if (capTag != null) compoundtag.m_128365_("ForgeCaps", capTag);
++         } catch (Exception exception) {
++            f_63449_.error("A capability provider has thrown an exception trying to write state. It will not persist. Report this to the mod author", exception);
++         }
 +      }
  
        m_188235_(p_63455_, compoundtag, p_63456_.m_183568_());
        compoundtag.m_128365_("PostProcessing", m_63490_(p_63456_.m_6720_()));
-@@ -354,6 +_,11 @@
+@@ -354,6 +_,14 @@
  
        compoundtag.m_128365_("Heightmaps", compoundtag2);
        compoundtag.m_128365_("structures", m_188249_(StructurePieceSerializationContext.m_192770_(p_63455_), chunkpos, p_63456_.m_6633_(), p_63456_.m_62769_()));
@@ -103,6 +116,9 @@
 +         compoundtag.m_128365_("ChunkBukkitValues", p_63456_.persistentDataContainer.toTagCompound());
 +      }
 +      // CraftBukkit end
++      {
++         p_63456_.fabric_writeAttachmentsToNbt(compoundtag); // Fabric - ChunkSerializerMixin
++      }
        return compoundtag;
     }
  
@@ -129,3 +145,12 @@
        };
     }
  
+@@ -459,7 +_,7 @@
+          ResourceLocation resourcelocation = ResourceLocation.m_135820_(s);
+          Structure structure = registry.m_7745_(resourcelocation);
+          if (structure == null) {
+-            f_63449_.warn("Found reference to unknown structure '{}' in chunk {}, discarding", resourcelocation, p_208156_);
++            f_63449_.debug("Found reference to unknown structure '{}' in chunk {}, discarding", resourcelocation, p_208156_); // Fabric - ChunkSerializerMixin Drop to debug log level.
+          } else {
+             long[] along = compoundtag.m_128467_(s);
+             if (along.length != 0) {
