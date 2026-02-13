@@ -83,7 +83,7 @@ ext {
     GIT_INFO = gradleutils.gitInfo
     FORGE_VERSION = "47.4.10"
     VERSION = "1.20.1-$FORGE_VERSION"
-    CATSERVER_VERSION = "1.20.1-" + gitVersion
+    CATSERVER_VERSION = "1.20.1-" + gitVersion + "-BalancedDiet"
     // FML_VERSION = gradleutils.getFilteredMCTagOffsetBranchVersion(true, 'FML', MC_VERSION)
 
     BINPATCH_TOOL = 'net.minecraftforge:binarypatcher:1.1.1:fatjar'

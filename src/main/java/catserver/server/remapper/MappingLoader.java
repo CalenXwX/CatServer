@@ -35,7 +35,7 @@ public class MappingLoader {
             loadNmsMappings(globalJarMapping, CatServer.NATIVE_VERSION);
             loadNmsPreMappings(globalPreJarMapping, CatServer.NATIVE_VERSION);
 
-            loadIntermediaryMappings(globalJarMapping, CatServer.NATIVE_VERSION); // Fabric
+            // loadIntermediaryMappings(globalJarMapping, CatServer.NATIVE_VERSION); // Fabric // the reverse mapping will replace bukkit's, and this is usually not used, so... remove it!
 
             fieldPackages = JarMapping.class.getDeclaredField("packages");
             fieldPackages.setAccessible(true);
