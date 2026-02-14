@@ -552,7 +552,7 @@ def sharedFmlonlyForge = { Project prj ->
                                     "libraries/org/codehaus/plexus/util/plexus-utils/3.5.1/plexus-utils-3.5.1.jar", // 1.20.1
                                     "libraries/com/google/protobuf/protobuf-java/3.21.9/protobuf-java-3.21.9.jar", // 1.20.1
                                     "mods-fabric/mixinextras-fabric-0.5.0.jar" // 1.20.1
-                            ].findAll { it.startsWith('libraries/') && !claimed.contains(it.rsplit('/', 2)[0]) }
+                            ].findAll { (it.startsWith('libraries/') || it.startsWith('mods-fabric/')) && !claimed.contains(it.rsplit('/', 2)[0]) }
                     )
 
             configure(prj.installerJar) {
@@ -1458,7 +1458,7 @@ project(':forge') {
                                 "libraries/org/codehaus/plexus/util/plexus-utils/3.5.1/plexus-utils-3.5.1.jar", // 1.20.1
                                 "libraries/com/google/protobuf/protobuf-java/3.21.9/protobuf-java-3.21.9.jar", // 1.20.1
                                 "mods-fabric/mixinextras-fabric-0.5.0.jar" // 1.20.1
-                        ].findAll { it.startsWith('libraries/') && !claimed.contains(it.rsplit('/', 2)[0]) }
+                        ].findAll { (it.startsWith('libraries/') || it.startsWith('mods-fabric/')) && !claimed.contains(it.rsplit('/', 2)[0]) }
                 )
         def MODULE_PATH = Util.getArtifactsOffline(project, project.configurations.moduleonly, false).values().collect { "libraries/${it.downloads.artifact.path}" }
         def tokens = [
