@@ -48,6 +48,17 @@ public class JarInJarDependencyLocator extends AbstractJarFileDependencyLocator
 
         final List<IModFile> dependenciesToLoad = JarSelector.detectAndSelect(sources, this::loadResourceFromModFile, this::loadModFileFrom, this::identifyMod, this::exception);
 
+        // CatServer start - some mods have jarInJar fabric api so... compat:forge-mod:accessories:neoforge-1.0.0-beta.48+1.20.1
+        java.util.Iterator<IModFile> iterator = dependenciesToLoad.iterator();
+        while (iterator.hasNext()) {
+            IModFile modFile = iterator.next();
+            boolean hasFabricDependency = modFile.getSecureJar().getPackages().stream().anyMatch(p -> p.startsWith("net.fabricmc"));
+            if (hasFabricDependency) {
+                iterator.remove();
+            }
+        }
+        // CatServer end
+
         if (dependenciesToLoad.isEmpty())
         {
             LOGGER.info("No dependencies to load found. Skipping!");

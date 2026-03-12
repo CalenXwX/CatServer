@@ -1,11 +1,19 @@
 --- a/net/minecraft/world/entity/npc/WanderingTraderSpawner.java
 +++ b/net/minecraft/world/entity/npc/WanderingTraderSpawner.java
-@@ -104,14 +_,14 @@
+@@ -104,14 +_,22 @@
                 return false;
              }
  
 -            WanderingTrader wanderingtrader = EntityType.f_20494_.m_262496_(p_35916_, blockpos2, MobSpawnType.EVENT);
-+            WanderingTrader wanderingtrader = EntityType.f_20494_.spawn(p_35916_, blockpos2, MobSpawnType.EVENT, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL); // CraftBukkit
++            // CatServer start - compat:mod:vinery:forge-1.4.41:net.satisfy.vinery.core.mixin.WanderingTraderSpawner#trySpawn
++            WanderingTrader wanderingtrader;
++            try {
++               catserver.server.CatServerCaptures.getCatServerCaptures().EntityType$spawn$spawnReason.push(EntityType.f_20494_, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL);
++               wanderingtrader = EntityType.f_20494_.m_262496_(p_35916_, blockpos2, MobSpawnType.EVENT); // CraftBukkit
++            } finally {
++               catserver.server.CatServerCaptures.getCatServerCaptures().EntityType$spawn$spawnReason.pop(EntityType.f_20494_);
++            }
++            // CatServer end
              if (wanderingtrader != null) {
                 for(int j = 0; j < 2; ++j) {
                    this.m_35917_(p_35916_, wanderingtrader, 4);

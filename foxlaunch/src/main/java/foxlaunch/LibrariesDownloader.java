@@ -48,7 +48,12 @@ public class LibrariesDownloader {
     public static void tryDownload(File file, String sha256, String dir) {
         Iterator<String> iterator = librariesSources.iterator();
         while (iterator.hasNext()) {
-            String downloadUrl = iterator.next() + (dir == null ? "" : dir + "/") + file.getName();
+            String downloadUrl;
+            if (file.getPath().contains("libraries/")) {
+                downloadUrl = iterator.next() + (dir == null ? "" : dir + "/") + file.getName();
+            } else {
+                downloadUrl = iterator.next() + (dir == null ? "" : dir + "/") + file.getParentFile().getName() + "/" + file.getName();
+            }
             try {
                 String authKey = null;
                 if (downloadUrl.startsWith("httpauth://")) {

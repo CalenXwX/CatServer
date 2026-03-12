@@ -2,11 +2,12 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://libraries.minecraft.net/' }
         maven { url = 'https://maven.fabricmc.net/' }
         mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:[6.0.11,6.2)'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:[6.0.11,6.0.48)' // CatServer - Forge's default is [6.0.11,6.2), but seems 6.0.50 is buggy. Snapshot version of MC26.1 will cause an exception in net.minecraftforge.srgutils.MinecraftVersion#splitDots
         classpath "dev.vankka:gradle-plugin:2.0.0"
     }
 }
@@ -51,7 +52,7 @@ ext {
     SPI_VERSION = '7.0.1'
     ACCESSTRANSFORMERS_VERSION = '8.0.4'
     COREMODS_VERSION = '5.2.4'
-    EVENTBUS_VERSION = '6.0.5'
+    EVENTBUS_VERSION = '6.2.33'
     MODLAUNCHER_VERSION = '10.0.9'
     SECUREJARHANDLER_VERSION = '2.1.10'
     BOOTSTRAPLAUNCHER_VERSION = '1.1.2'
@@ -241,11 +242,11 @@ def sharedDeps = {
     installer 'org.apache.commons:commons-lang3:3.12.0'
     installer 'net.jodah:typetools:0.6.3'
     installer "net.minecrell:terminalconsoleappender:${TERMINALCONSOLEAPPENDER_VERSION}"
-    installer "org.jline:jline-reader:${JLINE_VERSION}"   // Dep of TerminaalConsoleeAppender
-    installer "org.jline:jline-terminal:${JLINE_VERSION}" // Dep of TerminaalConsoleeAppender
+    installer "org.jline:jline-reader:${JLINE_VERSION}"   // Dep of TerminalConsoleAppender
+    installer "org.jline:jline-terminal:${JLINE_VERSION}" // Dep of TerminalConsoleAppender
     installer 'org.jline:jline-terminal-jansi:3.12.1'
     // installer "org.spongepowered:mixin:${MIXIN_VERSION}" // we use net.fabricmc:sponge-mixin below
-    installer 'org.openjdk.nashorn:nashorn-core:15.3'
+    installer 'org.openjdk.nashorn:nashorn-core:15.4'
     installer "net.minecraftforge:JarJarSelector:${JARJAR_VERSION}"
     installer "net.minecraftforge:JarJarMetadata:${JARJAR_VERSION}"
 
@@ -612,7 +613,7 @@ project(':fmlonly') {
     }
 
     configurations {
-        modu0leonly
+        moduleonly
         installer {
             // Don't pull all libraries, if we're missing something, add it to the installer list so the installer knows to download it.
             transitive = false
@@ -1542,8 +1543,8 @@ project(':forge') {
             rename { 'data/binarypatcher-1.0.12.jar' }
         }
 
-        from(rootProject.file('server_libs/srgutils-0.4.11.jar')) {
-            rename { 'data/srgutils-0.4.11.jar' }
+        from(rootProject.file('server_libs/srgutils-0.5.16.jar')) {
+            rename { 'data/srgutils-0.5.16.jar' }
         }
 
         from(rootProject.file('server_libs/fastcsv-2.0.0.jar')) {

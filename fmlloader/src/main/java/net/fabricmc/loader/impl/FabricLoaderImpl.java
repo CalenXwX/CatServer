@@ -241,6 +241,15 @@ public final class FabricLoaderImpl extends net.fabricmc.loader.FabricLoader {
 		Path cacheDir = gameDir.resolve(CACHE_DIR_NAME);
 		Path outputdir = cacheDir.resolve(PROCESSED_MODS_DIR_NAME);
 
+		// CatServer start
+		if (!cacheDir.toFile().exists()) {
+			cacheDir.toFile().mkdirs();
+		}
+		if (!outputdir.toFile().exists()) {
+			outputdir.toFile().mkdirs();
+		}
+		// CatServer end
+
 		// runtime mod remapping
 
 		if (remapRegularMods) {
@@ -250,7 +259,13 @@ public final class FabricLoaderImpl extends net.fabricmc.loader.FabricLoader {
 				// CatServer start
 				try {
 					RuntimeModRemapper.isRemapping = true;
-					RuntimeModRemapper.remap(modCandidates, cacheDir.resolve(TMP_DIR_NAME), outputdir);
+					Path tmpDir = cacheDir.resolve(TMP_DIR_NAME);
+					// CatServer start
+					if (!tmpDir.toFile().exists()) {
+						tmpDir.toFile().mkdirs();
+					}
+					// CatServer end
+					RuntimeModRemapper.remap(modCandidates, tmpDir, outputdir);
 				} finally {
 					RuntimeModRemapper.isRemapping = false;
 				}
