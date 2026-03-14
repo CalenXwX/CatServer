@@ -5,6 +5,7 @@ import catserver.server.remapper.ReflectionTransformer;
 import catserver.server.remapper.ReflectionUtils;
 import catserver.server.remapper.RemapRules;
 import catserver.server.remapper.RemapUtils;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -85,6 +86,12 @@ public class ProxyReflection {
 
     // Class.getDeclaredField
     public static Field getDeclaredField(Class<?> inst, String name) throws NoSuchFieldException, SecurityException {
+        // compat:plugin:trmenu:taboolib.module.nms.PacketSender#getConnectionHybrid:https://github.com/CoderKuo/TrMenu
+        // taboolib reflects ServerPlayer#connection with name "b", this is correct in 1.18.2, but "b" is LOGGER in 1.20.1...
+        // This will cause Exception when a player right clicks another player.
+        if (inst == ServerPlayer.class && "connection".equals(name)) {
+            return ServerPlayer.class.getDeclaredField("f_8906_");
+        }
         if (RemapUtils.isNeedRemapClass(inst, false))
             name = ReflectionTransformer.remapper.mapFieldName(RemapUtils.reverseMap(inst), name, null);
         return inst.getDeclaredField(name);

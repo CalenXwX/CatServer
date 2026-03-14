@@ -7,6 +7,7 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -49,7 +50,7 @@ public class CatServerCaptures {
     public final CatCaptureValueStack<ServerPlayer, PlayerTeleportEvent.TeleportCause> ServerPlayer$changeDimension$cause = withDefaultValue(PlayerTeleportEvent.TeleportCause.UNKNOWN);
     public final CatCaptureValueStack<LivingEntity, PlayerTeleportEvent.TeleportCause> LivingEntity$randomTeleport$cause = withDefaultValue(PlayerTeleportEvent.TeleportCause.UNKNOWN);
     public final CatCaptureValueStack<Void, org.bukkit.block.Block> ShearsDispenseItemBehavior$tryShearLivingEntity$bukkitBlock = withDefaultValue(null); // NotNull but without NPE
-    public final CatCaptureValueStack<Void, CraftItemStack> ShearsDispenseItemBehavior$tryShearLivingEntity$craftItemStack = withDefaultValue(() -> CraftItemStack.asCraftMirror(/*Nullable*/null));
+    public final CatCaptureValueStack<Void, CraftItemStack> ShearsDispenseItemBehavior$tryShearLivingEntity$craftItemStack = withDefaultValueSupplier(() -> CraftItemStack.asCraftMirror(/*Nullable*/null));
     public final CatCaptureValueStack<Player, EntityExhaustionEvent.ExhaustionReason> Player$causeFoodExhaustion$reason = withDefaultValue(EntityExhaustionEvent.ExhaustionReason.UNKNOWN);
     public final CatCaptureValueStack<Void, BrewingStandBlockEntity> BrewingStandBlockEntity$doBrew$tileentitybrewingstand = withDefaultValue(null); // Nullable
     public final CatCaptureValueStack<Void, Entity> RedStoneOreBlock$interact$entity = withDefaultValue(null); // Nullable
@@ -65,6 +66,7 @@ public class CatServerCaptures {
     public final CatCaptureValueStack<Level, Boolean> Level$explode_EntityDDDFExplosionInteraction$p_256634_ = withDefaultValue(false);
     public final CatCaptureValueStack<ServerGamePacketListenerImpl, Integer> ServerGamePacketListenerImpl$updateBookPages$slot = withDefaultValue(-1);
     public final CatCaptureValueStack<ServerGamePacketListenerImpl, ItemStack> ServerGamePacketListenerImpl$updateBookPages$handItem = withDefaultValue(ItemStack.EMPTY);
+    public final CatCaptureValueStack<EntityType<?>, CreatureSpawnEvent.SpawnReason> EntityType$spawn$spawnReason = withDefaultValue(CreatureSpawnEvent.SpawnReason.DEFAULT);
 
     public static CatServerCaptures getCatServerCaptures() {
         CatServerCaptures currentThreadCaptures = catServerCaptures.get();
@@ -79,7 +81,7 @@ public class CatServerCaptures {
         return new CatCaptureValueStack<>(defaultValue);
     }
 
-    public static <H, V> CatCaptureValueStack<H, V> withDefaultValue(Supplier<V> defaultValueSupplier) {
+    public static <H, V> CatCaptureValueStack<H, V> withDefaultValueSupplier(Supplier<V> defaultValueSupplier) {
         return new CatCaptureValueStack<>(defaultValueSupplier);
     }
 

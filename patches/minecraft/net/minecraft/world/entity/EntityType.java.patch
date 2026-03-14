@@ -90,7 +90,7 @@
     public T m_262496_(ServerLevel p_262634_, BlockPos p_262707_, MobSpawnType p_262597_) {
 -      return this.m_262455_(p_262634_, (CompoundTag)null, (Consumer<T>)null, p_262707_, p_262597_, false, false);
 +      // CraftBukkit start
-+      return this.spawn(p_262634_, p_262707_, p_262597_, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.DEFAULT);
++      return this.spawn(p_262634_, p_262707_, p_262597_, catserver.server.CatServerCaptures.getCatServerCaptures().EntityType$spawn$spawnReason.get(this)); // CatServer - default is SpawnReason.DEFAULT
 +   }
 +
 +   @Nullable
