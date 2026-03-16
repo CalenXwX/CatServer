@@ -56,7 +56,7 @@ public final class JavaPluginLoader implements PluginLoader {
     private final List<PluginClassLoader> loaders = new CopyOnWriteArrayList<PluginClassLoader>();
     // private final LibraryLoader libraryLoader; // CatServer - remove
     public static final CustomTimingsHandler pluginParentTimer = new CustomTimingsHandler("** Plugins"); // Spigot
-    private final java.net.URLClassLoader urlClassLoader; // CatServer - [compat:plugin:UltimateTimber:3.0.1:com.craftaro.ultimatetimber.core.third_party.com.georgev22.api.libraryloader.ClassLoaderAccess#<init>] some plugins require a URLClassLoader as a parent classloader to load libraries
+    private final catserver.server.remapper.proxy.ProxyURLClassLoader urlClassLoader; // CatServer - [compat:plugin:UltimateTimber:3.0.1:com.craftaro.ultimatetimber.core.third_party.com.georgev22.api.libraryloader.ClassLoaderAccess#<init>] some plugins require a URLClassLoader as a parent classloader to load libraries
 
     /**
      * This class was not meant to be constructed explicitly
@@ -86,7 +86,7 @@ public final class JavaPluginLoader implements PluginLoader {
             for (int i = 0; i < dependencies.length; i++) {
                 dependencyUrls[i] = new File(dependencies[i]).toURI().toURL();
             }
-            this.urlClassLoader = new java.net.URLClassLoader(dependencyUrls, getClass().getClassLoader()); // CatServer - 1.20.1
+            this.urlClassLoader = new catserver.server.remapper.proxy.ProxyURLClassLoader(dependencyUrls, getClass().getClassLoader()); // CatServer - 1.20.1
         } catch (java.net.MalformedURLException e) {
             throw new RuntimeException("Failed to initialize the urlClassLoader of JavaPluginLoader. Something wrong with the library paths:\n" + System.getProperty("pluginOnlyDependencyClassPath"), e);
         }

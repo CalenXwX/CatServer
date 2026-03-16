@@ -1,6 +1,7 @@
 package catserver.server.patcher;
 
 import catserver.server.patcher.plugins.EssentialsPatcher;
+import catserver.server.patcher.plugins.UltimateTimberPatcher;
 import catserver.server.patcher.plugins.WorldEditPatcher;
 
 import java.util.HashMap;
@@ -12,6 +13,7 @@ public class PatcherManager {
     static {
         registerPluginPatcher("Essentials", new EssentialsPatcher());
         registerPluginPatcher("WorldEdit", new WorldEditPatcher());
+        registerPluginPatcher("UltimateTimber", new UltimateTimberPatcher());
     }
 
     public static IPatcher getPluginPatcher(String pluginName) {

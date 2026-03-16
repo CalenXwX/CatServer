@@ -14,6 +14,7 @@ public class CatServerConfig {
     public List<String> fakePlayerPermissions = Lists.<String>newArrayList("essentials.build");
     public boolean versionCheck = true;
     public int pluginExecutorMaxThreads = -1;
+    public int loginTimeoutTicks = 600;
 
     public CatServerConfig(String file) {
         this.configFile = new File(file);
@@ -27,6 +28,8 @@ public class CatServerConfig {
         versionCheck = getOrWriteBooleanConfig("versionCheck", versionCheck);
         // thread
         pluginExecutorMaxThreads = getOrWriteIntConfig("pluginExecutor.maxThreads", pluginExecutorMaxThreads); // 1.20.1 see FMLConfig#MAX_THREADS
+        // login timeout
+        loginTimeoutTicks = getOrWriteIntConfig("loginTimeoutTicks", loginTimeoutTicks); // 1.20.1
         try {
             config.save(configFile);
         } catch (IOException e) {

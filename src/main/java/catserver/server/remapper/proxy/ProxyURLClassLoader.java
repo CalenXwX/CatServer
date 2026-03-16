@@ -1,10 +1,7 @@
 package catserver.server.remapper.proxy;
 
-import catserver.server.remapper.ClassInheritanceProvider;
-import catserver.server.remapper.CatServerRemapper;
-import catserver.server.remapper.MappingLoader;
-import catserver.server.remapper.ReflectionTransformer;
-import catserver.server.remapper.RemapRules;
+import catserver.server.patcher.IPatcher;
+import catserver.server.remapper.*;
 import catserver.server.utils.PluginBytecodeHandler;
 import com.google.common.io.ByteStreams;
 import cpw.mods.modlauncher.TransformingClassLoader;
@@ -14,6 +11,7 @@ import net.md_5.specialsource.provider.ClassLoaderProvider;
 import net.md_5.specialsource.provider.JointProvider;
 import net.md_5.specialsource.repo.RuntimeRepo;
 import net.minecraft.server.MinecraftServer;
+import org.bukkit.plugin.java.PluginClassLoader;
 
 import java.io.InputStream;
 import java.net.JarURLConnection;
@@ -117,6 +115,13 @@ public class ProxyURLClassLoader extends URLClassLoader
 
                         // Remap the classes
                         byte[] bytecode = this.remapper.remapClassFile(classBytes, RuntimeRepo.getInstance());
+                        // Patch the classes
+                        ClassLoader cl = ReflectionUtils.getCallerClass(6).getClassLoader();
+                        if (cl instanceof PluginClassLoader) {
+                            PluginClassLoader pluginClassLoader = (PluginClassLoader) cl;
+                            IPatcher patcher = pluginClassLoader.getPatcher();
+                            if (patcher != null) bytecode = patcher.transform(name.replace("/", "."), bytecode);
+                        }
                         bytecode = ReflectionTransformer.transform(bytecode);
 
                         // Fix the package

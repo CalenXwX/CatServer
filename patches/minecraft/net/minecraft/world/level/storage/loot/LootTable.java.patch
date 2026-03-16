@@ -126,7 +126,7 @@
  
     private void m_230924_(ObjectArrayList<ItemStack> p_230925_, int p_230926_, RandomSource p_230927_) {
        List<ItemStack> list = Lists.newArrayList();
-@@ -205,7 +_,51 @@
+@@ -205,12 +_,61 @@
        return new LootTable.Builder();
     }
  
@@ -179,10 +179,50 @@
        private final List<LootPool> f_79156_ = Lists.newArrayList();
        private final List<LootItemFunction> f_79157_ = Lists.newArrayList();
        private LootContextParamSet f_79158_ = LootTable.f_79106_;
-@@ -239,6 +_,50 @@
-       public LootTable m_79167_() {
-          return new LootTable(this.f_79158_, this.f_287003_, this.f_79156_.toArray(new LootPool[0]), this.f_79157_.toArray(new LootItemFunction[0]));
+       @Nullable
+       private ResourceLocation f_287003_ = null;
++      // CatServer start - fabric compat
++      private boolean forge$isFrozen = false;
++      @Nullable
++      private ResourceLocation forge$lootTableId = null;
++      // CatServer end
+ 
+       public LootTable.Builder m_79161_(LootPool.Builder p_79162_) {
+          this.f_79156_.add(p_79162_.m_79082_());
+@@ -227,6 +_,18 @@
+          return this;
        }
+ 
++      // CatServer start - fabric compat
++      public LootTable.Builder forge$isFrozen(boolean forge$isFrozen) {
++         this.forge$isFrozen = forge$isFrozen;
++         return this;
++      }
++
++      public LootTable.Builder forge$lootTableId(ResourceLocation forge$lootTableId) {
++         this.forge$lootTableId = forge$lootTableId;
++         return this;
++      }
++      // CatServer end
++
+       public LootTable.Builder m_79078_(LootItemFunction.Builder p_79164_) {
+          this.f_79157_.add(p_79164_.m_7453_());
+          return this;
+@@ -237,8 +_,59 @@
+       }
+ 
+       public LootTable m_79167_() {
+-         return new LootTable(this.f_79158_, this.f_287003_, this.f_79156_.toArray(new LootPool[0]), this.f_79157_.toArray(new LootItemFunction[0]));
+-      }
++         // CatServer start - fabric compat
++         LootTable ret = new LootTable(this.f_79158_, this.f_287003_, this.f_79156_.toArray(new LootPool[0]), this.f_79157_.toArray(new LootItemFunction[0]));
++         if (this.forge$lootTableId != null) {
++            ret.setLootTableId(this.forge$lootTableId);
++         }
++         ret.isFrozen = this.forge$isFrozen;
++         return ret;
++         // CatServer end
++      }
 +
 +      // Fabric start - LootTableBuilderMixin
 +      private LootTable.Builder self() {

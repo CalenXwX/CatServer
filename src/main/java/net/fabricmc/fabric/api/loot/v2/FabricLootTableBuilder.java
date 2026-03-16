@@ -106,6 +106,11 @@ public interface FabricLootTableBuilder {
 		builder.apply(List.of(accessor.fabric_getFunctions()));
 		builder.setRandomSequence(accessor.fabric_getRandomSequenceId());
 
+		// CatServer start
+		builder.forge$isFrozen(table.isFrozen());
+		builder.forge$lootTableId(table.getLootTableId());
+		// CatServer end
+
 		return builder;
 	}
 }
