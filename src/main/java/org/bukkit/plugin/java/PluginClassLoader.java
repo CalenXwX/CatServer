@@ -269,6 +269,7 @@ public final class PluginClassLoader extends URLClassLoader { // CatServer - pub
 
                         // Remap the classes
                         byte[] bytecode = remapper.remapClassFile(preRemapper.remapClassFile(classBytes, RuntimeRepo.getInstance()), RuntimeRepo.getInstance());
+                        // Patch the classes
                         if (this.patcher != null) bytecode = this.patcher.transform(name.replace("/", "."), bytecode);
                         bytecode = ReflectionTransformer.transform(bytecode);
 
@@ -303,6 +304,10 @@ public final class PluginClassLoader extends URLClassLoader { // CatServer - pub
         }
 
         return result;
+    }
+
+    public IPatcher getPatcher() {
+        return patcher;
     }
     // CatServer end
 }

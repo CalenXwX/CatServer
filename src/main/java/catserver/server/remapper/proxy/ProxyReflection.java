@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URLClassLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ProxyReflection {
@@ -86,11 +87,18 @@ public class ProxyReflection {
 
     // Class.getDeclaredField
     public static Field getDeclaredField(Class<?> inst, String name) throws NoSuchFieldException, SecurityException {
+        /////////////////////////////////////////////////////////////////////////////////
+        // TODO When taboolib fixed this, remove...
         // compat:plugin:trmenu:taboolib.module.nms.PacketSender#getConnectionHybrid:https://github.com/CoderKuo/TrMenu
         // taboolib reflects ServerPlayer#connection with name "b", this is correct in 1.18.2, but "b" is LOGGER in 1.20.1...
         // This will cause Exception when a player right clicks another player.
         if (inst == ServerPlayer.class && "connection".equals(name)) {
             return ServerPlayer.class.getDeclaredField("f_8906_");
+        }
+        /////////////////////////////////////////////////////////////////////////////////
+        // <PluginClass>.class.getClassLoader().getParent().ucp -> JavaPluginLoader#urlClassLoader.super.ucp
+        if (ProxyURLClassLoader.class == inst && "ucp".equals(name)) {
+            return URLClassLoader.class.getDeclaredField("ucp");
         }
         if (RemapUtils.isNeedRemapClass(inst, false))
             name = ReflectionTransformer.remapper.mapFieldName(RemapUtils.reverseMap(inst), name, null);
