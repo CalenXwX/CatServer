@@ -49,10 +49,10 @@ public class LibrariesDownloader {
         Iterator<String> iterator = librariesSources.iterator();
         while (iterator.hasNext()) {
             String downloadUrl;
-            if (file.getPath().contains("libraries/")) {
-                downloadUrl = iterator.next() + (dir == null ? "" : dir + "/") + file.getName();
-            } else {
+            if (file.getPath().contains("mods-fabric/")) {
                 downloadUrl = iterator.next() + (dir == null ? "" : dir + "/") + file.getParentFile().getName() + "/" + file.getName();
+            } else {
+                downloadUrl = iterator.next() + (dir == null ? "" : dir + "/") + file.getName();
             }
             try {
                 String authKey = null;

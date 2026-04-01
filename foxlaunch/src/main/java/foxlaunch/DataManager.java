@@ -73,7 +73,18 @@ public class DataManager {
                     String[] name = jarEntry.getName().split("/");
                     if (name.length == 2) {
                         if (Objects.equals(name[0], "data")) {
-                            if (name[1].endsWith(".jar")) {
+                            if (Objects.equals(name[1], "catserver-fake-fabric-api-0.92.6+1.20.1.jar")) {
+                                try (OutputStream out = new FileOutputStream(new File(mods_fabric, name[1]))) {
+                                    try (InputStream in = serverJar.getInputStream(jarEntry)) {
+                                        byte[] bytes = new byte[4096];
+                                        int readSize;
+                                        while ((readSize = in.read(bytes)) > 0) {
+                                            out.write(bytes, 0, readSize);
+                                        }
+                                    }
+                                    out.flush();
+                                }
+                            } else if (name[1].endsWith(".jar")) {
                                 File path = librariesMap.get(name[1]);
 
                                 if (path == null) {
@@ -151,17 +162,6 @@ public class DataManager {
                                             }
                                         }
                                     }
-                                }
-                            } else if (Objects.equals(name[1], "catserver-fake-fabric-api-0.92.6+1.20.1.jar")) {
-                                try (OutputStream out = new FileOutputStream(new File(mods_fabric, name[1]))) {
-                                    try (InputStream in = serverJar.getInputStream(jarEntry)) {
-                                        byte[] bytes = new byte[4096];
-                                        int readSize;
-                                        while ((readSize = in.read(bytes)) > 0) {
-                                            out.write(bytes, 0, readSize);
-                                        }
-                                    }
-                                    out.flush();
                                 }
                             }
                         }
