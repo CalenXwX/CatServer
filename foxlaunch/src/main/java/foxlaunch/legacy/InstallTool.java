@@ -22,7 +22,7 @@ public class InstallTool {
         URL[] libInstallerTools = new URL[] {
                 Utils.pathToURL("foxlaunch-libs/installertools-1.2.10.jar"),
                 Utils.pathToURL("foxlaunch-libs/fastcsv-2.0.0.jar"),
-                Utils.pathToURL("foxlaunch-libs/srgutils-0.4.11.jar"),
+                Utils.pathToURL("foxlaunch-libs/srgutils-0.5.16.jar"),
                 Utils.pathToURL("libraries/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar"),
                 Utils.pathToURL("libraries/net/md-5/SpecialSource/1.10.0/SpecialSource-1.10.0.jar"),
                 Utils.pathToURL("libraries/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar"),
@@ -35,13 +35,13 @@ public class InstallTool {
 
         URL[] libJarSplitter = new URL[] {
                 Utils.pathToURL("foxlaunch-libs/jarsplitter-1.1.4.jar"),
-                Utils.pathToURL("foxlaunch-libs/srgutils-0.4.11.jar"),
+                Utils.pathToURL("foxlaunch-libs/srgutils-0.5.16.jar"),
                 Utils.pathToURL("libraries/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar"),
         };
 
         URL[] libForgeAutoRenamingTool = new URL[] {
                 Utils.pathToURL("foxlaunch-libs/ForgeAutoRenamingTool-0.1.22.jar"),
-                Utils.pathToURL("foxlaunch-libs/srgutils-0.4.11.jar"),
+                Utils.pathToURL("foxlaunch-libs/srgutils-0.5.16.jar"),
                 Utils.pathToURL("libraries/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar"),
                 Utils.pathToURL("libraries/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.jar"),
                 Utils.pathToURL("libraries/org/ow2/asm/asm-analysis/9.8/asm-analysis-9.8.jar"),
